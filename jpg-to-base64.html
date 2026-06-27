@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>JPG to Base64 Converter — Free Online JPEG Encoder</title>
+<meta name="description" content="Free online JPG to Base64 converter. Drag &amp; drop a JPEG photo and instantly copy its Base64 string or data URI for HTML, CSS or JSON. 100% in-browser, no upload, no sign-up." />
+<link rel="canonical" href="https://image2base64.com/jpg-to-base64.html" />
+<meta name="robots" content="index, follow" />
+
+<meta property="og:type" content="website" />
+<meta property="og:title" content="JPG to Base64 Converter — Free Online JPEG Encoder" />
+<meta property="og:description" content="Drag &amp; drop a JPEG and copy its Base64 data URI. Runs 100% in your browser." />
+<meta property="og:url" content="https://image2base64.com/jpg-to-base64.html" />
+<meta name="twitter:card" content="summary_large_image" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What does a JPG Base64 string start with?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A JPEG data URI starts with data:image/jpeg;base64, followed by the encoded body, which typically begins with /9j/ — the Base64 signature of the JPEG file header."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I inline a large JPG photo as Base64?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Usually not. Base64 adds about 33% to the file size and inlined images can't be cached separately by the browser. For large photos keep a normal .jpg file; reserve Base64 for small images or single-file deliverables."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the JPG to Base64 conversion private?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Everything happens in your browser with the FileReader API. The JPEG is never uploaded to any server."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="#tool">Converter</a>
+      <a href="#guide">Guide</a>
+      <a href="#tools">More tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>JPG to Base64 Converter</h1>
+      <p class="lede">
+        Drag in a <strong>JPG / JPEG</strong> photo and instantly get its Base64 string and data URI —
+        ready to paste into HTML, CSS, JSON or JavaScript. One click to copy.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Your photo never leaves your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="drop" class="dropzone" data-accept="jpeg">
+          <div class="dz-icon" aria-hidden="true">🖼️</div>
+          <h2>Drop a JPG here</h2>
+          <p>or paste from clipboard · JPG and JPEG both work</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose JPG</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/jpeg" />
+        </div>
+
+        <p id="enc-error" class="error" hidden></p>
+
+        <div id="results" class="results" hidden>
+          <div class="result-head">
+            <div class="preview-box"><img id="preview" alt="Preview of the selected JPG" hidden /></div>
+            <dl class="meta">
+              <div><dt>File</dt><dd id="m-name">—</dd></div>
+              <div><dt>Type</dt><dd id="m-type">—</dd></div>
+              <div><dt>Size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Base64 length</dt><dd id="m-len">—</dd></div>
+            </dl>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-datauri">Data URI <span class="muted">(use this in HTML/CSS)</span></label>
+              <button class="copy" type="button" data-copy="#out-datauri">Copy</button>
+            </div>
+            <textarea id="out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <label class="toggle">
+            <input id="prefix-toggle" type="checkbox" />
+            Show raw Base64 only (without the <code>data:image/jpeg;base64,</code> prefix)
+          </label>
+          <div id="raw-wrap" class="field" hidden>
+            <div class="field-head">
+              <label for="out-raw">Raw Base64 string</label>
+              <button class="copy" type="button" data-copy="#out-raw">Copy</button>
+            </div>
+            <textarea id="out-raw" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-html">HTML <code>&lt;img&gt;</code> snippet</label>
+              <button class="copy" type="button" data-copy="#out-html">Copy</button>
+            </div>
+            <textarea id="out-html" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-css">CSS <code>background-image</code> snippet</label>
+              <button class="copy" type="button" data-copy="#out-css">Copy</button>
+            </div>
+            <textarea id="out-css" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>JPG to Base64, explained</h2>
+      <p>
+        Encoding a JPG to Base64 turns the photo's binary data into a plain-text string you can embed directly
+        in your code. JPEG is a <strong>compressed, lossy</strong> format built for photographs, so its Base64
+        strings are far shorter than an equivalent uncompressed image — handy when you want a small inline thumbnail.
+      </p>
+
+      <h3>How to use it</h3>
+      <pre><code>&lt;img src="data:image/jpeg;base64,/9j/4AAQSkZJRg..." alt="photo" /&gt;
+
+.banner { background-image: url(data:image/jpeg;base64,/9j/4AAQSkZJRg...); }</code></pre>
+
+      <h3>Keep an eye on size</h3>
+      <p>
+        Base64 inflates data by about <strong>33%</strong>, and an inlined photo can't be cached on its own. For a
+        large hero image, a normal <code>.jpg</code> file the browser can cache will load faster. Reserve Base64 for
+        small thumbnails, avatars, or single-file deliverables like emails and self-contained HTML reports.
+      </p>
+
+      <h3>Private by design</h3>
+      <p>
+        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server. Check
+        your Network tab and you'll see the photo never goes anywhere.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
+        <a class="sib-card" href="png-to-base64.html"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
+        <a class="sib-card" href="base64-to-image.html"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
+        <span class="sib-card soon"><strong>SVG to Base64</strong><span>Coming soon.</span></span>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>What does a JPG Base64 string start with?</summary>
+        <p>A JPEG data URI starts with <code>data:image/jpeg;base64,</code> and the body typically begins with <code>/9j/</code> — the Base64 signature of the JPEG header.</p>
+      </details>
+      <details>
+        <summary>Should I inline a large JPG as Base64?</summary>
+        <p>Usually not. Base64 adds about 33% to the size and inlined images can't be cached separately. For large photos keep a normal <code>.jpg</code>; reserve Base64 for small images or single-file deliverables.</p>
+      </details>
+      <details>
+        <summary>Is the conversion private?</summary>
+        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The JPEG is never uploaded to any server.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="png-to-base64.html">PNG to Base64</a>
+        <a href="jpg-to-base64.html">JPG to Base64</a>
+        <a href="base64-to-image.html">Base64 to Image</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

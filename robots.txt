@@ -1,0 +1,4 @@
+User-agent: *
+Allow: /
+
+Sitemap: https://image2base64.com/sitemap.xml
