@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>JPG to Base64 Converter — Free Online JPEG Encoder</title>
-<meta name="description" content="Free online JPG to Base64 converter. Drag &amp; drop a JPEG photo and instantly copy its Base64 string or data URI for HTML, CSS or JSON. 100% in-browser, no upload, no sign-up." />
-<link rel="canonical" href="https://image2base64.com/jpg-to-base64.html" />
+<title>SVG to Base64 Converter — Free Online Encoder for Data URIs</title>
+<meta name="description" content="Free online SVG to Base64 converter. Drag &amp; drop an SVG and instantly copy its Base64 string or data URI for CSS background-image, HTML or JSON. 100% in-browser, no upload, no sign-up." />
+<link rel="canonical" href="https://image2base64.com/svg-to-base64.html" />
 <meta name="robots" content="index, follow" />
 
 <meta property="og:type" content="website" />
-<meta property="og:title" content="JPG to Base64 Converter — Free Online JPEG Encoder" />
-<meta property="og:description" content="Drag &amp; drop a JPEG and copy its Base64 data URI. Runs 100% in your browser." />
-<meta property="og:url" content="https://image2base64.com/jpg-to-base64.html" />
+<meta property="og:title" content="SVG to Base64 Converter — Free Online Encoder" />
+<meta property="og:description" content="Drag &amp; drop an SVG and copy its Base64 data URI. Runs 100% in your browser." />
+<meta property="og:url" content="https://image2base64.com/svg-to-base64.html" />
 <meta name="twitter:card" content="summary_large_image" />
 
 <link rel="stylesheet" href="styles.css" />
@@ -23,26 +23,26 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "What does a JPG Base64 string start with?",
+      "name": "Should I Base64-encode or URL-encode an SVG for CSS?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A JPEG data URI starts with data:image/jpeg;base64, followed by the encoded body, which typically begins with /9j/ — the Base64 signature of the JPEG file header."
+        "text": "Both work in a CSS data URI. Base64 is the most compatible and copy-paste safe option and is what this tool produces. URL-encoding (percent-encoding) usually yields a slightly smaller string for SVG because SVG is text, but it is fiddlier to get right; Base64 is the safer default."
       }
     },
     {
       "@type": "Question",
-      "name": "Should I inline a large JPG photo as Base64?",
+      "name": "What does an SVG Base64 data URI start with?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Usually not. Base64 adds about 33% to the file size and inlined images can't be cached separately by the browser. For large photos keep a normal .jpg file; reserve Base64 for small images or single-file deliverables."
+        "text": "An SVG data URI starts with data:image/svg+xml;base64, followed by the encoded body. You can drop it straight into a CSS background-image or an HTML img src."
       }
     },
     {
       "@type": "Question",
-      "name": "Is the JPG to Base64 conversion private?",
+      "name": "Is the SVG to Base64 conversion private?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Everything happens in your browser with the FileReader API. The JPEG is never uploaded to any server."
+        "text": "Yes. Everything happens in your browser with the FileReader API. The SVG file is never uploaded to any server."
       }
     }
   ]
@@ -67,31 +67,31 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>JPG to Base64 Converter</h1>
+      <h1>SVG to Base64 Converter</h1>
       <p class="lede">
-        Drag in a <strong>JPG / JPEG</strong> photo and instantly get its Base64 string and data URI —
-        ready to paste into HTML, CSS, JSON or JavaScript. One click to copy.
+        Drag in an <strong>SVG</strong> and instantly get its Base64 string and data URI —
+        ready to paste into a CSS <code>background-image</code>, HTML or JSON. One click to copy.
       </p>
-      <p class="trust"><strong>100% client-side.</strong> Your photo never leaves your device.</p>
+      <p class="trust"><strong>100% client-side.</strong> Your SVG never leaves your device.</p>
     </div>
   </section>
 
   <section id="tool" class="tool-section">
     <div class="wrap">
       <div class="tool">
-        <div id="drop" class="dropzone" data-accept="jpeg">
+        <div id="drop" class="dropzone" data-accept="svg">
           <div class="dz-icon" aria-hidden="true">🖼️</div>
-          <h2>Drop a JPG here</h2>
-          <p>or paste from clipboard · JPG and JPEG both work</p>
-          <button id="pick" class="btn btn-primary" type="button">Choose JPG</button>
-          <input id="file" class="visually-hidden" type="file" accept="image/jpeg" />
+          <h2>Drop an SVG here</h2>
+          <p>or paste from clipboard · vector stays crisp at any size</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose SVG</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/svg+xml,.svg" />
         </div>
 
         <p id="enc-error" class="error" hidden></p>
 
         <div id="results" class="results" hidden>
           <div class="result-head">
-            <div class="preview-box"><img id="preview" alt="Preview of the selected JPG" hidden /></div>
+            <div class="preview-box"><img id="preview" alt="Preview of the selected SVG" hidden /></div>
             <dl class="meta">
               <div><dt>File</dt><dd id="m-name">—</dd></div>
               <div><dt>Type</dt><dd id="m-type">—</dd></div>
@@ -110,7 +110,7 @@
 
           <label class="toggle">
             <input id="prefix-toggle" type="checkbox" />
-            Show raw Base64 only (without the <code>data:image/jpeg;base64,</code> prefix)
+            Show raw Base64 only (without the <code>data:image/svg+xml;base64,</code> prefix)
           </label>
           <div id="raw-wrap" class="field" hidden>
             <div class="field-head">
@@ -142,29 +142,36 @@
 
   <section id="guide" class="content-section">
     <div class="wrap prose">
-      <h2>JPG to Base64, explained</h2>
+      <h2>SVG to Base64, explained</h2>
       <p>
-        Encoding a JPG to Base64 turns the photo's binary data into a plain-text string you can embed directly
-        in your code. JPEG is a <strong>compressed, lossy</strong> format built for photographs, so its Base64
-        strings are far shorter than an equivalent uncompressed image — handy when you want a small inline thumbnail.
+        Encoding an SVG to Base64 turns the vector file into a plain-text string you can embed directly in CSS, HTML
+        or JSON — no separate file to host. Because SVG is <strong>resolution-independent</strong>, an inlined SVG
+        icon stays razor-sharp at any size and on any screen density.
+      </p>
+
+      <h3>Base64 vs URL-encoding for SVG</h3>
+      <p>
+        SVG is itself text, so you'll see two ways to inline it in CSS: <strong>Base64</strong> and
+        <strong>URL-encoding</strong> (percent-encoding). Base64 — what this tool outputs — is the most
+        copy-paste-safe and universally compatible. URL-encoding often produces a slightly shorter string for SVG,
+        but it's easy to get the escaping wrong; Base64 is the reliable default.
       </p>
 
       <h3>How to use it</h3>
-      <pre><code>&lt;img src="data:image/jpeg;base64,/9j/4AAQSkZJRg..." alt="photo" /&gt;
+      <pre><code>&lt;img src="data:image/svg+xml;base64,PHN2ZyB4bWxu..." alt="icon" /&gt;
 
-.banner { background-image: url(data:image/jpeg;base64,/9j/4AAQSkZJRg...); }</code></pre>
+.icon { background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxu...); }</code></pre>
 
-      <h3>Keep an eye on size</h3>
-      <p>
-        Base64 inflates data by about <strong>33%</strong>, and an inlined photo can't be cached on its own. For a
-        large hero image, a normal <code>.jpg</code> file the browser can cache will load faster. Reserve Base64 for
-        small thumbnails, avatars, or single-file deliverables like emails and self-contained HTML reports.
-      </p>
+      <h3>When to inline an SVG</h3>
+      <ul>
+        <li>Small UI icons and logos you want crisp on every display.</li>
+        <li>CSS backgrounds where you'd rather not ship a separate request.</li>
+        <li>Self-contained components, emails or design tokens.</li>
+      </ul>
 
       <h3>Private by design</h3>
       <p>
-        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server. Check
-        your Network tab and you'll see the photo never goes anywhere.
+        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server.
       </p>
     </div>
   </section>
@@ -175,8 +182,7 @@
       <div class="sib-grid">
         <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
         <a class="sib-card" href="png-to-base64.html"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
-        <a class="sib-card" href="svg-to-base64.html"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
-        <a class="sib-card" href="webp-to-base64.html"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
+        <a class="sib-card" href="jpg-to-base64.html"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
         <a class="sib-card" href="base64-to-image.html"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
       </div>
     </div>
@@ -186,16 +192,16 @@
     <div class="wrap">
       <h2>Frequently asked questions</h2>
       <details>
-        <summary>What does a JPG Base64 string start with?</summary>
-        <p>A JPEG data URI starts with <code>data:image/jpeg;base64,</code> and the body typically begins with <code>/9j/</code> — the Base64 signature of the JPEG header.</p>
+        <summary>Should I Base64-encode or URL-encode an SVG for CSS?</summary>
+        <p>Both work in a CSS data URI. Base64 (what this tool produces) is the most compatible and copy-paste safe. URL-encoding usually yields a slightly smaller string for SVG since it's text, but it's fiddlier to get right — Base64 is the safer default.</p>
       </details>
       <details>
-        <summary>Should I inline a large JPG as Base64?</summary>
-        <p>Usually not. Base64 adds about 33% to the size and inlined images can't be cached separately. For large photos keep a normal <code>.jpg</code>; reserve Base64 for small images or single-file deliverables.</p>
+        <summary>What does an SVG Base64 data URI start with?</summary>
+        <p>It starts with <code>data:image/svg+xml;base64,</code> followed by the encoded body. Drop it straight into a CSS <code>background-image</code> or an HTML <code>img src</code>.</p>
       </details>
       <details>
         <summary>Is the conversion private?</summary>
-        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The JPEG is never uploaded to any server.</p>
+        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The SVG is never uploaded to any server.</p>
       </details>
     </div>
   </section>

@@ -3,15 +3,15 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>JPG to Base64 Converter — Free Online JPEG Encoder</title>
-<meta name="description" content="Free online JPG to Base64 converter. Drag &amp; drop a JPEG photo and instantly copy its Base64 string or data URI for HTML, CSS or JSON. 100% in-browser, no upload, no sign-up." />
-<link rel="canonical" href="https://image2base64.com/jpg-to-base64.html" />
+<title>WebP to Base64 Converter — Free Online Encoder</title>
+<meta name="description" content="Free online WebP to Base64 converter. Drag &amp; drop a WebP image and instantly copy its Base64 string or data URI for HTML, CSS or JSON. 100% in-browser, no upload, no sign-up." />
+<link rel="canonical" href="https://image2base64.com/webp-to-base64.html" />
 <meta name="robots" content="index, follow" />
 
 <meta property="og:type" content="website" />
-<meta property="og:title" content="JPG to Base64 Converter — Free Online JPEG Encoder" />
-<meta property="og:description" content="Drag &amp; drop a JPEG and copy its Base64 data URI. Runs 100% in your browser." />
-<meta property="og:url" content="https://image2base64.com/jpg-to-base64.html" />
+<meta property="og:title" content="WebP to Base64 Converter — Free Online Encoder" />
+<meta property="og:description" content="Drag &amp; drop a WebP image and copy its Base64 data URI. Runs 100% in your browser." />
+<meta property="og:url" content="https://image2base64.com/webp-to-base64.html" />
 <meta name="twitter:card" content="summary_large_image" />
 
 <link rel="stylesheet" href="styles.css" />
@@ -23,26 +23,26 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "What does a JPG Base64 string start with?",
+      "name": "What does a WebP Base64 string start with?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A JPEG data URI starts with data:image/jpeg;base64, followed by the encoded body, which typically begins with /9j/ — the Base64 signature of the JPEG file header."
+        "text": "A WebP data URI starts with data:image/webp;base64, followed by the encoded body, which begins with UklGR — the Base64 signature of the WebP (RIFF) file header."
       }
     },
     {
       "@type": "Question",
-      "name": "Should I inline a large JPG photo as Base64?",
+      "name": "Will a Base64 WebP work in every browser?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Usually not. Base64 adds about 33% to the file size and inlined images can't be cached separately by the browser. For large photos keep a normal .jpg file; reserve Base64 for small images or single-file deliverables."
+        "text": "A Base64 WebP data URI displays in any browser that supports WebP, which today is all modern browsers (Chrome, Firefox, Safari, Edge). Encoding to Base64 does not change format support — it only changes how the same WebP bytes are delivered."
       }
     },
     {
       "@type": "Question",
-      "name": "Is the JPG to Base64 conversion private?",
+      "name": "Is the WebP to Base64 conversion private?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Everything happens in your browser with the FileReader API. The JPEG is never uploaded to any server."
+        "text": "Yes. Everything happens in your browser with the FileReader API. The WebP file is never uploaded to any server."
       }
     }
   ]
@@ -67,31 +67,31 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>JPG to Base64 Converter</h1>
+      <h1>WebP to Base64 Converter</h1>
       <p class="lede">
-        Drag in a <strong>JPG / JPEG</strong> photo and instantly get its Base64 string and data URI —
+        Drag in a <strong>WebP</strong> image and instantly get its Base64 string and data URI —
         ready to paste into HTML, CSS, JSON or JavaScript. One click to copy.
       </p>
-      <p class="trust"><strong>100% client-side.</strong> Your photo never leaves your device.</p>
+      <p class="trust"><strong>100% client-side.</strong> Your image never leaves your device.</p>
     </div>
   </section>
 
   <section id="tool" class="tool-section">
     <div class="wrap">
       <div class="tool">
-        <div id="drop" class="dropzone" data-accept="jpeg">
+        <div id="drop" class="dropzone" data-accept="webp">
           <div class="dz-icon" aria-hidden="true">🖼️</div>
-          <h2>Drop a JPG here</h2>
-          <p>or paste from clipboard · JPG and JPEG both work</p>
-          <button id="pick" class="btn btn-primary" type="button">Choose JPG</button>
-          <input id="file" class="visually-hidden" type="file" accept="image/jpeg" />
+          <h2>Drop a WebP here</h2>
+          <p>or paste from clipboard · transparency &amp; animation preserved</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose WebP</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/webp" />
         </div>
 
         <p id="enc-error" class="error" hidden></p>
 
         <div id="results" class="results" hidden>
           <div class="result-head">
-            <div class="preview-box"><img id="preview" alt="Preview of the selected JPG" hidden /></div>
+            <div class="preview-box"><img id="preview" alt="Preview of the selected WebP" hidden /></div>
             <dl class="meta">
               <div><dt>File</dt><dd id="m-name">—</dd></div>
               <div><dt>Type</dt><dd id="m-type">—</dd></div>
@@ -110,7 +110,7 @@
 
           <label class="toggle">
             <input id="prefix-toggle" type="checkbox" />
-            Show raw Base64 only (without the <code>data:image/jpeg;base64,</code> prefix)
+            Show raw Base64 only (without the <code>data:image/webp;base64,</code> prefix)
           </label>
           <div id="raw-wrap" class="field" hidden>
             <div class="field-head">
@@ -142,29 +142,36 @@
 
   <section id="guide" class="content-section">
     <div class="wrap prose">
-      <h2>JPG to Base64, explained</h2>
+      <h2>WebP to Base64, explained</h2>
       <p>
-        Encoding a JPG to Base64 turns the photo's binary data into a plain-text string you can embed directly
-        in your code. JPEG is a <strong>compressed, lossy</strong> format built for photographs, so its Base64
-        strings are far shorter than an equivalent uncompressed image — handy when you want a small inline thumbnail.
+        Encoding a WebP to Base64 turns the image's binary data into a plain-text string you can embed directly in
+        your code. <strong>WebP</strong> is a modern format that compresses smaller than PNG or JPG at similar
+        quality and supports both transparency and animation — so its Base64 strings tend to be shorter than the
+        equivalent PNG.
       </p>
 
       <h3>How to use it</h3>
-      <pre><code>&lt;img src="data:image/jpeg;base64,/9j/4AAQSkZJRg..." alt="photo" /&gt;
+      <pre><code>&lt;img src="data:image/webp;base64,UklGRni..." alt="image" /&gt;
 
-.banner { background-image: url(data:image/jpeg;base64,/9j/4AAQSkZJRg...); }</code></pre>
+.hero { background-image: url(data:image/webp;base64,UklGRni...); }</code></pre>
+
+      <h3>Browser support</h3>
+      <p>
+        A Base64 WebP data URI shows up in any browser that supports WebP — which today is every modern browser
+        (Chrome, Firefox, Safari, Edge). Encoding to Base64 doesn't change format support; it only changes how the
+        same bytes are delivered. If you must support very old browsers, keep a PNG/JPG fallback.
+      </p>
 
       <h3>Keep an eye on size</h3>
       <p>
-        Base64 inflates data by about <strong>33%</strong>, and an inlined photo can't be cached on its own. For a
-        large hero image, a normal <code>.jpg</code> file the browser can cache will load faster. Reserve Base64 for
-        small thumbnails, avatars, or single-file deliverables like emails and self-contained HTML reports.
+        Base64 still adds about <strong>33%</strong> over the raw file and inlined images can't be cached on their
+        own. WebP's strong compression softens the hit, but for large images a normal cached <code>.webp</code> file
+        is usually faster. Reserve inlining for small icons, thumbnails and single-file deliverables.
       </p>
 
       <h3>Private by design</h3>
       <p>
-        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server. Check
-        your Network tab and you'll see the photo never goes anywhere.
+        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server.
       </p>
     </div>
   </section>
@@ -175,8 +182,8 @@
       <div class="sib-grid">
         <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
         <a class="sib-card" href="png-to-base64.html"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
+        <a class="sib-card" href="jpg-to-base64.html"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
         <a class="sib-card" href="svg-to-base64.html"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
-        <a class="sib-card" href="webp-to-base64.html"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
         <a class="sib-card" href="base64-to-image.html"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
       </div>
     </div>
@@ -186,16 +193,16 @@
     <div class="wrap">
       <h2>Frequently asked questions</h2>
       <details>
-        <summary>What does a JPG Base64 string start with?</summary>
-        <p>A JPEG data URI starts with <code>data:image/jpeg;base64,</code> and the body typically begins with <code>/9j/</code> — the Base64 signature of the JPEG header.</p>
+        <summary>What does a WebP Base64 string start with?</summary>
+        <p>A WebP data URI starts with <code>data:image/webp;base64,</code> and the body begins with <code>UklGR</code> — the Base64 signature of the WebP (RIFF) header.</p>
       </details>
       <details>
-        <summary>Should I inline a large JPG as Base64?</summary>
-        <p>Usually not. Base64 adds about 33% to the size and inlined images can't be cached separately. For large photos keep a normal <code>.jpg</code>; reserve Base64 for small images or single-file deliverables.</p>
+        <summary>Will a Base64 WebP work in every browser?</summary>
+        <p>It displays in any browser that supports WebP — all modern browsers (Chrome, Firefox, Safari, Edge). Base64 doesn't change format support, only how the bytes are delivered. Keep a PNG/JPG fallback only for very old browsers.</p>
       </details>
       <details>
         <summary>Is the conversion private?</summary>
-        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The JPEG is never uploaded to any server.</p>
+        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The WebP is never uploaded to any server.</p>
       </details>
     </div>
   </section>

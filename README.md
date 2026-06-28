@@ -21,6 +21,8 @@ image-to-base64/
   index.html             主词工具页：image to base64（编码器，主入口 = 首页）
   png-to-base64.html     兄弟长尾页：PNG to Base64（编码器变体，保留透明度文案）
   jpg-to-base64.html     兄弟长尾页：JPG to Base64（编码器变体）
+  svg-to-base64.html     兄弟长尾页：SVG to Base64（编码器变体，含 base64 vs URL-encode 说明）
+  webp-to-base64.html    兄弟长尾页：WebP to Base64（编码器变体）
   base64-to-image.html   兄弟长尾页：Base64 to Image（反向解码器 + 下载）
   styles.css             全站共用样式（开发者工具风：slate + indigo）
   app.js                 全站共用脚本；按页面元素自动挂载编码器/解码器，纯客户端无网络请求
@@ -49,7 +51,7 @@ image-to-base64/
 3. **Cloudflare Pages 连 GitHub 自动部署**：把本目录推到一个 GitHub repo → Cloudflare Pages 新建项目连该 repo，build command 留空、输出目录设为站点根（纯静态），保存即自动部署；再到 Pages 项目的 Custom domains 绑 `image2base64.com`（同账号 DNS 一键加 CNAME）。后续 push 自动更新。
 4. **收录 & 数据**：加统计（Cloudflare Web Analytics，无 cookie 免费）→ Google Search Console 验证域名 → 提交 `sitemap.xml` → 手动请求收录首页 → 铺几条外链（dev 社区 / 工具目录站 / Reddit 相关帖）加速抓取。
 5. **AdSense / 变现**：流量起来后申请 AdSense，广告位已在 HTML 预留 `<!-- AD-SLOT -->` 注释处。
-6. **扩长尾页**：照现有兄弟页模式新增 `svg-to-base64.html`、`webp-to-base64.html`、`base64 to png/jpg` 等，复用 `app.js`（已页面无关），每页一词、互相内链。
+6. **扩长尾页**：✅ 已加 `svg-to-base64.html`、`webp-to-base64.html`（2026-06-28）。后续可继续照同模式加 `gif-to-base64`、`base64 to png/jpg`、`ico-to-base64` 等，复用 `app.js`（已页面无关），每页一词、互相内链，加完记得补进 `sitemap.xml`。
 
 ## 本地自测
 
