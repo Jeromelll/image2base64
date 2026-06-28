@@ -6,27 +6,27 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://image2base64.com/png-to-base64.html</loc>
+    <loc>https://image2base64.com/png-to-base64</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://image2base64.com/jpg-to-base64.html</loc>
+    <loc>https://image2base64.com/jpg-to-base64</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://image2base64.com/svg-to-base64.html</loc>
+    <loc>https://image2base64.com/svg-to-base64</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://image2base64.com/webp-to-base64.html</loc>
+    <loc>https://image2base64.com/webp-to-base64</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
   <url>
-    <loc>https://image2base64.com/base64-to-image.html</loc>
+    <loc>https://image2base64.com/base64-to-image</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>
