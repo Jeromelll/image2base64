@@ -26,6 +26,11 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://image2base64.com/gif-to-base64</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://image2base64.com/base64-to-image</loc>
     <changefreq>monthly</changefreq>
     <priority>0.8</priority>

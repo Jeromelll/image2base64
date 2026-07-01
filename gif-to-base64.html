@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SVG to Base64 Converter — Free Online Encoder for Data URIs</title>
-<meta name="description" content="Free SVG to Base64 converter. Drag &amp; drop an SVG and copy a Base64 string or data URI for CSS, HTML or JSON. 100% in-browser, no upload, no sign-up." />
-<link rel="canonical" href="https://image2base64.com/svg-to-base64" />
+<title>GIF to Base64 Converter — Free Online Encoder</title>
+<meta name="description" content="Free online GIF to Base64 converter. Drag &amp; drop a GIF image and instantly copy its Base64 string or data URI for HTML, CSS or JSON. 100% in-browser, no upload, no sign-up." />
+<link rel="canonical" href="https://image2base64.com/gif-to-base64" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
 <link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
@@ -16,9 +16,9 @@
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Image to Base64 Converter" />
-<meta property="og:title" content="SVG to Base64 Converter — Free Online Encoder" />
-<meta property="og:description" content="Drag &amp; drop an SVG and copy its Base64 data URI. Runs 100% in your browser." />
-<meta property="og:url" content="https://image2base64.com/svg-to-base64" />
+<meta property="og:title" content="GIF to Base64 Converter — Free Online Encoder" />
+<meta property="og:description" content="Drag &amp; drop a GIF image and copy its Base64 data URI. Runs 100% in your browser." />
+<meta property="og:url" content="https://image2base64.com/gif-to-base64" />
 <meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -35,26 +35,26 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "Should I Base64-encode or URL-encode an SVG for CSS?",
+      "name": "What does a GIF Base64 string start with?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Both work in a CSS data URI. Base64 is the most compatible and copy-paste safe option and is what this tool produces. URL-encoding (percent-encoding) usually yields a slightly smaller string for SVG because SVG is text, but it is fiddlier to get right; Base64 is the safer default."
+        "text": "A GIF data URI starts with data:image/gif;base64, followed by the encoded body, which commonly begins with R0lGOD — the Base64 form of a GIF87a or GIF89a header."
       }
     },
     {
       "@type": "Question",
-      "name": "What does an SVG Base64 data URI start with?",
+      "name": "Will a Base64 GIF work in every browser?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "An SVG data URI starts with data:image/svg+xml;base64, followed by the encoded body. You can drop it straight into a CSS background-image or an HTML img src."
+        "text": "A Base64 GIF data URI displays in any browser that supports GIF, which today is all modern browsers (Chrome, Firefox, Safari, Edge). Encoding to Base64 does not change format support — it only changes how the same GIF bytes are delivered."
       }
     },
     {
       "@type": "Question",
-      "name": "Is the SVG to Base64 conversion private?",
+      "name": "Is the GIF to Base64 conversion private?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Everything happens in your browser with the FileReader API. The SVG file is never uploaded to any server."
+        "text": "Yes. Everything happens in your browser with the FileReader API. The GIF file is never uploaded to any server."
       }
     }
   ]
@@ -79,31 +79,31 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>SVG to Base64 Converter</h1>
+      <h1>GIF to Base64 Converter</h1>
       <p class="lede">
-        Drag in an <strong>SVG</strong> and instantly get its Base64 string and data URI —
-        ready to paste into a CSS <code>background-image</code>, HTML or JSON. One click to copy.
+        Drag in a <strong>GIF</strong> image and instantly get its Base64 string and data URI —
+        ready to paste into HTML, CSS, JSON or JavaScript. One click to copy.
       </p>
-      <p class="trust"><strong>100% client-side.</strong> Your SVG never leaves your device.</p>
+      <p class="trust"><strong>100% client-side.</strong> Your image never leaves your device.</p>
     </div>
   </section>
 
   <section id="tool" class="tool-section">
     <div class="wrap">
       <div class="tool">
-        <div id="drop" class="dropzone" data-accept="svg">
+        <div id="drop" class="dropzone" data-accept="gif">
           <div class="dz-icon" aria-hidden="true">🖼️</div>
-          <h2>Drop an SVG here</h2>
-          <p>or paste from clipboard · vector stays crisp at any size</p>
-          <button id="pick" class="btn btn-primary" type="button">Choose SVG</button>
-          <input id="file" class="visually-hidden" type="file" accept="image/svg+xml,.svg" />
+          <h2>Drop a GIF here</h2>
+          <p>or paste from clipboard · transparency &amp; animation preserved</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose GIF</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/gif" />
         </div>
 
         <p id="enc-error" class="error" hidden></p>
 
         <div id="results" class="results" hidden>
           <div class="result-head">
-            <div class="preview-box"><img id="preview" alt="Preview of the selected SVG" hidden /></div>
+            <div class="preview-box"><img id="preview" alt="Preview of the selected GIF" hidden /></div>
             <dl class="meta">
               <div><dt>File</dt><dd id="m-name">—</dd></div>
               <div><dt>Type</dt><dd id="m-type">—</dd></div>
@@ -122,7 +122,7 @@
 
           <label class="toggle">
             <input id="prefix-toggle" type="checkbox" />
-            Show raw Base64 only (without the <code>data:image/svg+xml;base64,</code> prefix)
+            Show raw Base64 only (without the <code>data:image/gif;base64,</code> prefix)
           </label>
           <div id="raw-wrap" class="field" hidden>
             <div class="field-head">
@@ -154,32 +154,31 @@
 
   <section id="guide" class="content-section">
     <div class="wrap prose">
-      <h2>SVG to Base64, explained</h2>
+      <h2>GIF to Base64, explained</h2>
       <p>
-        Encoding an SVG to Base64 turns the vector file into a plain-text string you can embed directly in CSS, HTML
-        or JSON — no separate file to host. Because SVG is <strong>resolution-independent</strong>, an inlined SVG
-        icon stays razor-sharp at any size and on any screen density.
-      </p>
-
-      <h3>Base64 vs URL-encoding for SVG</h3>
-      <p>
-        SVG is itself text, so you'll see two ways to inline it in CSS: <strong>Base64</strong> and
-        <strong>URL-encoding</strong> (percent-encoding). Base64 — what this tool outputs — is the most
-        copy-paste-safe and universally compatible. URL-encoding often produces a slightly shorter string for SVG,
-        but it's easy to get the escaping wrong; Base64 is the reliable default.
+        Encoding a GIF to Base64 turns the image's binary data into a plain-text string you can embed directly in
+        your code. <strong>GIF</strong> is best known for small animations and simple graphics; the Base64 data URI
+        keeps the original GIF bytes, including animation frames.
       </p>
 
       <h3>How to use it</h3>
-      <pre><code>&lt;img src="data:image/svg+xml;base64,PHN2ZyB4bWxu..." alt="icon" /&gt;
+      <pre><code>&lt;img src="data:image/gif;base64,R0lGODlh..." alt="image" /&gt;
 
-.icon { background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxu...); }</code></pre>
+.hero { background-image: url(data:image/gif;base64,R0lGODlh...); }</code></pre>
 
-      <h3>When to inline an SVG</h3>
-      <ul>
-        <li>Small UI icons and logos you want crisp on every display.</li>
-        <li>CSS backgrounds where you'd rather not ship a separate request.</li>
-        <li>Self-contained components, emails or design tokens.</li>
-      </ul>
+      <h3>Browser support</h3>
+      <p>
+        A Base64 GIF data URI shows up in any browser that supports GIF — which today is every modern browser
+        (Chrome, Firefox, Safari, Edge). Encoding to Base64 doesn't change format support; it only changes how the
+        same bytes are delivered.
+      </p>
+
+      <h3>Keep an eye on size</h3>
+      <p>
+        Base64 still adds about <strong>33%</strong> over the raw file and inlined images can't be cached on their
+        own. Animated GIFs can get large quickly, so a normal cached <code>.gif</code> file is usually faster for
+        anything beyond tiny icons, badges and single-file deliverables.
+      </p>
 
       <h3>Private by design</h3>
       <p>
@@ -195,8 +194,8 @@
         <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
         <a class="sib-card" href="png-to-base64"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
         <a class="sib-card" href="jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
+        <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
-        <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
         <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
       </div>
     </div>
@@ -206,16 +205,16 @@
     <div class="wrap">
       <h2>Frequently asked questions</h2>
       <details>
-        <summary>Should I Base64-encode or URL-encode an SVG for CSS?</summary>
-        <p>Both work in a CSS data URI. Base64 (what this tool produces) is the most compatible and copy-paste safe. URL-encoding usually yields a slightly smaller string for SVG since it's text, but it's fiddlier to get right — Base64 is the safer default.</p>
+        <summary>What does a GIF Base64 string start with?</summary>
+        <p>A GIF data URI starts with <code>data:image/gif;base64,</code> and the body commonly begins with <code>R0lGOD</code>, the Base64 form of a GIF87a or GIF89a header.</p>
       </details>
       <details>
-        <summary>What does an SVG Base64 data URI start with?</summary>
-        <p>It starts with <code>data:image/svg+xml;base64,</code> followed by the encoded body. Drop it straight into a CSS <code>background-image</code> or an HTML <code>img src</code>.</p>
+        <summary>Will a Base64 GIF work in every browser?</summary>
+        <p>It displays in any browser that supports GIF — all modern browsers (Chrome, Firefox, Safari, Edge). Base64 doesn't change format support, only how the bytes are delivered. Keep a PNG/JPG fallback only for very old browsers.</p>
       </details>
       <details>
         <summary>Is the conversion private?</summary>
-        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The SVG is never uploaded to any server.</p>
+        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The GIF is never uploaded to any server.</p>
       </details>
     </div>
   </section>
