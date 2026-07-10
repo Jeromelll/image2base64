@@ -77,7 +77,7 @@
       "name": "How do I use a Base64 image in HTML or CSS?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Use the full data URI. In HTML, set it as the image source: <img src=\"data:image/png;base64,iVBORw0K...\">. In CSS, use it as a background: background-image: url(data:image/png;base64,iVBORw0K...). This converter gives you ready-to-paste HTML and CSS snippets."
+        "text": "Use the full data URI. In HTML, set it as the image source: <img src=\"data:image/png;base64,iVBORw0K...\" alt=\"Example embedded PNG\" width=\"32\" height=\"32\">. In CSS, use it as a background: background-image: url(data:image/png;base64,iVBORw0K...). This converter gives you ready-to-paste HTML and CSS snippets."
       }
     },
     {
@@ -124,6 +124,7 @@
         and <strong>data URI</strong> — ready to paste into your HTML, CSS or JavaScript. One click to copy.
       </p>
       <p class="trust"><strong>100% client-side.</strong> Your image never leaves your device.</p>
+      <p class="trust">Working with PNG only? Use the dedicated <a href="png-to-base64">PNG to Base64 converter</a>.</p>
     </div>
   </section>
 
@@ -142,7 +143,7 @@
 
         <div id="results" class="results" hidden>
           <div class="result-head">
-            <div class="preview-box"><img id="preview" alt="Preview of the selected image" hidden /></div>
+            <div class="preview-box"><img id="preview" alt="Preview of the selected image before Base64 encoding" width="120" height="120" hidden /></div>
             <dl class="meta">
               <div><dt>File</dt><dd id="m-name">—</dd></div>
               <div><dt>Type</dt><dd id="m-type">—</dd></div>
@@ -208,6 +209,8 @@
         64 safe characters (A–Z, a–z, 0–9, <code>+</code> and <code>/</code>). When you prepend a small header
         like <code>data:image/png;base64,</code> you get a <strong>data URI</strong> — a self-contained string
         that a browser treats exactly like a normal image URL, except the picture is baked right into the text.
+        If you only need PNG files, the focused <a href="png-to-base64">PNG to Base64 converter</a> keeps the
+        same private workflow while matching that search directly.
       </p>
 
       <h3>When embedding an image as Base64 is worth it</h3>
