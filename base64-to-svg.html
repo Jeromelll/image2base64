@@ -1,11 +1,14 @@
 <!DOCTYPE html>
+<!-- Skeleton generated to mirror image2base64.com/base64-to-image structure.
+     Drop in alongside styles.css / app.js. SVG is vector text; app.js can also
+     expose the raw markup, not just an <img> preview. -->
 <html lang="en">
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Base64 to Image Converter — Free Online Decoder &amp; Viewer</title>
-<meta name="description" content="Free online Base64 to image decoder. Paste a Base64 string or data URI to preview the image and download it as a PNG, JPG or GIF file. 100% in-browser, no upload, no sign-up." />
-<link rel="canonical" href="https://image2base64.com/base64-to-image" />
+<title>Base64 to SVG Converter — Free Online Decoder &amp; Viewer</title>
+<meta name="description" content="Free online Base64 to SVG decoder. Paste a Base64 string or data URI to preview vector SVG markup and download it as an .svg file. 100% in-browser, no upload, no sign-up." />
+<link rel="canonical" href="https://image2base64.com/base64-to-svg" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
 <link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
@@ -16,9 +19,9 @@
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Image to Base64 Converter" />
-<meta property="og:title" content="Base64 to Image Converter — Free Online Decoder" />
-<meta property="og:description" content="Paste a Base64 string or data URI to preview and download the image. Runs 100% in your browser." />
-<meta property="og:url" content="https://image2base64.com/base64-to-image" />
+<meta property="og:title" content="Base64 to SVG Converter — Free Online Decoder" />
+<meta property="og:description" content="Paste a Base64 string or data URI to preview and download vector SVG markup. Runs 100% in your browser." />
+<meta property="og:url" content="https://image2base64.com/base64-to-svg" />
 <meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -35,23 +38,23 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "How do I convert a Base64 string back to an image?",
+      "name": "How do I convert a Base64 string to an SVG?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Paste the Base64 string or full data URI into the box and the decoder renders the image instantly. You can then download it as a normal file. If you paste a bare Base64 body without a data: prefix, the tool assumes PNG by default."
+        "text": "Paste the Base64 string or full data URI into the box and click Decode to SVG. The vector previews and you can download the .svg file or copy the markup."
       }
     },
     {
       "@type": "Question",
-      "name": "Do I need the data:image prefix?",
+      "name": "Why use SVG instead of PNG?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Not necessarily. A full data URI like data:image/png;base64,iVBOR... always works and carries the exact format. If you only have the raw Base64 body, the decoder will try it as a PNG, which works for most strings."
+        "text": "SVG is vector, so it stays sharp at any size and is usually smaller for line art and logos. PNG is better for detailed photos."
       }
     },
     {
       "@type": "Question",
-      "name": "Is the Base64 to image decoder private?",
+      "name": "Is the Base64 to SVG decoder private?",
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Yes. Decoding happens entirely in your browser. Nothing is uploaded, so your data stays on your device."
@@ -79,10 +82,10 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>Base64 to Image Converter</h1>
+      <h1>Base64 to SVG Converter</h1>
       <p class="lede">
-        Paste a <strong>Base64 string</strong> or full <strong>data URI</strong> to preview the image
-        instantly and download it as a PNG, JPG or GIF file.
+        Paste a <strong>Base64 string</strong> or full <strong>data URI</strong> to preview vector SVG markup
+        instantly and download it as an <strong>.svg</strong> file.
       </p>
       <p class="trust"><strong>100% client-side.</strong> Nothing is uploaded — decoding happens in your browser.</p>
     </div>
@@ -95,21 +98,22 @@
           <div class="field-head">
             <label for="b64-input">Paste Base64 or a data URI</label>
           </div>
+          <!-- Skeleton: for SVG, app.js can render the <img> AND surface the raw <svg> markup for copy/paste. -->
           <textarea id="b64-input" class="out" spellcheck="false"
-            placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...   — or just the raw Base64 body"></textarea>
+            placeholder="data:image/svg+xml;base64,PHN2ZyB4bWxucz0...   — or just the raw Base64 body"></textarea>
         </div>
-        <button id="decode" class="btn btn-primary" type="button">Decode to image</button>
+        <button id="decode" class="btn btn-primary" type="button">Decode to SVG</button>
 
         <p id="dec-error" class="error" hidden></p>
 
         <div id="dec-results" class="results" hidden>
           <div class="result-head">
-            <div class="preview-box"><img id="decoded-img" alt="Preview of the decoded Base64 image" width="120" height="120" /></div>
+            <div class="preview-box"><img id="decoded-img" alt="Preview of the decoded SVG image" width="120" height="120" /></div>
             <div class="meta" style="align-self:center">
-              <p class="muted" style="margin:0">Preview of your decoded image. Use the button below to save it.</p>
+              <p class="muted" style="margin:0">Preview of your decoded SVG. Use the button below to save it as an .svg file.</p>
             </div>
           </div>
-          <a id="download" class="btn btn-primary" download="decoded.png" href="#">Download image</a>
+          <a id="download" class="btn btn-primary" download="decoded.svg" href="#">Download SVG</a>
         </div>
       </div>
     </div>
@@ -117,24 +121,24 @@
 
   <section id="guide" class="content-section">
     <div class="wrap prose">
-      <h2>Base64 to image, explained</h2>
+      <h2>Base64 to SVG, explained</h2>
       <p>
-        A Base64 image string is just text that encodes an image's binary data. This decoder reverses the process:
-        paste the string and the browser reconstructs the original picture, which you can preview and save back to a
-        real file. It's the counterpart to the <a href="/">image to Base64</a> encoder.
+        SVG is different from raster formats: it's text-based vector markup, not pixels. This decoder turns a Base64 SVG
+        string back into editable <strong>.svg</strong> markup you can preview, copy, or download. Because SVG is vector,
+        it scales to any size without blur.
       </p>
+
+      <h3>When to choose SVG</h3>
+      <ul>
+        <li><strong>Icons, logos, illustrations.</strong> Crisp at every resolution.</li>
+        <li><strong>You need to edit the source.</strong> SVG is plain XML you can open and tweak.</li>
+        <li><strong>Small, reusable assets for CSS.</strong> Common in sprites and inline styles.</li>
+      </ul>
 
       <h3>What you can paste</h3>
       <ul>
-        <li><strong>A full data URI</strong> — <code>data:image/png;base64,iVBOR...</code>. This is the most reliable form because it names the exact format.</li>
-        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The decoder assumes PNG, which works for the majority of strings.</li>
-      </ul>
-
-      <h3>Common uses</h3>
-      <ul>
-        <li>Inspect a data URI you found in CSS, HTML or an API response.</li>
-        <li>Recover an image that was stored as a Base64 string in a database or config file.</li>
-        <li>Sanity-check the output of an encoder before shipping it.</li>
+        <li><strong>A full data URI</strong> — <code>data:image/svg+xml;base64,PHN2Zy...</code>. Names the exact format, most reliable.</li>
+        <li><strong>A bare Base64 body</strong> — decoded as SVG.</li>
       </ul>
 
       <h3>Private by design</h3>
@@ -155,10 +159,10 @@
         <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
         <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
+        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode to PNG/JPG/GIF (generic).</span></a>
         <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
         <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
         <a class="sib-card" href="base64-to-jpeg"><strong>Base64 to JPEG</strong><span>Decode and save as JPG.</span></a>
-        <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
         <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
       </div>
     </div>
@@ -168,12 +172,12 @@
     <div class="wrap">
       <h2>Frequently asked questions</h2>
       <details>
-        <summary>How do I convert a Base64 string back to an image?</summary>
-        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to image</em>. The image renders instantly and you can download it. A bare Base64 body with no <code>data:</code> prefix is assumed to be PNG.</p>
+        <summary>How do I convert a Base64 string to an SVG?</summary>
+        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to SVG</em>. The vector previews and you can download the .svg file or copy the markup.</p>
       </details>
       <details>
-        <summary>Do I need the <code>data:image</code> prefix?</summary>
-        <p>Not necessarily. A full data URI like <code>data:image/png;base64,iVBOR...</code> always works and carries the exact format. With only the raw body, the decoder tries it as a PNG, which works for most strings.</p>
+        <summary>Why use SVG instead of PNG?</summary>
+        <p>SVG is vector, so it stays sharp at any size and is usually smaller for line art and logos. PNG is better for detailed photos.</p>
       </details>
       <details>
         <summary>Is the decoder private?</summary>
