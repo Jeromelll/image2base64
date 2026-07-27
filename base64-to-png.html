@@ -41,7 +41,7 @@
       "name": "How do I convert a Base64 string to a PNG?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Paste the Base64 string or full data URI into the box and click Decode to PNG. The image renders instantly and you can download it as a .png file. A bare Base64 body with no data: prefix is assumed to be PNG."
+        "text": "Paste the Base64 string or full data URI into the box and click Convert to PNG. The tool detects the source image, converts it to PNG in your browser, and downloads a real .png file."
       }
     },
     {
@@ -100,9 +100,10 @@
           </div>
           <!-- Skeleton: app.js should force the download in the target format (e.g. canvas.toBlob('image/png')). -->
           <textarea id="b64-input" class="out" spellcheck="false"
+            data-output-mime="image/png" data-output-ext="png"
             placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...   — or just the raw Base64 body"></textarea>
         </div>
-        <button id="decode" class="btn btn-primary" type="button">Decode to PNG</button>
+        <button id="decode" class="btn btn-primary" type="button">Convert to PNG</button>
 
         <p id="dec-error" class="error" hidden></p>
 
@@ -123,8 +124,9 @@
     <div class="wrap prose">
       <h2>Base64 to PNG, explained</h2>
       <p>
-        A Base64 image string is just text that encodes an image's binary data. This decoder reverses the process for the
-        PNG format: paste the string, preview the picture, and save it back as a <strong>.png</strong> file. PNG is a
+        A Base64 image string is just text that encodes an image's binary data. This converter detects the source image,
+        renders it, and exports a real <strong>.png</strong> file in your browser. It accepts PNG, JPG, GIF, WebP and
+        SVG Base64 input. PNG is a
         lossless format that keeps every pixel exact and supports transparent backgrounds — ideal when you need a crisp
         logo, icon, or screenshot.
       </p>
@@ -139,7 +141,7 @@
       <h3>What you can paste</h3>
       <ul>
         <li><strong>A full data URI</strong> — <code>data:image/png;base64,iVBOR...</code>. This is the most reliable form because it names the exact format.</li>
-        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The decoder assumes PNG, which works for the majority of strings.</li>
+        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The source format is detected automatically.</li>
       </ul>
 
       <h3>Private by design</h3>
@@ -160,9 +162,8 @@
         <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
         <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
-        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode to PNG/JPG/GIF (generic).</span></a>
+        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Auto-detect PNG, JPG, GIF, WebP or SVG.</span></a>
         <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
-        <a class="sib-card" href="base64-to-jpeg"><strong>Base64 to JPEG</strong><span>Decode and save as JPG.</span></a>
         <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
         <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
         <a class="sib-card" href="base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
@@ -175,7 +176,7 @@
       <h2>Frequently asked questions</h2>
       <details>
         <summary>How do I convert a Base64 string to a PNG?</summary>
-        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to PNG</em>. The image renders instantly and you can download it as a .png file. A bare Base64 body with no <code>data:</code> prefix is assumed to be PNG.</p>
+        <p>Paste the Base64 string or full data URI into the box and click <em>Convert to PNG</em>. The source image is detected automatically and exported as a real .png file.</p>
       </details>
       <details>
         <summary>Does this decoder keep transparency?</summary>
@@ -207,7 +208,6 @@
         <a href="base64-to-image">Base64 to Image</a>
         <a href="base64-to-png">Base64 to PNG</a>
         <a href="base64-to-jpg">Base64 to JPG</a>
-        <a href="base64-to-jpeg">Base64 to JPEG</a>
         <a href="base64-to-svg">Base64 to SVG</a>
         <a href="base64-to-webp">Base64 to WebP</a>
         <a href="base64-to-gif">Base64 to GIF</a>

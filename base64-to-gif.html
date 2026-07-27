@@ -41,7 +41,7 @@
       "name": "How do I convert a Base64 string to a GIF?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Paste the Base64 string or full data URI into the box and click Decode to GIF. The image renders instantly and you can download it as a .gif file. A bare Base64 body with no data: prefix is assumed to be GIF."
+        "text": "Paste the Base64 string or full data URI into the box and click Decode to GIF. The tool verifies that the decoded bytes are a GIF, previews it, and downloads the original .gif file."
       }
     },
     {
@@ -49,7 +49,7 @@
       "name": "Can this decoder handle animated GIFs?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The browser's image decoder shows the first frame, so the downloaded .gif contains a single static frame rather than the full animation. For animated GIFs, keep the original file or use a dedicated GIF tool."
+        "text": "Yes. The decoder downloads the original GIF bytes rather than redrawing the image, so every animation frame is preserved."
       }
     },
     {
@@ -99,6 +99,7 @@
             <label for="b64-input">Paste Base64 or a data URI</label>
           </div>
           <textarea id="b64-input" class="out" spellcheck="false"
+            data-accept-mime="image/gif" data-output-ext="gif"
             placeholder="data:image/gif;base64,R0lGODlhAQABAIAAAAAAAP///yH5BAEAAAAALAAAAAABAAEAAAIBRAA7   — or just the raw Base64 body"></textarea>
         </div>
         <button id="decode" class="btn btn-primary" type="button">Decode to GIF</button>
@@ -138,14 +139,13 @@
       <h3>What you can paste</h3>
       <ul>
         <li><strong>A full data URI</strong> — <code>data:image/gif;base64,R0lGOD...</code>. This is the most reliable form because it names the exact format.</li>
-        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The decoder assumes GIF, which works for the majority of strings.</li>
+        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The tool verifies the GIF file signature before showing a result.</li>
       </ul>
 
       <h3>A note on animated GIFs</h3>
       <p>
-        Browsers decode a GIF <em>image</em> to its first frame, so the downloaded .gif holds that single frame rather
-        than the full animation. If you need the animation preserved, keep the original file — the Base64 string itself
-        already contains every frame.
+        The decoder saves the original GIF bytes instead of redrawing the preview through a canvas. That means an
+        animated GIF keeps every frame, its timing, and its looping behavior in the downloaded file.
       </p>
 
       <h3>Private by design</h3>
@@ -166,10 +166,9 @@
         <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
         <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
-        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode to PNG/JPG/GIF (generic).</span></a>
+        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Auto-detect PNG, JPG, GIF, WebP or SVG.</span></a>
         <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
         <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
-        <a class="sib-card" href="base64-to-jpeg"><strong>Base64 to JPEG</strong><span>Decode and save as JPG.</span></a>
         <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
         <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
       </div>
@@ -181,11 +180,11 @@
       <h2>Frequently asked questions</h2>
       <details>
         <summary>How do I convert a Base64 string to a GIF?</summary>
-        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to GIF</em>. The image renders instantly and you can download it as a .gif file. A bare Base64 body with no <code>data:</code> prefix is assumed to be GIF.</p>
+        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to GIF</em>. The tool verifies the GIF signature, previews it, and downloads the original .gif bytes.</p>
       </details>
       <details>
         <summary>Can this decoder handle animated GIFs?</summary>
-        <p>No — the browser's image decoder shows only the first frame, so the downloaded .gif contains a single static frame. For animated GIFs, keep the original file or use a dedicated GIF tool.</p>
+        <p>Yes. The downloaded file uses the original GIF bytes, so every animation frame, delay, and loop setting is preserved.</p>
       </details>
       <details>
         <summary>Is the decoder private?</summary>
@@ -213,7 +212,6 @@
         <a href="base64-to-image">Base64 to Image</a>
         <a href="base64-to-png">Base64 to PNG</a>
         <a href="base64-to-jpg">Base64 to JPG</a>
-        <a href="base64-to-jpeg">Base64 to JPEG</a>
         <a href="base64-to-svg">Base64 to SVG</a>
         <a href="base64-to-webp">Base64 to WebP</a>
         <a href="base64-to-gif">Base64 to GIF</a>

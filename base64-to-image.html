@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Base64 to Image Converter — Free Online Decoder &amp; Viewer</title>
-<meta name="description" content="Free online Base64 to image decoder. Paste a Base64 string or data URI to preview the image and download it as a PNG, JPG or GIF file. 100% in-browser, no upload, no sign-up." />
+<meta name="description" content="Free online Base64 to image decoder. Paste a Base64 string or data URI to detect, preview and download PNG, JPG, GIF, WebP or SVG images. Private and in-browser." />
 <link rel="canonical" href="https://image2base64.com/base64-to-image" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -38,7 +38,7 @@
       "name": "How do I convert a Base64 string back to an image?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Paste the Base64 string or full data URI into the box and the decoder renders the image instantly. You can then download it as a normal file. If you paste a bare Base64 body without a data: prefix, the tool assumes PNG by default."
+        "text": "Paste the Base64 string or full data URI into the box and the decoder detects PNG, JPG, GIF, WebP or SVG from the image data. It then renders the image and lets you download the original bytes in the detected format."
       }
     },
     {
@@ -46,7 +46,7 @@
       "name": "Do I need the data:image prefix?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Not necessarily. A full data URI like data:image/png;base64,iVBOR... always works and carries the exact format. If you only have the raw Base64 body, the decoder will try it as a PNG, which works for most strings."
+        "text": "No. A full data URI like data:image/png;base64,iVBOR... includes a format label, but a raw Base64 body also works because the decoder checks the decoded file signature instead of assuming PNG."
       }
     },
     {
@@ -82,7 +82,7 @@
       <h1>Base64 to Image Converter</h1>
       <p class="lede">
         Paste a <strong>Base64 string</strong> or full <strong>data URI</strong> to preview the image
-        instantly and download it as a PNG, JPG or GIF file.
+        instantly and download it as a PNG, JPG, GIF, WebP or SVG file.
       </p>
       <p class="trust"><strong>100% client-side.</strong> Nothing is uploaded — decoding happens in your browser.</p>
     </div>
@@ -106,7 +106,7 @@
           <div class="result-head">
             <div class="preview-box"><img id="decoded-img" alt="Preview of the decoded Base64 image" width="120" height="120" /></div>
             <div class="meta" style="align-self:center">
-              <p class="muted" style="margin:0">Preview of your decoded image. Use the button below to save it.</p>
+              <p class="muted" style="margin:0">The detected image format and download details will appear here.</p>
             </div>
           </div>
           <a id="download" class="btn btn-primary" download="decoded.png" href="#">Download image</a>
@@ -121,14 +121,28 @@
       <p>
         A Base64 image string is just text that encodes an image's binary data. This decoder reverses the process:
         paste the string and the browser reconstructs the original picture, which you can preview and save back to a
-        real file. It's the counterpart to the <a href="/">image to Base64</a> encoder.
+        real file. The decoder identifies PNG, JPG, GIF, WebP and SVG from the decoded bytes, so it also works when a
+        raw Base64 value has no MIME type. It's the counterpart to the <a href="/">image to Base64</a> encoder.
       </p>
 
       <h3>What you can paste</h3>
       <ul>
         <li><strong>A full data URI</strong> — <code>data:image/png;base64,iVBOR...</code>. This is the most reliable form because it names the exact format.</li>
-        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The decoder assumes PNG, which works for the majority of strings.</li>
+        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The decoder detects the format from its file signature.</li>
       </ul>
+
+      <h3>How format detection works</h3>
+      <p>
+        PNG, JPG, GIF and WebP files begin with recognizable binary signatures. SVG is detected from its XML or
+        <code>&lt;svg&gt;</code> markup. If the bytes do not match a supported image, the tool shows an error instead
+        of downloading a file with a guessed extension.
+      </p>
+
+      <h3>Example Base64 image</h3>
+      <p>
+        A complete value starts like <code>data:image/png;base64,iVBORw0KGgo...</code>. You may paste that entire
+        data URI or only the part after the comma. Spaces and line breaks are ignored, and URL-safe Base64 is accepted.
+      </p>
 
       <h3>Common uses</h3>
       <ul>
@@ -157,7 +171,6 @@
         <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
         <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
         <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
-        <a class="sib-card" href="base64-to-jpeg"><strong>Base64 to JPEG</strong><span>Decode and save as JPG.</span></a>
         <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
         <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
         <a class="sib-card" href="base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
@@ -170,11 +183,11 @@
       <h2>Frequently asked questions</h2>
       <details>
         <summary>How do I convert a Base64 string back to an image?</summary>
-        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to image</em>. The image renders instantly and you can download it. A bare Base64 body with no <code>data:</code> prefix is assumed to be PNG.</p>
+        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to image</em>. The tool detects PNG, JPG, GIF, WebP or SVG, renders a preview, and downloads the original image bytes with the matching extension.</p>
       </details>
       <details>
         <summary>Do I need the <code>data:image</code> prefix?</summary>
-        <p>Not necessarily. A full data URI like <code>data:image/png;base64,iVBOR...</code> always works and carries the exact format. With only the raw body, the decoder tries it as a PNG, which works for most strings.</p>
+        <p>No. A full data URI like <code>data:image/png;base64,iVBOR...</code> includes a format label, but a raw Base64 body also works because the decoder checks the decoded file signature.</p>
       </details>
       <details>
         <summary>Is the decoder private?</summary>
@@ -202,7 +215,6 @@
         <a href="base64-to-image">Base64 to Image</a>
         <a href="base64-to-png">Base64 to PNG</a>
         <a href="base64-to-jpg">Base64 to JPG</a>
-        <a href="base64-to-jpeg">Base64 to JPEG</a>
         <a href="base64-to-svg">Base64 to SVG</a>
         <a href="base64-to-webp">Base64 to WebP</a>
         <a href="base64-to-gif">Base64 to GIF</a>

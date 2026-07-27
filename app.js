@@ -182,6 +182,12 @@
     var dlBtn = $("#download");
     var errBox = $("#dec-error");
     var resWrap = $("#dec-results");
+    var resultNote = resWrap ? $(".meta .muted", resWrap) : null;
+    var outputMime = (input.getAttribute("data-output-mime") || "").toLowerCase();
+    var outputExt = (input.getAttribute("data-output-ext") || "").toLowerCase();
+    var acceptMime = (input.getAttribute("data-accept-mime") || "").toLowerCase();
+    var quality = parseFloat(input.getAttribute("data-quality") || "0.92");
+    var activeObjectUrl = "";
 
     function showError(msg) {
       if (!errBox) return;
@@ -189,35 +195,196 @@
       errBox.hidden = !msg;
     }
 
+    function revokeActiveUrl() {
+      if (!activeObjectUrl) return;
+      URL.revokeObjectURL(activeObjectUrl);
+      activeObjectUrl = "";
+    }
+
+    function mimeLabel(mime) {
+      var labels = {
+        "image/png": "PNG",
+        "image/jpeg": "JPG",
+        "image/gif": "GIF",
+        "image/webp": "WebP",
+        "image/svg+xml": "SVG"
+      };
+      return labels[mime] || mime || "image";
+    }
+
+    function extensionForMime(mime) {
+      var extensions = {
+        "image/png": "png",
+        "image/jpeg": "jpg",
+        "image/gif": "gif",
+        "image/webp": "webp",
+        "image/svg+xml": "svg"
+      };
+      return extensions[mime] || "img";
+    }
+
+    function detectMime(bytes) {
+      if (bytes.length >= 8 &&
+          bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 &&
+          bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) {
+        return "image/png";
+      }
+      if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+        return "image/jpeg";
+      }
+      if (bytes.length >= 6) {
+        var gifHeader = String.fromCharCode.apply(null, bytes.slice(0, 6));
+        if (gifHeader === "GIF87a" || gifHeader === "GIF89a") return "image/gif";
+      }
+      if (bytes.length >= 12) {
+        var riff = String.fromCharCode.apply(null, bytes.slice(0, 4));
+        var webp = String.fromCharCode.apply(null, bytes.slice(8, 12));
+        if (riff === "RIFF" && webp === "WEBP") return "image/webp";
+      }
+      try {
+        var text = new TextDecoder("utf-8").decode(bytes.slice(0, 2048))
+          .replace(/^\uFEFF/, "")
+          .trim();
+        if (/^(?:<\?xml[\s\S]*?\?>\s*)?<svg[\s>]/i.test(text)) return "image/svg+xml";
+      } catch (e) {}
+      return "";
+    }
+
+    function parseBase64(value) {
+      var declaredMime = "";
+      var body = value;
+      var dataUri = value.match(/^data:([^;,]+)?(?:;charset=[^;,]+)?;base64,([\s\S]+)$/i);
+      if (dataUri) {
+        declaredMime = (dataUri[1] || "").toLowerCase();
+        body = dataUri[2];
+      } else if (/^data:/i.test(value)) {
+        throw new Error("Use a Base64 data URI. URL-encoded data URIs are not supported here.");
+      }
+
+      body = body.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
+      if (!body || /[^a-z0-9+/=]/i.test(body)) {
+        throw new Error("The input contains characters that are not valid Base64.");
+      }
+      body = body.replace(/=+$/, "");
+      while (body.length % 4) body += "=";
+
+      var binary;
+      try {
+        binary = atob(body);
+      } catch (e) {
+        throw new Error("The Base64 string is incomplete or malformed.");
+      }
+      if (!binary.length) throw new Error("The Base64 string is empty.");
+
+      var bytes = new Uint8Array(binary.length);
+      for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+      var detectedMime = detectMime(bytes);
+      var mime = detectedMime || declaredMime;
+      if (!/^image\//.test(mime)) {
+        throw new Error("This Base64 data does not appear to contain a supported image.");
+      }
+      return { bytes: bytes, mime: mime };
+    }
+
+    function loadImage(url) {
+      return new Promise(function (resolve, reject) {
+        var source = new Image();
+        source.onload = function () { resolve(source); };
+        source.onerror = function () { reject(new Error("The decoded bytes are not a valid browser-readable image.")); };
+        source.src = url;
+      });
+    }
+
+    function canvasBlob(source, mime) {
+      return new Promise(function (resolve, reject) {
+        var canvas = document.createElement("canvas");
+        canvas.width = source.naturalWidth;
+        canvas.height = source.naturalHeight;
+        var ctx = canvas.getContext("2d");
+        if (!ctx || !canvas.width || !canvas.height) {
+          reject(new Error("The decoded image has invalid dimensions."));
+          return;
+        }
+        if (mime === "image/jpeg") {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        ctx.drawImage(source, 0, 0);
+        canvas.toBlob(function (blob) {
+          if (!blob || blob.type !== mime) {
+            reject(new Error(mimeLabel(mime) + " export is not supported by this browser."));
+            return;
+          }
+          resolve(blob);
+        }, mime, quality);
+      });
+    }
+
+    function showResult(blob, mime, note) {
+      revokeActiveUrl();
+      activeObjectUrl = URL.createObjectURL(blob);
+      img.src = activeObjectUrl;
+      if (dlBtn) {
+        dlBtn.href = activeObjectUrl;
+        dlBtn.setAttribute("download", "decoded." + (outputExt || extensionForMime(mime)));
+      }
+      if (resultNote) resultNote.textContent = note;
+      if (resWrap) resWrap.hidden = false;
+      resWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+    }
+
     function decode() {
       showError("");
       var v = (input.value || "").trim();
       if (!v) { showError("Paste a Base64 string or data URI first."); return; }
+      revokeActiveUrl();
+      if (resWrap) resWrap.hidden = true;
 
-      // Accept either a full data URI or a bare base64 body.
-      var src = v;
-      if (v.indexOf("data:") !== 0) {
-        // Guess a mime from a leading hint, default to png.
-        src = "data:image/png;base64," + v.replace(/\s+/g, "");
+      var parsed;
+      try {
+        parsed = parseBase64(v);
+      } catch (e) {
+        showError(e.message || "The Base64 string could not be decoded.");
+        return;
       }
-      // Validate by attempting to load it.
-      img.onerror = function () {
-        showError("That string didn't decode to a valid image. Check that you pasted the full Base64 body.");
-        if (resWrap) resWrap.hidden = true;
-      };
-      img.onload = function () {
-        if (resWrap) resWrap.hidden = false;
-        if (dlBtn) {
-          dlBtn.href = src;
-          var m = src.match(/^data:image\/([a-z0-9.+-]+)/i);
-          dlBtn.setAttribute("download", "decoded." + ((m && m[1]) || "png").replace("jpeg", "jpg"));
+
+      if (acceptMime && parsed.mime !== acceptMime) {
+        showError(
+          "This page accepts " + mimeLabel(acceptMime) + " data. The pasted image is " +
+          mimeLabel(parsed.mime) + "."
+        );
+        return;
+      }
+
+      var sourceBlob = new Blob([parsed.bytes], { type: parsed.mime });
+      var sourceUrl = URL.createObjectURL(sourceBlob);
+      loadImage(sourceUrl).then(function (source) {
+        if (!outputMime) {
+          showResult(
+            sourceBlob,
+            parsed.mime,
+            "Detected " + mimeLabel(parsed.mime) + ". Preview it here or download the original image bytes."
+          );
+          return null;
         }
-        resWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
-      };
-      img.src = src;
+        return canvasBlob(source, outputMime).then(function (convertedBlob) {
+          showResult(
+            convertedBlob,
+            outputMime,
+            "Converted " + mimeLabel(parsed.mime) + " to " + mimeLabel(outputMime) +
+            " in your browser."
+          );
+        });
+      }).catch(function (e) {
+        showError(e.message || "The decoded image could not be processed.");
+        if (resWrap) resWrap.hidden = true;
+      }).finally(function () {
+        URL.revokeObjectURL(sourceUrl);
+      });
     }
 
     if (decodeBtn) decodeBtn.addEventListener("click", decode);
+    window.addEventListener("beforeunload", revokeActiveUrl);
     wireCopyButtons(input.closest("section") || document);
   }
 

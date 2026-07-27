@@ -7,7 +7,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Base64 to SVG Converter — Free Online Decoder &amp; Viewer</title>
-<meta name="description" content="Free online Base64 to SVG decoder. Paste a Base64 string or data URI to preview vector SVG markup and download it as an .svg file. 100% in-browser, no upload, no sign-up." />
+<meta name="description" content="Free online Base64 to SVG decoder. Paste real SVG Base64 or a data URI to verify, preview and download the original .svg file. Private and in-browser." />
 <link rel="canonical" href="https://image2base64.com/base64-to-svg" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -41,7 +41,7 @@
       "name": "How do I convert a Base64 string to an SVG?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Paste the Base64 string or full data URI into the box and click Decode to SVG. The vector previews and you can download the .svg file or copy the markup."
+        "text": "Paste the Base64 string or full data URI into the box and click Decode to SVG. The tool verifies that the decoded data is SVG, previews the vector, and downloads the original .svg file."
       }
     },
     {
@@ -100,6 +100,7 @@
           </div>
           <!-- Skeleton: for SVG, app.js can render the <img> AND surface the raw <svg> markup for copy/paste. -->
           <textarea id="b64-input" class="out" spellcheck="false"
+            data-accept-mime="image/svg+xml" data-output-ext="svg"
             placeholder="data:image/svg+xml;base64,PHN2ZyB4bWxucz0...   — or just the raw Base64 body"></textarea>
         </div>
         <button id="decode" class="btn btn-primary" type="button">Decode to SVG</button>
@@ -124,7 +125,7 @@
       <h2>Base64 to SVG, explained</h2>
       <p>
         SVG is different from raster formats: it's text-based vector markup, not pixels. This decoder turns a Base64 SVG
-        string back into editable <strong>.svg</strong> markup you can preview, copy, or download. Because SVG is vector,
+        string back into an <strong>.svg</strong> file you can preview or download. Because SVG is vector,
         it scales to any size without blur.
       </p>
 
@@ -138,7 +139,7 @@
       <h3>What you can paste</h3>
       <ul>
         <li><strong>A full data URI</strong> — <code>data:image/svg+xml;base64,PHN2Zy...</code>. Names the exact format, most reliable.</li>
-        <li><strong>A bare Base64 body</strong> — decoded as SVG.</li>
+        <li><strong>A bare Base64 body</strong> — verified as SVG before it is previewed or downloaded.</li>
       </ul>
 
       <h3>Private by design</h3>
@@ -159,10 +160,9 @@
         <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
         <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
-        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode to PNG/JPG/GIF (generic).</span></a>
+        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Auto-detect PNG, JPG, GIF, WebP or SVG.</span></a>
         <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
         <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
-        <a class="sib-card" href="base64-to-jpeg"><strong>Base64 to JPEG</strong><span>Decode and save as JPG.</span></a>
         <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
         <a class="sib-card" href="base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
       </div>
@@ -174,7 +174,7 @@
       <h2>Frequently asked questions</h2>
       <details>
         <summary>How do I convert a Base64 string to an SVG?</summary>
-        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to SVG</em>. The vector previews and you can download the .svg file or copy the markup.</p>
+        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to SVG</em>. The tool verifies the SVG markup, previews the vector, and downloads the original .svg file.</p>
       </details>
       <details>
         <summary>Why use SVG instead of PNG?</summary>
@@ -206,7 +206,6 @@
         <a href="base64-to-image">Base64 to Image</a>
         <a href="base64-to-png">Base64 to PNG</a>
         <a href="base64-to-jpg">Base64 to JPG</a>
-        <a href="base64-to-jpeg">Base64 to JPEG</a>
         <a href="base64-to-svg">Base64 to SVG</a>
         <a href="base64-to-webp">Base64 to WebP</a>
         <a href="base64-to-gif">Base64 to GIF</a>

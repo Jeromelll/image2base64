@@ -6,8 +6,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Base64 to JPG Converter — Free Online Decoder &amp; Download</title>
-<meta name="description" content="Free online Base64 to JPG decoder. Paste a Base64 string or data URI to preview the image and download it as a JPEG file. Smaller files for photos, 100% in-browser, no upload." />
+<title>Base64 to JPG / JPEG Converter — Free Online Tool</title>
+<meta name="description" content="Convert Base64 images to real JPG or JPEG files online. Paste PNG, WebP, GIF, SVG or JPEG Base64, preview it, and download a private in-browser JPG." />
 <link rel="canonical" href="https://image2base64.com/base64-to-jpg" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -19,7 +19,7 @@
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Image to Base64 Converter" />
-<meta property="og:title" content="Base64 to JPG Converter — Free Online Decoder" />
+<meta property="og:title" content="Base64 to JPG / JPEG Converter — Free Online Tool" />
 <meta property="og:description" content="Paste a Base64 string or data URI to preview and download a JPEG file. Runs 100% in your browser." />
 <meta property="og:url" content="https://image2base64.com/base64-to-jpg" />
 <meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
@@ -41,7 +41,7 @@
       "name": "How do I convert a Base64 string to a JPG?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Paste the Base64 string or full data URI into the box and click Decode to JPG. The image renders instantly and you can download it as a .jpg file."
+        "text": "Paste the Base64 string or full data URI into the box and click Convert to JPG. The tool detects the source image, converts it to JPEG in your browser, and downloads a real .jpg file."
       }
     },
     {
@@ -82,7 +82,7 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>Base64 to JPG Converter</h1>
+      <h1>Base64 to JPG / JPEG Converter</h1>
       <p class="lede">
         Paste a <strong>Base64 string</strong> or full <strong>data URI</strong> to preview the image
         instantly and download it as a <strong>JPG</strong> file — smaller and ready for the web.
@@ -100,9 +100,10 @@
           </div>
           <!-- Skeleton: app.js should force the download in the target format (e.g. canvas.toBlob('image/jpeg')). -->
           <textarea id="b64-input" class="out" spellcheck="false"
+            data-output-mime="image/jpeg" data-output-ext="jpg" data-quality="0.92"
             placeholder="data:image/jpeg;base64,/9j/4AAQSkZJRg...   — or just the raw Base64 body"></textarea>
         </div>
-        <button id="decode" class="btn btn-primary" type="button">Decode to JPG</button>
+        <button id="decode" class="btn btn-primary" type="button">Convert to JPG</button>
 
         <p id="dec-error" class="error" hidden></p>
 
@@ -123,9 +124,9 @@
     <div class="wrap prose">
       <h2>Base64 to JPG, explained</h2>
       <p>
-        This decoder turns a Base64 image string back into a <strong>.jpg</strong> file. JPG (or JPEG) is a lossy format
-        that shrinks file size dramatically, which makes it the right choice for photographs and complex images where a
-        little quality loss is invisible to the eye.
+        This converter detects PNG, JPG, GIF, WebP or SVG Base64 input and exports a real
+        <strong>.jpg</strong> file. JPG (or JPEG) is a lossy format that shrinks file size dramatically, which makes it
+        the right choice for photographs and complex images where a little quality loss is invisible to the eye.
       </p>
 
       <h3>When to choose JPG</h3>
@@ -137,8 +138,8 @@
 
       <h3>What you can paste</h3>
       <ul>
-        <li><strong>A full data URI</strong> — <code>data:image/jpeg;base64,/9j/4AAQ...</code>. Names the exact format, most reliable.</li>
-        <li><strong>A bare Base64 body</strong> — decoded and saved as a JPG.</li>
+        <li><strong>A full data URI</strong> — for example, <code>data:image/png;base64,iVBOR...</code> or <code>data:image/jpeg;base64,/9j/...</code>.</li>
+        <li><strong>A bare Base64 body</strong> — the source format is detected automatically before conversion.</li>
       </ul>
 
       <h3>Private by design</h3>
@@ -159,9 +160,8 @@
         <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
         <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
-        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode to PNG/JPG/GIF (generic).</span></a>
+        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Auto-detect PNG, JPG, GIF, WebP or SVG.</span></a>
         <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
-        <a class="sib-card" href="base64-to-jpeg"><strong>Base64 to JPEG</strong><span>Decode and save as JPG.</span></a>
         <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
         <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
         <a class="sib-card" href="base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
@@ -174,7 +174,7 @@
       <h2>Frequently asked questions</h2>
       <details>
         <summary>How do I convert a Base64 string to a JPG?</summary>
-        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to JPG</em>. The image renders instantly and you can download it as a .jpg file.</p>
+        <p>Paste the Base64 string or full data URI into the box and click <em>Convert to JPG</em>. The source image is detected automatically and exported as a real .jpg file.</p>
       </details>
       <details>
         <summary>Does JPG keep transparency?</summary>
@@ -206,7 +206,6 @@
         <a href="base64-to-image">Base64 to Image</a>
         <a href="base64-to-png">Base64 to PNG</a>
         <a href="base64-to-jpg">Base64 to JPG</a>
-        <a href="base64-to-jpeg">Base64 to JPEG</a>
         <a href="base64-to-svg">Base64 to SVG</a>
         <a href="base64-to-webp">Base64 to WebP</a>
         <a href="base64-to-gif">Base64 to GIF</a>

@@ -7,7 +7,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Base64 to WebP Converter — Free Online Decoder &amp; Download</title>
-<meta name="description" content="Free online Base64 to WebP decoder. Paste a Base64 string or data URI to preview the image and download it as a WebP file. Smaller than PNG/JPG, transparency supported, 100% in-browser." />
+<meta name="description" content="Convert Base64 images to real WebP files online. Paste PNG, JPG, GIF, SVG or WebP Base64, preview it, and download a private in-browser WebP." />
 <link rel="canonical" href="https://image2base64.com/base64-to-webp" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -41,7 +41,7 @@
       "name": "How do I convert a Base64 string to a WebP?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Paste the Base64 string or full data URI into the box and click Decode to WebP. The image renders instantly and you can download it as a .webp file."
+        "text": "Paste the Base64 string or full data URI into the box and click Convert to WebP. The tool detects the source image, converts it in your browser, and downloads a real .webp file."
       }
     },
     {
@@ -100,9 +100,10 @@
           </div>
           <!-- Skeleton: app.js should force the download in the target format (e.g. canvas.toBlob('image/webp')). -->
           <textarea id="b64-input" class="out" spellcheck="false"
+            data-output-mime="image/webp" data-output-ext="webp" data-quality="0.9"
             placeholder="data:image/webp;base64,UklGRh4AAABXRUJQVlA4T...   — or just the raw Base64 body"></textarea>
         </div>
-        <button id="decode" class="btn btn-primary" type="button">Decode to WebP</button>
+        <button id="decode" class="btn btn-primary" type="button">Convert to WebP</button>
 
         <p id="dec-error" class="error" hidden></p>
 
@@ -124,7 +125,8 @@
       <h2>Base64 to WebP, explained</h2>
       <p>
         WebP is a modern format that often beats both PNG and JPG on file size while keeping quality and transparency.
-        This decoder turns a Base64 WebP string back into a downloadable <strong>.webp</strong> file.
+        This converter detects PNG, JPG, GIF, WebP or SVG Base64 input and exports a real
+        <strong>.webp</strong> file in your browser.
       </p>
 
       <h3>When to choose WebP</h3>
@@ -136,8 +138,8 @@
 
       <h3>What you can paste</h3>
       <ul>
-        <li><strong>A full data URI</strong> — <code>data:image/webp;base64,UklGR...</code>. Names the exact format, most reliable.</li>
-        <li><strong>A bare Base64 body</strong> — decoded as WebP.</li>
+        <li><strong>A full data URI</strong> — for example, <code>data:image/png;base64,iVBOR...</code> or <code>data:image/webp;base64,UklGR...</code>.</li>
+        <li><strong>A bare Base64 body</strong> — the source format is detected automatically before conversion.</li>
       </ul>
 
       <h3>Private by design</h3>
@@ -158,10 +160,9 @@
         <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
         <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
-        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode to PNG/JPG/GIF (generic).</span></a>
+        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Auto-detect PNG, JPG, GIF, WebP or SVG.</span></a>
         <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
         <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
-        <a class="sib-card" href="base64-to-jpeg"><strong>Base64 to JPEG</strong><span>Decode and save as JPG.</span></a>
         <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
         <a class="sib-card" href="base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
       </div>
@@ -173,7 +174,7 @@
       <h2>Frequently asked questions</h2>
       <details>
         <summary>How do I convert a Base64 string to a WebP?</summary>
-        <p>Paste the Base64 string or full data URI into the box and click <em>Decode to WebP</em>. The image renders instantly and you can download it as a .webp file.</p>
+        <p>Paste the Base64 string or full data URI into the box and click <em>Convert to WebP</em>. The source image is detected automatically and exported as a real .webp file.</p>
       </details>
       <details>
         <summary>Why use WebP over PNG or JPG?</summary>
@@ -205,7 +206,6 @@
         <a href="base64-to-image">Base64 to Image</a>
         <a href="base64-to-png">Base64 to PNG</a>
         <a href="base64-to-jpg">Base64 to JPG</a>
-        <a href="base64-to-jpeg">Base64 to JPEG</a>
         <a href="base64-to-svg">Base64 to SVG</a>
         <a href="base64-to-webp">Base64 to WebP</a>
         <a href="base64-to-gif">Base64 to GIF</a>
