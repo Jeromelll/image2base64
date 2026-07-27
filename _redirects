@@ -1,4 +1,0 @@
-# Force HTTPS and drop the www prefix — consolidate to https://image2base64.com
-# Cloudflare Pages / Netlify both read this file.
-http://image2base64.com/* https://image2base64.com/:splat 301
-https://www.image2base64.com/* https://image2base64.com/:splat 301
