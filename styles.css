@@ -35,13 +35,25 @@ code{font-family:var(--mono);font-size:.88em;background:#eef0f6;padding:.12em .4
 .nav{display:flex;gap:1.3rem}
 .nav a{text-decoration:none;color:var(--ink-soft);font-weight:500;font-size:.92rem}
 .nav a:hover{color:var(--brand)}
-@media(max-width:640px){.nav{display:none}}
 
 /* Hero */
 .hero{padding:60px 0 8px;text-align:center;background:
   radial-gradient(1100px 360px at 50% -20%, #e8ebff 0%, rgba(232,235,255,0) 70%)}
 .eyebrow{display:inline-block;color:var(--brand-dark);font-weight:600;font-size:.8rem;letter-spacing:.03em;background:#eceeff;border:1px solid #dfe3ff;padding:.3em .9em;border-radius:999px;margin:0 0 16px}
-.hero h1{font-size:clamp(2rem,5vw,3rem);margin:0 0 16px}
+.hero h1{font-size:clamp(2rem,5vw,3rem);margin:0 0 16px;word-break:break-word;overflow-wrap:anywhere}
+
+@media(max-width:640px){
+  .nav{display:none}
+  .hero{padding-top:42px}
+  .hero h1{font-size:1.32rem;line-height:1.2;white-space:normal !important}
+  .eyebrow{font-size:.72rem;padding:.25em .7em}
+  .result-head{flex-direction:column;align-items:center;gap:14px}
+  .preview-box{width:160px;height:160px}
+  .preview-box img{width:160px;height:160px}
+  .meta{width:100%;grid-template-columns:1fr}
+  .copy{padding:.55em 1.1em;font-size:.9rem;min-height:40px}
+  .btn{padding:.72em 1.25em;font-size:1rem;min-height:44px}
+}
 .lede{font-size:1.1rem;color:var(--ink-soft);max-width:660px;margin:0 auto 6px}
 .trust{color:var(--muted);font-size:.9rem;margin:14px auto 0}
 .trust strong{color:var(--accent)}

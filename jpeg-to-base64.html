@@ -3,9 +3,9 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>GIF to Base64 Converter - Encode and Copy Data URI, No Upload</title>
-<meta name="description" content="Convert a GIF to Base64 in your browser. Get the data URI and ready-to-paste snippets for the animation - 100% client-side, nothing uploaded." />
-<link rel="canonical" href="https://image2base64.com/gif-to-base64" />
+<title>JPEG to Base64 Converter — Free Online JPEG Encoder</title>
+<meta name="description" content="Free online JPEG to Base64 converter. Drag &amp; drop a JPEG photo and instantly copy its Base64 string or data URI for HTML, CSS or JSON. 100% in-browser, no upload, no sign-up." />
+<link rel="canonical" href="https://image2base64.com/jpeg-to-base64" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
 <link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
@@ -16,9 +16,9 @@
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Image to Base64 Converter" />
-<meta property="og:title" content="GIF to Base64 Converter - Encode and Copy Data URI, No Upload" />
-<meta property="og:description" content="Encode GIF to Base64 entirely in your browser. Copy the data URI or snippets - no upload, no sign-up." />
-<meta property="og:url" content="https://image2base64.com/gif-to-base64" />
+<meta property="og:title" content="JPEG to Base64 Converter — Free Online JPEG Encoder" />
+<meta property="og:description" content="Drag &amp; drop a JPEG and copy its Base64 data URI. Runs 100% in your browser." />
+<meta property="og:url" content="https://image2base64.com/jpeg-to-base64" />
 <meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -35,26 +35,26 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "What does a GIF Base64 string start with?",
+      "name": "What does a JPEG Base64 string start with?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A GIF data URI starts with data:image/gif;base64, followed by the encoded body, which commonly begins with R0lGOD — the Base64 form of a GIF87a or GIF89a header."
+        "text": "A JPEG data URI starts with data:image/jpeg;base64, followed by the encoded body, which typically begins with /9j/ — the Base64 signature of the JPEG file header."
       }
     },
     {
       "@type": "Question",
-      "name": "Will a Base64 GIF work in every browser?",
+      "name": "Should I inline a large JPEG photo as Base64?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A Base64 GIF data URI displays in any browser that supports GIF, which today is all modern browsers (Chrome, Firefox, Safari, Edge). Encoding to Base64 does not change format support — it only changes how the same GIF bytes are delivered."
+        "text": "Usually not. Base64 adds about 33% to the file size and inlined images can't be cached separately by the browser. For large photos keep a normal .jpg file; reserve Base64 for small images or single-file deliverables."
       }
     },
     {
       "@type": "Question",
-      "name": "Is the GIF to Base64 conversion private?",
+      "name": "Is the JPEG to Base64 conversion private?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Everything happens in your browser with the FileReader API. The GIF file is never uploaded to any server."
+        "text": "Yes. Everything happens in your browser with the FileReader API. The JPEG is never uploaded to any server."
       }
     }
   ]
@@ -65,9 +65,9 @@
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "GIF to Base64 Converter",
-  "url": "https://image2base64.com/gif-to-base64",
-  "description": "Free GIF to Base64 Converter — 100% client-side, no upload, no server. Convert instantly in your browser with drag & drop and copy-paste output.",
+  "name": "JPEG to Base64 Converter",
+  "url": "https://image2base64.com/jpeg-to-base64",
+  "description": "Free JPEG to Base64 Converter — 100% client-side, no upload, no server. Convert instantly in your browser with drag & drop and copy-paste output.",
   "operatingSystem": "Web",
   "applicationCategory": "UtilitiesApplication",
   "applicationSubCategory": "ImageConverter",
@@ -104,31 +104,31 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>GIF to Base64 Converter</h1>
+      <h1>JPEG to Base64 Converter</h1>
       <p class="lede">
-        Drag in a <strong>GIF</strong> image and instantly get its Base64 string and data URI —
+        Drag in a <strong>JPEG</strong> photo and instantly get its Base64 string and data URI —
         ready to paste into HTML, CSS, JSON or JavaScript. One click to copy.
       </p>
-      <p class="trust"><strong>100% client-side.</strong> Your image never leaves your device.</p>
+      <p class="trust"><strong>100% client-side.</strong> Your photo never leaves your device.</p>
     </div>
   </section>
 
   <section id="tool" class="tool-section">
     <div class="wrap">
       <div class="tool">
-        <div id="drop" class="dropzone" data-accept="gif">
+        <div id="drop" class="dropzone" data-accept="jpeg">
           <div class="dz-icon" aria-hidden="true">🖼️</div>
-          <h2>Drop a GIF here</h2>
-          <p>or paste from clipboard · transparency &amp; animation preserved</p>
-          <button id="pick" class="btn btn-primary" type="button">Choose GIF</button>
-          <input id="file" class="visually-hidden" type="file" accept="image/gif" />
+          <h2>Drop a JPEG here</h2>
+          <p>or paste from clipboard · JPEG and JPG both work</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose JPEG</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/jpeg" />
         </div>
 
         <p id="enc-error" class="error" hidden></p>
 
         <div id="results" class="results" hidden>
           <div class="result-head">
-            <div class="preview-box"><img id="preview" alt="Preview of the selected GIF before Base64 encoding" width="120" height="120" hidden /></div>
+            <div class="preview-box"><img id="preview" alt="Preview of the selected JPEG before Base64 encoding" width="120" height="120" hidden /></div>
             <dl class="meta">
               <div><dt>File</dt><dd id="m-name">—</dd></div>
               <div><dt>Type</dt><dd id="m-type">—</dd></div>
@@ -147,7 +147,7 @@
 
           <label class="toggle">
             <input id="prefix-toggle" type="checkbox" />
-            Show raw Base64 only (without the <code>data:image/gif;base64,</code> prefix)
+            Show raw Base64 only (without the <code>data:image/jpeg;base64,</code> prefix)
           </label>
           <div id="raw-wrap" class="field" hidden>
             <div class="field-head">
@@ -179,35 +179,29 @@
 
   <section id="guide" class="content-section">
     <div class="wrap prose">
-      <h2>GIF to Base64, explained</h2>
+      <h2>JPEG to Base64, explained</h2>
       <p>
-        Encoding a GIF to Base64 turns the image's binary data into a plain-text string you can embed directly in
-        your code. <strong>GIF</strong> is best known for small animations and simple graphics; the Base64 data URI
-        keeps the original GIF bytes, including animation frames.
+        Encoding a JPEG to Base64 turns the photo's binary data into a plain-text string you can embed directly
+        in your code. JPEG is a <strong>compressed, lossy</strong> format built for photographs, so its Base64
+        strings are far shorter than an equivalent uncompressed image — handy when you want a small inline thumbnail.
       </p>
 
       <h3>How to use it</h3>
-      <pre><code>&lt;img src="data:image/gif;base64,R0lGODlh..." alt="image" /&gt;
+      <pre><code>&lt;img src="data:image/jpeg;base64,/9j/4AAQSkZJRg..." alt="photo" /&gt;
 
-.hero { background-image: url(data:image/gif;base64,R0lGODlh...); }</code></pre>
-
-      <h3>Browser support</h3>
-      <p>
-        A Base64 GIF data URI shows up in any browser that supports GIF — which today is every modern browser
-        (Chrome, Firefox, Safari, Edge). Encoding to Base64 doesn't change format support; it only changes how the
-        same bytes are delivered.
-      </p>
+.banner { background-image: url(data:image/jpeg;base64,/9j/4AAQSkZJRg...); }</code></pre>
 
       <h3>Keep an eye on size</h3>
       <p>
-        Base64 still adds about <strong>33%</strong> over the raw file and inlined images can't be cached on their
-        own. Animated GIFs can get large quickly, so a normal cached <code>.gif</code> file is usually faster for
-        anything beyond tiny icons, badges and single-file deliverables.
+        Base64 inflates data by about <strong>33%</strong>, and an inlined photo can't be cached on its own. For a
+        large hero image, a normal <code>.jpg</code> file the browser can cache will load faster. Reserve Base64 for
+        small thumbnails, avatars, or single-file deliverables like emails and self-contained HTML reports.
       </p>
 
       <h3>Private by design</h3>
       <p>
-        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server.
+        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server. Check
+        your Network tab and you'll see the photo never goes anywhere.
       </p>
     </div>
   </section>
@@ -218,10 +212,10 @@
       <div class="sib-grid">
         <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
         <a class="sib-card" href="png-to-base64"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
-        <a class="sib-card" href="jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
-        <a class="sib-card" href="jpeg-to-base64"><strong>JPEG to Base64</strong><span>Encode JPEG photos with the .jpeg extension.</span></a>
         <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
+        <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
+        <a class="sib-card" href="jpg-to-base64"><strong>JPG to Base64</strong><span>Encode JPEG photos with the classic .jpg extension.</span></a>
         <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
         <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
         <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
@@ -236,16 +230,16 @@
     <div class="wrap">
       <h2>Frequently asked questions</h2>
       <details>
-        <summary>What does a GIF Base64 string start with?</summary>
-        <p>A GIF data URI starts with <code>data:image/gif;base64,</code> and the body commonly begins with <code>R0lGOD</code>, the Base64 form of a GIF87a or GIF89a header.</p>
+        <summary>What does a JPEG Base64 string start with?</summary>
+        <p>A JPEG data URI starts with <code>data:image/jpeg;base64,</code> and the body typically begins with <code>/9j/</code> — the Base64 signature of the JPEG header.</p>
       </details>
       <details>
-        <summary>Will a Base64 GIF work in every browser?</summary>
-        <p>It displays in any browser that supports GIF — all modern browsers (Chrome, Firefox, Safari, Edge). Base64 doesn't change format support, only how the bytes are delivered. Keep a PNG/JPG fallback only for very old browsers.</p>
+        <summary>Should I inline a large JPEG as Base64?</summary>
+        <p>Usually not. Base64 adds about 33% to the size and inlined images can't be cached separately. For large photos keep a normal <code>.jpg</code>; reserve Base64 for small images or single-file deliverables.</p>
       </details>
       <details>
         <summary>Is the conversion private?</summary>
-        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The GIF is never uploaded to any server.</p>
+        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The JPEG is never uploaded to any server.</p>
       </details>
     </div>
   </section>
@@ -262,7 +256,6 @@
         <span class="head">Converters</span>
         <a href="/">Image to Base64</a>
         <a href="png-to-base64">PNG to Base64</a>
-        <a href="jpg-to-base64">JPG to Base64</a>
         <a href="jpeg-to-base64">JPEG to Base64</a>
         <a href="svg-to-base64">SVG to Base64</a>
         <a href="webp-to-base64">WebP to Base64</a>
