@@ -1,0 +1,10 @@
+# Files/dirs under dist/ that must never be uploaded as public assets.
+.git
+.claude
+.wrangler
+*.toml
+*.py
+*.md
+worker.js
+.gitignore
+.DS_Store

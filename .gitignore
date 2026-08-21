@@ -7,3 +7,4 @@ Thumbs.db
 
 # Local preview config (not needed on Cloudflare Pages)
 .claude/
+dist/
