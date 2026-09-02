@@ -1,6 +1,84 @@
+## 2026-09-02 — 上线 /image-to-base64 精品页（一词一页补位）
+
+- 战略依据：9/2 战略转向（外链→慢变量、内容/排名→首要杠杆）后 action B 第一个产物；head 词 `image to base64`（~2400/mo）原只由首页兼任，按哥飞「一词一页」原则为它建独立页。
+- 页面：`image-to-base64.html`（V2.0 三合一精品页），canonical `https://image2base64.com/image-to-base64`，含 SoftwareApplication JSON-LD + FAQ 区；`worker.js` clean URL 自动解析，无需加路由。
+- 内链：13 个格式页 sib-card 26 处（root+dist）+ 全站 footer nav「Image to Base64」28 处（root+dist 统一改指，含首页；首页由此获得指向新页的第 1 条链接）+ 新页自身 footer = 线上每格式页 2 处、首页 1 处指向新页。
+- sitemap：`priority 0.9` 条目，位于首页之后第 2 位。
+- 部署：`wrangler deploy` Version `9336f57e`（2026-09-02 晚，第二次部署含 footer/sitemap 修复）。
+- 线上已验证：`/image-to-base64` 200；`.html` raw 307（Workers 自动转 clean）；`/jpeg-to-base64` 301 规则不变；sitemap.xml 200 含新页；check_seo_consistency `ok=53 warn=2 fail=0`（2 warn 为已知 jpg/jpeg 合并）。
+- 预期：吃 `image to base64` head 词，辅助非品牌点击 0→>0（成功指标见 outreach.md 战略转向节）。
+
+## 2026-09-01 — Product Hunt 定时发布 + TAAFT 免费路径
+
+## 2026-09-02 — Product Hunt 发布日 X 推广
+
+### Product Hunt（发布日）
+- **主帖 posted（15:12 CST）**：`https://x.com/jiamujiamu/status/2095046137145430150`
+  - 内容："🖼️ Made a tiny tool: Image2Base64 — converts images to Base64 entirely in your browser. No uploads, no server, no account. Your images never leave your device. Free forever. 👉 https://image2base64.com #BuildInPublic #DeveloperTools"
+  - 技术：Draft.js execCommand insertText 方案写入，JS click 发布按钮验证成功
+- **第二条 posted（15:44 CST，automation id: eb4db7f6）**：`https://x.com/jiamujiamu/status/2095056140820480331`
+  - 内容："The privacy angle is underrated for dev tools. Every "free" image converter uploads your file to their server. Image2Base64 doesn't. 100% client-side, zero data collection. Link in bio 👆"
+  - 技术：Draft.js execCommand insertText 写入（注意 X compose 是双语版，需要先清空再插入），JS click enabled post button（index 0）发布成功
+- PH Pre-Launch Dashboard：产品 Sub-launch，无 Pre-Launch Dashboard，X 追踪链接不可获取
+  - 根因：Image to Base64 Converter 是 Code Beautify 下的 Sub-launch（子项），PH Pre-Launch Dashboard（含 X/LinkedIn 带追踪参数的分享链接）仅对独立产品开放
+  - 验证：Sub-launch `/posts/image-to-base64-converter` → `code-beautify?launch=` 重定向；`/shoutouts` → 主页占位；产品页 Share 按钮 → 图片画廊，无追踪模态框
+  - 建议：下次发布新产品时作为独立产品提交以获取 Pre-Launch Dashboard
+- **第三条 posted（17:00 CST）**：`https://x.com/jiamujiamu/status/2095074957088932189`
+  - 内容："Helped ship Image2Base64 on @ProductHunt today — converts images to Base64 entirely in-browser. No uploads, no server, no account. 100% private.\nhttps://www.producthunt.com/products/code-beautify/launches/image-to-base64-converter\n#BuildInPublic #DeveloperTools"
+  - 意义：直接给 PH 产品页引流量（PH 排名信号 = 独立访客 IP 数）
+- **状态：posted**（主帖已发，第二条已发，第三条含 PH 链接已发）
+
+### TAAFT（theresanaiforthat.com）免费路径
+- Main info：Name `Image to Base64 Converter`（25/40）/ Tagline `Free private PNG to Base64 converter in your browser`（52/60）/ Link `https://image2base64.com` / Description 186/500。
+- Launch tags：**Developer Tools + Design Tools**（PH 无 "Tech" 这个 tag，实际是分类导航项，误以为可选；2 个 tag 达标）。
+- Makers：王佳木（当前登录 PH 账号，solo maker，`I worked on this product`）。
+- Extras：Pricing = **Free** + **Bootstrapped** 勾选（YC/VC 均否）。
+- Images：Thumbnail 1 张 + Gallery 1 张（2 张达标）。「Paste a URL」走原生 prompt 对话框，bsk 自动 accept 空值，og-image 没加成功 → 不强求第 3 张。
+- 未做（Strongly Recommended，非必须）：Shoutouts / 首评 / Video / Loom / 更多 Makers —— 发布日可用 Pre-Launch Dashboard 补。
+- 发布日行动：PH 的 X / LinkedIn "Copy Link" 在 Pre-Launch Dashboard 右侧，带投票追踪参数，发社交帖时用它。
+- 踩坑记录：PH 提交表单真实入口是 `/posts/new?ref=header`（直接 `/posts/new` 被重定向到指南页）；tag 下拉点击后 ref 失效需重新 snapshot；「Tech」是分类不是 tag。
+
+### TAAFT（theresanaiforthat.com）免费路径
+- **状态：submitted（2026-09-01）**。官方账号确认为 **@theresanaiforit**（非 @thereisanaiforthat，后者不存在）。
+- 免费机制：TAAFT 每月在 X 开一次免费抽选线程（"We'll randomly choose one AI tool to list on TAAFT for FREE!"），评论区一句话推广工具，月末随机抽 1 个免费收录 + newsletter（2.5M 订阅）提及。付费档 $49（Website only）/ $347（Maximum Exposure）。
+- **免费抽选线程**：`https://x.com/theresanaiforit/status/2093802183917535502`（8/30 发布，9 月场次）。
+- **已提交回复**：`https://x.com/jiamujiamu/status/2094753725512585619`（2026-09-01 13:30 CST 发布）。
+  - 内容："Free private PNG to Base64 converter that runs 100% in your browser — no uploads, no account. Convert, copy & download instantly: https://image2base64.com"（154 字符）。
+- **技术踩坑（重要）**：X 网页版回复框是 Draft.js 受控编辑器，`bsk fill`/`bsk press` 均无法写入（fill 走 DOM 属性不触发状态同步；press 逐字符 ok 但内容不进）。唯一有效解法 = `document.execCommand('insertText', false, msg)`：先 focus → selectAllChildren + execCommand('delete') 清空 → insertText 写入 → 发布按钮 tweetButtonInline disabled 变 false。插入后页面重渲染，旧 ref 失效需重新 snapshot 再 click。回复列表懒加载，需滚动/展开才渲染，验证回复用 DOM 查 `article` 含站点 URL 最可靠。
+- next：9 月底关注抽选结果；未抽中可等下月线程再投一次（免费路径可重复）。
+
+### 行动三：联系渠道
+- **done**。`/contact.html`（邮箱 `jeromell@be-winner.com`）已存在并部署线上。各工具页互链已含 contact。
+
 # Image2Base64 SEO Log
 
-Last updated: 2026-08-21 14:15 CST
+Last updated: 2026-09-02 CST
+
+## 2026-08-29 — backlink verification cadence (Wang Yan post)
+
+- takeaway: do not kill a channel at T+1; Ahrefs median first_seen ~8 days. Our I2B64 path is already directory / GitHub / DEV.to, not lifestyle comment spam.
+- live check (page still there, not Ahrefs): sitelike.org listing 200; DEV.to article 200; `hilmanski/freeStuffDev#2051` still OPEN (submitted 8/21); `zhaoolee/OnlineToolsBook#23` still OPEN (submitted 8/11); `iRajatDas/awesome-image-tools#5` merged 2026-08-07. Hashnode returned 403 from this machine — do not mark dead.
+- next: 2026-09-02 maintenance card only reviews the submitted batch. No new comment-blog campaign. No new format pages.
+- cadence note: `~/webcafe/sites/外链核验_王焱20260828对照.md`
+
+## 2026-08-25 — live GSC pull after login
+
+- done: Exported Performance (Web, Last 3 months, chart 2026-06-27→08-22) and Coverage from sc-domain:image2base64.com. Files: `~/Downloads/image2base64.com-Performance-on-Search-2026-08-25.zip`, `~/Downloads/image2base64.com-Coverage-2026-08-25.zip`.
+- totals: 191 clicks / 2,980 impressions / 6.4% CTR / pos 61.4. Last 28 days: 140 / 1.9K / 7.4% / 70.3.
+- brand query `https://www.image2base64.com/`: 151 / 212 / 71.23% / pos 1 (79% of clicks). Non-brand still 0 clicks.
+- http:// homepage still 0 / 71 / 27.39 (frozen since 7/21). Coverage: Alternate canonical **0**; Not indexed = Page with redirect × 2; Indexed 15. HTTPS non-HTTPS URLs = 0. Index-layer merge is done; Performance row is window leftover.
+- decode pages unchanged vs 8/16 (best `/base64-to-jpg` 0/42/6.31). `/jpg-to-base64` still 5 clicks / 269 / pos 13.66.
+- diagnosis updated: `诊断_GSC复盘_20260825.md` section 0.
+
+## 2026-08-25 — 4-week GSC retrospective vs 2026-07-21 baseline
+
+- checked: Deep compare of on-disk GSC exports (no newer file after 2026-08-16). Diagnosis: `诊断_GSC复盘_20260825.md`.
+- Baseline 2026-07-21 Chart (to 2026-07-18): 3 clicks / 743 impressions / CTR 0.40%. Verified by summing Chart.csv.
+- Latest 2026-08-16 (to 2026-08-14, Last 3 months): 155 clicks / 1963 impressions. Slice 2026-07-18→08-14 = 152 / 1234. Slice 2026-07-21→08-14 = 144 / 1157.
+- 6 decode pages (absent from 7/21 Pages): all present by 7/27. Best ranks at 8/16: `/base64-to-jpg` pos 6.31 / 42 impr / 0 clicks; `/base64-to-jpeg` 8.30 / 37 / 0; `/base64-to-svg` 10.50 / 26 / 0. Ranking loop worked; CTR did not.
+- http:// homepage still listed 0 / 71 / pos 27.39 on 7/21, 7/27, 8/11, 8/16 — frozen leftover in the 3-month window. Live `http://` 301s to https. No new http impressions after the baseline. Treat as merged for new traffic.
+- Query gaps: no format-page demand (ico/bmp/avif/tiff ≤3). Intent leftovers are viewer/data-uri/js/php (2–6 impr) — thicken existing pages, do not add URLs.
+- next: 2026-08-26 GSC check only (title rewrite + www 301 effects). No new pages. 2026-09-02 backlink review unchanged.
 
 ## 2026-08-21 — jpg/jpeg merge + compliance pages
 
@@ -263,3 +341,8 @@ Last updated: 2026-08-21 14:15 CST
 - No active backlink / directory-submission follow-up for Uneed, DevHunt, TinyLaunch, PitchWall, or Dofollow.Tools.
   - Canceled by Jerome on 2026-07-03; user will handle any future backlink work manually.
   - Keep the 2026-07-02 entries above as history only, not as Codex todo items.
+
+## 2026-08-29 · AdSense 提审前合规补齐
+- Privacy: Advertising 章节补第三方（含 Google）Cookie/web beacon 广告披露 + Google Ads Settings / aboutads.info 退出链接，Last updated → 2026-08-29。git `d135e38`。
+- **部署通道确认**：image2base64.com 线上走 **Worker（worker.js + ./dist 静态资产）**，Pages 项目（image2base64-1ya.pages.dev）未挂自定义域。改站后必须：同步 dist 副本 → `cd repo && npx wrangler deploy`。只 push git 不上线。
+- 线上已验证：/privacy 新文案 200；/jpeg-to-base64 301→/jpg-to-base64 正常；/ads.txt 200。
