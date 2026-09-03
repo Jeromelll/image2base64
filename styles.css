@@ -99,6 +99,15 @@ code{font-family:var(--mono);font-size:.88em;background:#eef0f6;padding:.12em .4
 .toggle{display:flex;align-items:center;gap:8px;font-size:.86rem;color:var(--ink-soft);margin:2px 0 16px;cursor:pointer;user-select:none}
 .toggle input{width:16px;height:16px;accent-color:var(--brand)}
 
+/* Sample chips (dropzone) & overhead note (results) */
+.dz-samples{display:flex;align-items:center;justify-content:center;flex-wrap:wrap;gap:8px;margin-top:18px;padding-top:14px;border-top:1px dashed #d7dcea}
+.dz-samples-label{color:var(--muted);font-size:.86rem}
+.sample-chip{border:1px solid var(--line);background:#fff;color:var(--ink);font-weight:600;font-size:.84rem;padding:.45em 1em;border-radius:999px;cursor:pointer;font-family:inherit;white-space:nowrap;transition:all .12s ease}
+.sample-chip:hover{border-color:var(--brand);color:var(--brand-dark);background:#fbfbff}
+.overhead-note{margin:0 0 16px;padding:10px 14px;border-radius:10px;background:#f2f5ff;border:1px solid #dfe4ff;color:var(--ink-soft);font-size:.88rem;line-height:1.55}
+.overhead-note strong{color:var(--brand-dark)}
+.overhead-note code{font-size:.84em}
+
 /* Generic sections */
 section{padding:48px 0}
 .content-section h2,.faq-section h2,.siblings h2{font-size:clamp(1.4rem,3vw,1.9rem);margin:0 0 10px}

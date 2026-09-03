@@ -69,6 +69,9 @@
     var metaType = $("#m-type");
     var metaSize = $("#m-size");
     var metaLen = $("#m-len");
+    var metaB64Size = $("#m-b64size");       // optional: encoded size (chars ≈ bytes)
+    var metaDims = $("#m-dims");             // optional: natural width × height
+    var overheadNote = $("#overhead-note");  // optional: "~33% bigger" explainer
     var outData = $("#out-datauri"); // textarea: full data URI
     var outRaw = $("#out-raw");      // textarea: raw base64 only
     var rawWrap = $("#raw-wrap");
@@ -79,6 +82,13 @@
 
     // The format this page is tuned for, e.g. "png" / "jpeg". Empty = any image.
     var accept = (drop.getAttribute("data-accept") || "").toLowerCase();
+
+    // Report natural dimensions as soon as the preview bitmap is ready.
+    if (preview) {
+      preview.addEventListener("load", function () {
+        if (metaDims) metaDims.textContent = preview.naturalWidth + " × " + preview.naturalHeight + " px";
+      });
+    }
 
     function showError(msg) {
       if (!errBox) return;
@@ -114,6 +124,24 @@
         if (metaType) metaType.textContent = file.type || "image";
         if (metaSize) metaSize.textContent = bytesToSize(file.size);
         if (metaLen) metaLen.textContent = raw.length.toLocaleString() + " chars";
+        if (metaB64Size) metaB64Size.textContent = bytesToSize(dataUri.length);
+
+        // Overhead hint: Base64 packs every 3 bytes into 4 chars, so the
+        // data URI ends up ~33% larger than the original file. Show the
+        // exact number for this file instead of a flat estimate.
+        if (overheadNote && file.size > 0) {
+          var pct = (((dataUri.length - file.size) / file.size) * 100).toFixed(1);
+          var msg = "Base64 encoding added <strong>≈ " + pct + "%</strong> of overhead: this " +
+            bytesToSize(file.size) + " JPG became <strong>" + bytesToSize(dataUri.length) +
+            "</strong> as a data URI.";
+          if (file.size > 100 * 1024) {
+            msg += " That's a big inline payload — for large photos a normal, cacheable <code>.jpg</code> file usually loads faster.";
+          } else {
+            msg += " Small enough to inline comfortably in HTML, CSS or JSON.";
+          }
+          overheadNote.innerHTML = msg;
+          overheadNote.hidden = false;
+        }
 
         if (results) results.hidden = false;
         results.scrollIntoView({ behavior: "smooth", block: "nearest" });
@@ -121,6 +149,61 @@
       reader.onerror = function () { showError("Sorry — the file could not be read. Try another image."); };
       reader.readAsDataURL(file);
     }
+
+    // Sample images: drawn locally on a canvas, then fed through the same
+    // pipeline as a real file. Nothing is downloaded; zero extra requests.
+    function makeSampleJpeg(kind, done) {
+      var c = document.createElement("canvas");
+      if (kind === "avatar") { c.width = 160; c.height = 160; } else { c.width = 480; c.height = 320; }
+      var ctx = c.getContext("2d");
+      if (!ctx) return;
+
+      if (kind === "avatar") {
+        var bg = ctx.createLinearGradient(0, 0, 0, 160);
+        bg.addColorStop(0, "#8ec9ff");
+        bg.addColorStop(1, "#dbeaff");
+        ctx.fillStyle = bg;
+        ctx.fillRect(0, 0, 160, 160);
+        ctx.fillStyle = "#f2c19a";                                    // shoulders
+        ctx.beginPath(); ctx.arc(80, 172, 52, Math.PI, 2 * Math.PI); ctx.fill();
+        ctx.fillStyle = "#f6d0ae";                                    // head
+        ctx.beginPath(); ctx.arc(80, 70, 30, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#3b2f2a";                                    // hair
+        ctx.beginPath(); ctx.arc(80, 64, 30, Math.PI, 2 * Math.PI); ctx.fill();
+      } else {
+        ctx.fillStyle = "#eef2ff";
+        ctx.fillRect(0, 0, 480, 320);
+        var sky = ctx.createLinearGradient(0, 0, 0, 210);
+        sky.addColorStop(0, "#5b6cff");
+        sky.addColorStop(1, "#c9d4ff");
+        ctx.fillStyle = sky;
+        ctx.fillRect(0, 0, 480, 210);
+        ctx.fillStyle = "#ffd66e";                                    // sun
+        ctx.beginPath(); ctx.arc(360, 70, 34, 0, Math.PI * 2); ctx.fill();
+        ctx.fillStyle = "#19c39a";                                    // back hill
+        ctx.beginPath(); ctx.moveTo(0, 320); ctx.quadraticCurveTo(140, 100, 300, 320); ctx.fill();
+        ctx.fillStyle = "#0f9d7c";                                    // front hill
+        ctx.beginPath(); ctx.moveTo(160, 320); ctx.quadraticCurveTo(330, 140, 480, 320); ctx.fill();
+      }
+
+      c.toBlob(function (blob) {
+        if (!blob || !done) return;
+        var name = kind === "avatar" ? "sample-avatar.jpg" : "sample-photo.jpg";
+        try {
+          done(new File([blob], name, { type: "image/jpeg" }));
+        } catch (err) {
+          blob.name = name; // very old browsers: carry the name on the Blob
+          done(blob);
+        }
+      }, "image/jpeg", 0.88);
+    }
+
+    // Sample chips (only present on pages that ship them)
+    drop.querySelectorAll(".sample-chip").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        makeSampleJpeg(chip.getAttribute("data-sample") || "photo", handleFile);
+      });
+    });
 
     // File picker
     if (pickBtn && fileInput) {
