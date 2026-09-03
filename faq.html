@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>FAQ — Image to Base64 Questions &amp; Answers | Image2Base64</title>
+<meta name="description" content="Answers to common questions about converting images to Base64: privacy, file size, data URIs in HTML and CSS, email embedding, and supported formats." />
+<link rel="canonical" href="https://image2base64.com/faq" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a Base64 image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A Base64 image is an image file (PNG, JPG, SVG, WebP, or GIF) encoded as a plain-text string of ASCII characters. The string can be embedded directly in HTML, CSS, or JSON as a data URI, so the browser renders the image without downloading a separate file."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I convert an image to Base64?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Upload or drag your image into the converter on our homepage, and the Base64 string is generated instantly in your browser. You can copy it as a plain Base64 string, an HTML <img> tag, or a CSS background-image declaration."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it safe to convert images to Base64 here? Do you upload my images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "All conversion runs entirely in your browser using client-side JavaScript. Your images are never uploaded to our servers, never stored, and never sent anywhere — the tool even works offline once the page has loaded. This makes it safe for confidential screenshots, logos, and private assets."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is the Base64 string larger than my original image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Base64 encoding represents every 3 bytes of binary data as 4 ASCII characters, which increases the size by roughly 33%. This overhead is normal. That is why Base64 is best for small images such as icons, logos, and avatars — not large photos."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I display a Base64 image in HTML?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use a data URI in the src attribute of an <img> tag: <img src=\"data:image/png;base64,your-base64-string\" alt=\"Description\">. Replace image/png with the correct MIME type for your format (image/jpeg, image/svg+xml, image/webp, or image/gif). Our converter outputs this tag ready to paste."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I use a Base64 image in CSS?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use it as a background-image value: background-image: url(\"data:image/png;base64,your-base64-string\");. This is common for small background patterns, icons, and sprites where you want to avoid an extra HTTP request."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which image formats can I convert?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "You can convert PNG, JPG/JPEG, SVG, WebP, and GIF to Base64, and convert Base64 strings back to PNG, JPG, GIF, WebP, or SVG images. Choose the specific tool from the Converters menu for the format you need."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the maximum image size I can convert?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Because conversion happens in your browser, the practical limit depends on your device's memory rather than our servers. Files up to a few megabytes convert fine on most machines. Keep in mind the ~33% size overhead — very large images produce very long Base64 strings that slow down page rendering."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do Base64 images work in email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Support is inconsistent. Base64 inline images work in many desktop and webmail clients, but Gmail and some Outlook versions strip or block data URIs in email HTML. For emails, hosting the image on a CDN and linking to it is still the more reliable approach; Base64 is better suited to web pages."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When should I use Base64 instead of a regular image file?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use Base64 for small, frequently reused assets — icons, logos, UI elements — where saving an HTTP request or keeping everything in a single file (HTML email templates, single-file demos, JSON APIs) matters. For large photos or images served to many pages, regular image files with browser caching are more efficient."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I convert a Base64 string back to an image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Paste the Base64 string into one of our decoders — Base64 to Image, Base64 to PNG, Base64 to JPG, Base64 to WebP, Base64 to GIF, or Base64 to SVG — and preview or download the decoded image. Decoding also runs entirely in your browser."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/png-to-base64">PNG</a>
+      <a href="/about">About</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px;max-width:760px">
+  <h1>Frequently Asked Questions</h1>
+  <p>Common questions about converting images to Base64 — privacy, data URIs, file sizes, and email embedding. If your question is not answered here, send it to us and we will add it.</p>
+
+  <section class="faq-section">
+    <h2>Basics</h2>
+
+    <h3>What is a Base64 image?</h3>
+    <p>A Base64 image is an image file (PNG, JPG, SVG, WebP, or GIF) encoded as a plain-text string of ASCII characters. The string can be embedded directly in HTML, CSS, or JSON as a <strong>data URI</strong>, so the browser renders the image without downloading a separate file.</p>
+
+    <h3>How do I convert an image to Base64?</h3>
+    <p>Upload or drag your image into the converter on our <a href="/">homepage</a>, and the Base64 string is generated instantly in your browser. You can copy it as a plain Base64 string, an HTML <code>&lt;img&gt;</code> tag, or a CSS <code>background-image</code> declaration.</p>
+
+    <h3>Can I convert a Base64 string back to an image?</h3>
+    <p>Yes. Paste the Base64 string into one of our decoders — <a href="/base64-to-image">Base64 to Image</a>, <a href="/base64-to-png">Base64 to PNG</a>, <a href="/base64-to-jpg">Base64 to JPG</a>, <a href="/base64-to-webp">Base64 to WebP</a>, <a href="/base64-to-gif">Base64 to GIF</a>, or <a href="/base64-to-svg">Base64 to SVG</a> — and preview or download the decoded image. Decoding also runs entirely in your browser.</p>
+
+    <h2>Privacy &amp; safety</h2>
+
+    <h3>Is it safe to convert images to Base64 here? Do you upload my images?</h3>
+    <p>All conversion runs entirely in your browser using client-side JavaScript. Your images are <strong>never uploaded to our servers</strong>, never stored, and never sent anywhere — the tool even works offline once the page has loaded. This makes it safe for confidential screenshots, logos, and private assets.</p>
+
+    <h2>Sizes &amp; formats</h2>
+
+    <h3>Why is the Base64 string larger than my original image?</h3>
+    <p>Base64 encoding represents every 3 bytes of binary data as 4 ASCII characters, which increases the size by roughly <strong>33%</strong>. This overhead is normal. That is why Base64 is best for small images such as icons, logos, and avatars — not large photos.</p>
+
+    <h3>Which image formats can I convert?</h3>
+    <p>You can convert PNG, JPG/JPEG, SVG, WebP, and GIF to Base64, and convert Base64 strings back to images. Pick the exact tool from the Converters menu in the footer — for example <a href="/png-to-base64">PNG to Base64</a> or <a href="/svg-to-base64">SVG to Base64</a>.</p>
+
+    <h3>What is the maximum image size I can convert?</h3>
+    <p>Because conversion happens in your browser, the practical limit depends on your device's memory rather than our servers. Files up to a few megabytes convert fine on most machines. Keep in mind the ~33% size overhead — very large images produce very long Base64 strings that slow down page rendering.</p>
+
+    <h2>Using Base64 in HTML, CSS &amp; email</h2>
+
+    <h3>How do I display a Base64 image in HTML?</h3>
+    <p>Use a data URI in the <code>src</code> attribute of an <code>&lt;img&gt;</code> tag:</p>
+    <pre><code>&lt;img src="data:image/png;base64,your-base64-string" alt="Description"&gt;</code></pre>
+    <p>Replace <code>image/png</code> with the correct MIME type for your format (<code>image/jpeg</code>, <code>image/svg+xml</code>, <code>image/webp</code>, or <code>image/gif</code>). Our converter outputs this tag ready to paste.</p>
+
+    <h3>How do I use a Base64 image in CSS?</h3>
+    <p>Use it as a <code>background-image</code> value:</p>
+    <pre><code>background-image: url("data:image/png;base64,your-base64-string");</code></pre>
+    <p>This is common for small background patterns, icons, and sprites where you want to avoid an extra HTTP request.</p>
+
+    <h3>Do Base64 images work in email?</h3>
+    <p>Support is inconsistent. Base64 inline images work in many desktop and webmail clients, but Gmail and some Outlook versions strip or block data URIs in email HTML. For emails, hosting the image on a CDN and linking to it is still the more reliable approach; Base64 is better suited to web pages.</p>
+
+    <h3>When should I use Base64 instead of a regular image file?</h3>
+    <p>Use Base64 for small, frequently reused assets — icons, logos, UI elements — where saving an HTTP request or keeping everything in a single file (HTML email templates, single-file demos, JSON APIs) matters. For large photos or images served across many pages, regular image files with browser caching are more efficient.</p>
+
+    <h2>Still have a question?</h2>
+    <p>Email us at <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">jeromell@be-winner.com</a> — real questions from users get answered and added to this page.</p>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>

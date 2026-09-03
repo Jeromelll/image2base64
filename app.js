@@ -478,3 +478,12 @@
     wireCopyButtons(document);
   });
 })();
+
+// Feedback mailto: include the page title in the subject so we know which page the user was on
+document.querySelectorAll('a.feedback-link').forEach(function (a) {
+  try {
+    var url = new URL(a.href);
+    url.searchParams.set('subject', 'Feedback: ' + document.title);
+    a.href = url.toString();
+  } catch (e) { /* keep static subject */ }
+});
