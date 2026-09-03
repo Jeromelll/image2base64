@@ -4,6 +4,28 @@
 (function () {
   "use strict";
 
+  // ---------- privacy-first event tracking ----------
+  // Sends minimal, cookieless events to our own Worker (/api/evt).
+  // Never sends file contents, names, or anything personal — only
+  // event name, page path, and coarse metadata (mime type, size bucket).
+  function track(name, x1, x2) {
+    try {
+      var body = JSON.stringify({ e: name, p: location.pathname, x1: x1 || "", x2: x2 || "" });
+      if (navigator.sendBeacon) {
+        navigator.sendBeacon("/api/evt", new Blob([body], { type: "application/json" }));
+      } else {
+        fetch("/api/evt", { method: "POST", body: body, keepalive: true });
+      }
+    } catch (e) { /* analytics must never break the tool */ }
+  }
+  function sizeBucket(bytes) {
+    if (!bytes && bytes !== 0) return "";
+    if (bytes < 10 * 1024) return "<10KB";
+    if (bytes < 100 * 1024) return "10-100KB";
+    if (bytes < 1024 * 1024) return "100KB-1MB";
+    return ">=1MB";
+  }
+
   // ---------- helpers ----------
   function $(sel, root) { return (root || document).querySelector(sel); }
   function bytesToSize(bytes) {
@@ -48,6 +70,7 @@
       btn.addEventListener("click", function () {
         var t = $(btn.getAttribute("data-copy"));
         if (!t) return;
+        track("copy", btn.getAttribute("data-copy"));
         var text = "value" in t ? t.value : t.textContent;
         copyText((text || "").trim(), btn);
       });
@@ -95,6 +118,7 @@
       if (!errBox) return;
       errBox.textContent = msg;
       errBox.hidden = !msg;
+      if (msg) track("error", "encode", msg.slice(0, 60));
     }
 
     function handleFile(file) {
@@ -147,6 +171,7 @@
 
         if (results) results.hidden = false;
         results.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        track("convert", file.type || "image", sizeBucket(file.size));
       };
       reader.onerror = function () { showError("Sorry — the file could not be read. Try another image."); };
       reader.readAsDataURL(file);
@@ -203,6 +228,7 @@
     // Sample chips (only present on pages that ship them)
     drop.querySelectorAll(".sample-chip").forEach(function (chip) {
       chip.addEventListener("click", function () {
+        track("sample", chip.getAttribute("data-sample") || "photo");
         makeSampleJpeg(chip.getAttribute("data-sample") || "photo", handleFile);
       });
     });
@@ -278,6 +304,7 @@
       if (!errBox) return;
       errBox.textContent = msg;
       errBox.hidden = !msg;
+      if (msg) track("error", "decode", msg.slice(0, 60));
     }
 
     function revokeActiveUrl() {
@@ -416,6 +443,7 @@
       if (resultNote) resultNote.textContent = note;
       if (resWrap) resWrap.hidden = false;
       resWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      track("decode", mime, outputMime || "original");
     }
 
     function decode() {
@@ -469,12 +497,17 @@
     }
 
     if (decodeBtn) decodeBtn.addEventListener("click", decode);
+    if (dlBtn) dlBtn.addEventListener("click", function () {
+      track("download", dlBtn.getAttribute("download") || "");
+    });
     window.addEventListener("beforeunload", revokeActiveUrl);
     wireCopyButtons(input.closest("section") || document);
   }
 
   // ---------- boot ----------
   document.addEventListener("DOMContentLoaded", function () {
+    // Privacy-first page view: cookieless, no IP, stored on our own Worker.
+    track("page_view", document.referrer);
     initEncoder();
     initDecoder();
     wireCopyButtons(document);

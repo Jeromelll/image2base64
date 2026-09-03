@@ -7,3 +7,8 @@ workers_dev = true
 directory = "./dist"
 binding = "ASSETS"
 not_found_handling = "none"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "image2base64-events"
+database_id = "d72e81ab-ac22-408a-9353-d0db9d867858"
