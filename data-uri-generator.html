@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Data URI Generator - Convert Any Image to a Base64 Data URI</title>
+<meta name="description" content="Generate a data URI from any image in your browser. Copy the data:image URI with ready-made HTML and CSS snippets - 100% client-side, no upload, no sign-up." />
+<link rel="canonical" href="https://image2base64.com/data-uri-generator" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Data URI Generator - Convert Any Image to a Base64 Data URI" />
+<meta property="og:description" content="Turn any image into a data URI in your browser. Copy the full data:image string with HTML and CSS snippets - nothing is uploaded." />
+<meta property="og:url" content="https://image2base64.com/data-uri-generator" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "What is a data URI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A data URI is a URI scheme that embeds file data directly inside a text string instead of pointing to an external resource. For images it typically looks like data:image/png;base64, followed by the Base64-encoded file bytes, and a browser treats it exactly like a normal image URL."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the correct data URI syntax?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The syntax is data:[<mediatype>][;base64],<data>. For a Base64-encoded PNG that is data:image/png;base64, followed by the encoded body. The mediatype is the MIME type such as image/png or image/svg+xml, and ;base64 marks the payload as Base64 rather than URL-encoded text."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is a Base64 data URI the same as a URL-encoded data URI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Base64 data URIs encode the bytes with the Base64 alphabet and are the common choice for images. URL-encoded data URIs percent-encode the raw bytes instead. Both are valid, but a Base64 data URI is shorter for binary images and is what this generator produces."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use a data URI in CSS background-image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Place the complete data URI inside url(), for example background-image: url(data:image/png;base64,AAAA...). Wrapping it in double quotes also works and is required when the string contains characters that conflict with the CSS syntax."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does a data URI image get cached?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not independently. An inline data URI is cached together with the HTML or CSS file that contains it. A separate image URL can be cached on its own and reused across pages, which is why inlining is best reserved for small assets."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the data URI generation private?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Everything runs in your browser with the FileReader API. The image is never uploaded to any server, and the generated data URI is produced locally on your device."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Data URI Generator",
+  "url": "https://image2base64.com/data-uri-generator",
+  "description": "Free Data URI Generator — convert any image to a Base64 data URI entirely in your browser. Copy the data:image string with ready-made HTML and CSS snippets. No upload, no server.",
+  "operatingSystem": "Web",
+  "applicationCategory": "UtilitiesApplication",
+  "applicationSubCategory": "ImageConverter",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "100% client-side",
+    "No upload — files never leave your browser",
+    "Full data URI output with MIME prefix",
+    "Ready-made HTML and CSS snippets",
+    "Drag & drop and paste support"
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="#tool">Generator</a>
+      <a href="#guide">Guide</a>
+      <a href="#tools">More tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Data URI Generator</h1>
+      <p class="lede">
+        Turn any image into a <strong>Base64 data URI</strong> and copy it with ready-made HTML and CSS snippets.
+        Works with PNG, JPG, GIF, WebP and SVG — nothing leaves your device.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Your image never leaves your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="drop" class="dropzone" data-accept="">
+          <div class="dz-icon" aria-hidden="true">🔗</div>
+          <h2>Drop an image to generate its data URI</h2>
+          <p>or paste from your clipboard · any image format</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose image</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/*" />
+        </div>
+
+        <p id="enc-error" class="error" hidden></p>
+
+        <div id="results" class="results" hidden>
+          <div class="result-head">
+            <div class="preview-box"><img id="preview" alt="Preview of the selected image before data URI generation" width="120" height="120" hidden /></div>
+            <dl class="meta">
+              <div><dt>File</dt><dd id="m-name">—</dd></div>
+              <div><dt>Type</dt><dd id="m-type">—</dd></div>
+              <div><dt>Size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Base64 length</dt><dd id="m-len">—</dd></div>
+            </dl>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-datauri">Data URI <span class="muted">(the complete data:image string)</span></label>
+              <button class="copy" type="button" data-copy="#out-datauri">Copy</button>
+            </div>
+            <textarea id="out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-html">HTML <code>&lt;img&gt;</code> snippet</label>
+              <button class="copy" type="button" data-copy="#out-html">Copy</button>
+            </div>
+            <textarea id="out-html" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-css">CSS <code>background-image</code> snippet</label>
+              <button class="copy" type="button" data-copy="#out-css">Copy</button>
+            </div>
+            <textarea id="out-css" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+
+          <label class="toggle">
+            <input id="prefix-toggle" type="checkbox" />
+            Show raw Base64 only (without the <code>data:</code> prefix)
+          </label>
+          <div id="raw-wrap" class="field" hidden>
+            <div class="field-head">
+              <label for="out-raw">Raw Base64 string</label>
+              <button class="copy" type="button" data-copy="#out-raw">Copy</button>
+            </div>
+            <textarea id="out-raw" class="out" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>How to generate a data URI from an image</h2>
+      <p>
+        A <strong>data URI</strong> embeds a file directly inside a text string, so the browser never has to make a
+        separate request to fetch it. For images the payload is Base64-encoded, which makes the string safe to place
+        inside HTML attributes, CSS values, JavaScript sources and JSON. This generator reads your image locally and
+        returns the complete URI together with snippets for the two most common destinations.
+      </p>
+
+      <ol>
+        <li><strong>Add an image.</strong> Drag a file onto the generator, pick one from your device, or paste from the clipboard.</li>
+        <li><strong>Review the result.</strong> The page shows the detected MIME type, original size, Base64 length and a local preview.</li>
+        <li><strong>Copy the format you need.</strong> Take the full data URI, the HTML <code>&lt;img&gt;</code> snippet, or the CSS <code>background-image</code> declaration.</li>
+        <li><strong>Paste and test.</strong> Drop it into your code and check the page where it will actually be used.</li>
+      </ol>
+
+      <h3>Data URI syntax, piece by piece</h3>
+      <p>
+        Every data URI follows the same pattern: <code>data:[mediatype][;base64],data</code>. The mediatype is the
+        file's MIME type — <code>image/png</code>, <code>image/jpeg</code>, <code>image/gif</code>,
+        <code>image/webp</code> or <code>image/svg+xml</code>. The <code>;base64</code> marker says the payload is
+        Base64 text rather than percent-encoded bytes. Everything after the single comma is the encoded file itself,
+        with no line breaks or whitespace. If the prefix and the payload don't match — for example a JPEG body labeled
+        as <code>image/png</code> — browsers usually fail to render the image, so copy the whole string rather than
+        editing it by hand.
+      </p>
+
+      <h3>Using a data URI in HTML</h3>
+      <p>
+        Put the complete URI in an <code>img src</code> attribute, or use it as the <code>href</code> of an SVG
+        <code>&lt;image&gt;</code> element. Keep a meaningful <code>alt</code> text on content images, exactly as you
+        would for a normal file. The string can be as long as you like — HTML attributes have no practical length
+        limit — but remember the payload counts toward the document size your visitors download.
+      </p>
+      <pre><code>&lt;img src="data:image/png;base64,iVBORw0KGgo..." alt="Cart icon" width="24" height="24" /&gt;</code></pre>
+
+      <h3>Using a data URI in CSS</h3>
+      <p>
+        Inside CSS, place the URI in <code>url()</code>. Quotes are optional when the string contains no whitespace or
+        special characters — Base64 and the <code>data:</code> prefix both qualify — but adding double quotes is a safe
+        habit, and required in the rare case a linter or preprocessor rewrites the value. Use the <code>background-image</code>
+        property for decorative assets and icons where a separate HTTP request isn't worth it.
+      </p>
+      <pre><code>.spinner {
+  background-image: url("data:image/gif;base64,R0lGODlh...");
+  background-repeat: no-repeat;
+}</code></pre>
+
+      <h3>When a data URI is worth it</h3>
+      <ul>
+        <li><strong>Tiny, reused assets:</strong> icons, logos, badges and spinners where one less request matters more than a few hundred bytes.</li>
+        <li><strong>Single-file deliverables:</strong> email templates, HTML reports or demos that must work as one portable file.</li>
+        <li><strong>Prototypes:</strong> quick tests and fixtures that shouldn't depend on an image host or a build step.</li>
+        <li><strong>Text-only channels:</strong> APIs and databases that accept strings but not binary uploads.</li>
+      </ul>
+
+      <h3>When a normal image file is better</h3>
+      <p>
+        A data URI cannot be cached independently — it ships inside the HTML or CSS that references it, every time.
+        Base64 also inflates the payload by roughly 33%. For large photos, hero images and anything reused across many
+        pages, a separate optimized file with its own cache lifetime and CDN delivery is almost always the faster
+        choice. Inline the small stuff; link the big stuff.
+      </p>
+
+      <h3>Base64 vs URL-encoded data URIs</h3>
+      <p>
+        The data URI scheme also allows percent-encoded payloads — for example
+        <code>data:image/svg+xml,%3Csvg%20...</code>. That form is common for small SVGs because the raw markup stays
+        semi-readable and gzip compresses it well. For binary formats such as PNG, JPEG, GIF and WebP, however, Base64
+        is the standard choice and what this generator produces. If a tool rejects your data URI, check whether it
+        expects the Base64 form or the URL-encoded form before changing anything else.
+      </p>
+
+      <h3>Private, browser-only generation</h3>
+      <p>
+        The generator uses the browser's <code>FileReader</code> API. Your image is read on the current device and the
+        data URI is assembled locally; the file is not uploaded to this site, and nothing is stored. That makes the
+        tool safe for internal screenshots and unreleased design assets — although once a data URI exists, treat it
+        like the file itself, because anyone holding the string can decode it.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/image-to-base64"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
+        <a class="sib-card" href="/base64-favicon"><strong>Base64 Favicon</strong><span>Inline your favicon with a data URI link tag.</span></a>
+        <a class="sib-card" href="png-to-base64"><strong>PNG to Base64</strong><span>Encode PNG images, transparency kept.</span></a>
+        <a class="sib-card" href="jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
+        <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
+        <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
+        <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
+        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
+        <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
+        <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
+        <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
+        <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
+        <a class="sib-card" href="base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>What is a data URI?</summary>
+        <p>A data URI embeds file data directly inside a text string instead of pointing to an external resource. For images it looks like <code>data:image/png;base64,</code> followed by the Base64-encoded bytes, and the browser treats it like a normal image URL.</p>
+      </details>
+      <details>
+        <summary>What is the correct data URI syntax?</summary>
+        <p><code>data:[mediatype][;base64],data</code> — for example <code>data:image/png;base64,AAAA...</code>. The mediatype is the MIME type, <code>;base64</code> marks the payload as Base64, and everything after the comma is the encoded file.</p>
+      </details>
+      <details>
+        <summary>Is a Base64 data URI the same as a URL-encoded data URI?</summary>
+        <p>No. Base64 data URIs encode bytes with the Base64 alphabet — the common form for binary images. URL-encoded data URIs percent-encode the raw bytes instead. This generator produces the Base64 form.</p>
+      </details>
+      <details>
+        <summary>Can I use a data URI in CSS background-image?</summary>
+        <p>Yes. Place the complete URI inside <code>url()</code>, e.g. <code>background-image: url(data:image/png;base64,AAAA...)</code>. Double quotes around the value are also valid and are the safer habit.</p>
+      </details>
+      <details>
+        <summary>Does a data URI image get cached?</summary>
+        <p>Not independently — it is cached together with the HTML or CSS file that contains it. A separate image URL can be cached on its own and reused across pages, so inlining is best reserved for small assets.</p>
+      </details>
+      <details>
+        <summary>Is the data URI generation private?</summary>
+        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The image is never uploaded to any server and the URI is assembled locally on your device.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/image-to-base64">Image to Base64</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="png-to-base64">PNG to Base64</a>
+        <a href="jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="svg-to-base64">SVG to Base64</a>
+        <a href="webp-to-base64">WebP to Base64</a>
+        <a href="gif-to-base64">GIF to Base64</a>
+        <a href="base64-to-image">Base64 to Image</a>
+        <a href="base64-to-png">Base64 to PNG</a>
+        <a href="base64-to-jpg">Base64 to JPG</a>
+        <a href="base64-to-svg">Base64 to SVG</a>
+        <a href="base64-to-webp">Base64 to WebP</a>
+        <a href="base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

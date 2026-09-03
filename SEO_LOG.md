@@ -1,4 +1,24 @@
-## 2026-09-02 — 上线 /image-to-base64 精品页（一词一页补位）
+## 2026-09-03 — 上线 /data-uri-generator + /base64-favicon（GSC 数据驱动的相邻意图扩页）
+
+- 选题依据：GSC 9/3 导出（28 天）显示 12 个格式词页全部收录、均有曝光但 0 点击、排名 10–90 位——瓶颈是域名权重不是页面数；故新页只选**现有查询空间之外的相邻意图**，不开新格式词变体。两个词都离主产品最近（同一个编码引擎、同一批用户）。
+- 新页 1：`data-uri-generator.html`，主词 `data uri generator`，辅词 base64 to data uri / data uri css。encoder 全量复用（data URI + HTML + CSS 三个输出）。
+- 新页 2：`base64-favicon.html`，主词 `base64 favicon`，辅词 favicon data uri / inline favicon。`app.js` encoder 新增可选 `#out-link` 输出（3 行）：生成完整 `<link rel="icon" type="…" href="data:…">` 标签，其他页无此 id 不受影响。
+- 内链接线（root+dist 共 38 处改动）：两新页 footer + sib-card 进全站 14 个工具页与首页；新页互链 + 回链全网格；sitemap 加 2 条（data-uri-generator 0.9、base64-favicon 0.8）。合规页（about/faq/privacy/contact/editorial）本就无工具导航，未动。
+- 部署：`wrangler deploy`（wrangler 4.128 装在 ~/.workbuddy/binaries/node/workspace，NODE_PATH 调用）Version `55a50762`（2026-09-03 17:55 CST）。
+- 线上已验证：两新页 200、title/canonical 正确；sitemap.xml 含 2 新条目（cf 边缘缓存短暂返回旧版，数分钟后已刷新）；`.html` raw 307 → clean。check_seo_consistency `ok=62 warn=2 fail=0`（2 warn 仍为已知 jpg/jpeg 合并）。
+- 坑：批量接线脚本第一版把「卡片是否已插」的判重条件与 footer 插入共用同一个 href 检查，footer 先插导致卡片全部漏插；已修正为独立判重标记后重跑。批量 sed/python 改动后必须 grep -c 复核两类锚点。
+- 预期：吃 data uri / inline favicon 两个未覆盖查询空间；成功指标同前——非品牌点击 0→>0。
+
+## 2026-09-03 — Loop Engineering：/faq FAQ 内容页 + 全站 Feedback 入口
+
+- 动机：飞哥 4:2:4 框架（找需求:开发:运营）中的运营项——用户问题反哺 SEO 长尾词（Loop Engineering），一鱼两吃。
+- 新页：`faq.html`（11 问 FAQ，FAQPage JSON-LD 吃 rich results），canonical `https://image2base64.com/faq`，sitemap priority 0.7。
+- 反馈入口：全站 19 页 footer About 栏新增 FAQ + Feedback（mailto）链接；`app.js` 末尾新增 feedback-link 邮件主题自动带上 `document.title`——用户从哪个工具页发反馈一目了然，客服问题直接映射到对应工具页的 FAQ 补充。
+- 部署：`rsync ./ dist/`（含排除 `诊断_*`）+ `npx wrangler@4 deploy` Version `8dcd21a6`（2026-09-03 晚）。**git push 不会上线**；GitHub 上的 Workers Builds check 长期 failure 但与本站部署无关，勿被误导等部署。
+- 线上已验证：`/faq` 200 含 FAQPage schema；工具页 footer 含 FAQ/Feedback 链接；sitemap.xml 200 含 /faq；app.js 含 subject 自动填充。check_seo_consistency `ok=56 warn=2 fail=0`。
+- 后续：收到的真实用户问题按「对应工具页就近补充 FAQ 区 + 本页收录」双轨消化。
+
+
 
 - 战略依据：9/2 战略转向（外链→慢变量、内容/排名→首要杠杆）后 action B 第一个产物；head 词 `image to base64`（~2400/mo）原只由首页兼任，按哥飞「一词一页」原则为它建独立页。
 - 页面：`image-to-base64.html`（V2.0 三合一精品页），canonical `https://image2base64.com/image-to-base64`，含 SoftwareApplication JSON-LD + FAQ 区；`worker.js` clean URL 自动解析，无需加路由。

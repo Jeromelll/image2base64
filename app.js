@@ -78,6 +78,7 @@
     var prefixToggle = $("#prefix-toggle"); // checkbox: show raw (no prefix)
     var outHtml = $("#out-html");
     var outCss = $("#out-css");
+    var outLink = $("#out-link");    // optional: favicon <link rel="icon"> snippet
     var errBox = $("#enc-error");
 
     // The format this page is tuned for, e.g. "png" / "jpeg". Empty = any image.
@@ -118,6 +119,7 @@
         outRaw.value = raw;
         if (outHtml) outHtml.value = '<img src="' + dataUri + '" alt="" />';
         if (outCss) outCss.value = "background-image: url(" + dataUri + ");";
+        if (outLink) outLink.value = '<link rel="icon" type="' + (file.type || "image/png") + '" href="' + dataUri + '" />';
 
         if (preview) { preview.src = dataUri; preview.hidden = false; }
         if (metaName) metaName.textContent = file.name || "(pasted image)";

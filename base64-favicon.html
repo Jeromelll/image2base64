@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Base64 Favicon Generator - Inline Favicon as a Data URI, No Upload</title>
+<meta name="description" content="Convert a PNG or SVG favicon to a Base64 data URI and copy a ready-to-paste link tag. Inline favicons save a request and work in single-file HTML - 100% in your browser." />
+<link rel="canonical" href="https://image2base64.com/base64-favicon" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Base64 Favicon Generator - Inline Favicon as a Data URI, No Upload" />
+<meta property="og:description" content="Turn a favicon image into a Base64 data URI and copy the link rel=icon tag. Saves an HTTP request, works from file:// and in single-file HTML." />
+<meta property="og:url" content="https://image2base64.com/base64-favicon" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can a favicon be a Base64 data URI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. All modern browsers support a favicon declared as a data URI in a link element, for example link rel=icon with href=data:image/png;base64,.... The browser renders the inline image exactly like a favicon loaded from a separate /favicon.ico file."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I add a Base64 favicon to my HTML?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Paste the generated tag into the head section of your page: link rel=icon type=image/png href=data:image/png;base64, followed by the encoded bytes. The generator on this page produces the complete tag, so you only need to copy and paste it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What size should a Base64 favicon be?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Keep the source image small — 16×16, 32×32 or 48×48 pixels is plenty, and the encoded data URI should stay under a few kilobytes. The favicon is embedded in every page load, so a large payload would bloat your HTML."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why use an inline favicon instead of favicon.ico?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "An inline favicon saves one HTTP request, works in single-file HTML documents that have no other assets, and keeps working when a page is opened from the local file system where relative favicon links may not resolve."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I still need a favicon.ico file?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It is a good idea to keep one. Some crawlers, bookmark services and older clients request /favicon.ico directly instead of reading link tags. Serving a real file at that path alongside the inline favicon covers every case."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can SVG favicons be inlined as a data URI?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Use the MIME type image/svg+xml in the data URI and link it with type=image/svg+xml. SVG favicons scale to any tab size and often encode smaller than PNG, but a few older browsers do not render them, so a PNG fallback is prudent."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Base64 Favicon Generator",
+  "url": "https://image2base64.com/base64-favicon",
+  "description": "Free Base64 Favicon Generator — convert a PNG or SVG favicon to an inline data URI and copy a ready-to-paste link rel=icon tag. 100% client-side, no upload.",
+  "operatingSystem": "Web",
+  "applicationCategory": "UtilitiesApplication",
+  "applicationSubCategory": "ImageConverter",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "100% client-side",
+    "No upload — files never leave your browser",
+    "Complete link rel=icon snippet output",
+    "Supports PNG, SVG, ICO, WebP sources",
+    "Drag & drop and paste support"
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="#tool">Generator</a>
+      <a href="#guide">Guide</a>
+      <a href="#tools">More tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Base64 Favicon Generator</h1>
+      <p class="lede">
+        Turn a <strong>favicon into a Base64 data URI</strong> and copy a ready-to-paste
+        <code>&lt;link rel="icon"&gt;</code> tag — one less request, and your HTML works as a single self-contained file.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Your image never leaves your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="drop" class="dropzone" data-accept="">
+          <div class="dz-icon" aria-hidden="true">⭐</div>
+          <h2>Drop a favicon image to inline it as Base64</h2>
+          <p>PNG, SVG, ICO or WebP · 16–48 px works best</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose favicon image</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/png,image/svg+xml,image/x-icon,image/webp,image/*" />
+        </div>
+
+        <p id="enc-error" class="error" hidden></p>
+
+        <div id="results" class="results" hidden>
+          <div class="result-head">
+            <div class="preview-box"><img id="preview" alt="Preview of the selected favicon before Base64 encoding" width="120" height="120" hidden /></div>
+            <dl class="meta">
+              <div><dt>File</dt><dd id="m-name">—</dd></div>
+              <div><dt>Type</dt><dd id="m-type">—</dd></div>
+              <div><dt>Size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Base64 length</dt><dd id="m-len">—</dd></div>
+            </dl>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-link">Favicon <code>&lt;link&gt;</code> tag <span class="muted">(paste into your <code>&lt;head&gt;</code>)</span></label>
+              <button class="copy" type="button" data-copy="#out-link">Copy</button>
+            </div>
+            <textarea id="out-link" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-datauri">Data URI <span class="muted">(the raw data:image string)</span></label>
+              <button class="copy" type="button" data-copy="#out-datauri">Copy</button>
+            </div>
+            <textarea id="out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <label class="toggle">
+            <input id="prefix-toggle" type="checkbox" />
+            Show raw Base64 only (without the <code>data:</code> prefix)
+          </label>
+          <div id="raw-wrap" class="field" hidden>
+            <div class="field-head">
+              <label for="out-raw">Raw Base64 string</label>
+              <button class="copy" type="button" data-copy="#out-raw">Copy</button>
+            </div>
+            <textarea id="out-raw" class="out" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>How to inline a favicon as a Base64 data URI</h2>
+      <p>
+        A favicon declared as a data URI lives inside your HTML instead of a separate
+        <code>/favicon.ico</code> request. All modern browsers resolve a
+        <code>&lt;link rel="icon"&gt;</code> whose <code>href</code> is a
+        <code>data:image/...;base64,</code> string, so the icon appears in tabs and bookmarks exactly like a
+        file-based favicon. This generator encodes your image locally and hands you the finished tag.
+      </p>
+
+      <ol>
+        <li><strong>Add the favicon image.</strong> Drop a small PNG or SVG onto the generator, or paste one from the clipboard.</li>
+        <li><strong>Review the result.</strong> Check the detected type, size and Base64 length — a favicon should stay small.</li>
+        <li><strong>Copy the link tag.</strong> The first output is the complete <code>&lt;link rel="icon"&gt;</code> element, prefix and all.</li>
+        <li><strong>Paste it into your <code>&lt;head&gt;</code>.</strong> Place it with your other meta and title tags, then reload the page to confirm the tab icon.</li>
+      </ol>
+
+      <h3>What the generated tag looks like</h3>
+      <pre><code>&lt;link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo..." /&gt;</code></pre>
+      <p>
+        The <code>type</code> attribute mirrors the MIME type of your source image: <code>image/png</code>,
+        <code>image/svg+xml</code>, <code>image/webp</code> or <code>image/x-icon</code> for .ico files. The
+        <code>href</code> is the full data URI, so the icon needs no other file, no path and no extra HTTP request.
+      </p>
+
+      <h3>Why inline a favicon</h3>
+      <ul>
+        <li><strong>One less request.</strong> The icon travels inside the document, so the browser never fetches a separate file.</li>
+        <li><strong>Single-file HTML.</strong> Email templates, exported reports and offline demos keep their icon with no asset folder.</li>
+        <li><strong>file:// pages.</strong> Documents opened straight from disk reliably show an inline icon, while relative favicon links may not resolve.</li>
+        <li><strong>No 404 noise.</strong> Pages without a real favicon file generate a /favicon.ico 404 on every first visit; an inline icon removes it.</li>
+      </ul>
+
+      <h3>Keep the payload small</h3>
+      <p>
+        The data URI is embedded in every page load, so size matters more than with any other inline asset. Aim for a
+        source image of 16×16, 32×32 or 48×48 pixels and an encoded result under roughly 2–3 KB. A 32×32 PNG icon
+        typically encodes to a few hundred characters. If your favicon source is large, resize it first — the browser
+        will scale it down anyway, and you would just be shipping wasted bytes in your HTML.
+      </p>
+
+      <h3>PNG or SVG for an inline favicon?</h3>
+      <p>
+        SVG favicons scale cleanly to any tab or bookmark size and often encode to a shorter string than an
+        equivalent PNG. Link them with <code>type="image/svg+xml"</code>. Their one weakness is older browser support,
+        so a common pattern is to declare both — an SVG data URI first and a PNG data URI as fallback:
+      </p>
+      <pre><code>&lt;link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2Zy4uLg==" /&gt;
+&lt;link rel="icon" type="image/png" href="data:image/png;base64,iVBORw0KGgo..." /&gt;</code></pre>
+      <p>
+        Browsers pick the first format they support. Note that SVG favicons must contain their own viewBox and cannot
+        rely on external CSS or fonts to render correctly when inlined.
+      </p>
+
+      <h3>When you still want a favicon.ico file</h3>
+      <p>
+        Some clients never read link tags: certain crawlers, feed readers and bookmark services request
+        <code>/favicon.ico</code> directly. Serving a real file at that path costs you one static file and covers those
+        cases, while the inline <code>&lt;link&gt;</code> takes care of the browser tab. The two approaches are not
+        mutually exclusive — many sites ship both.
+      </p>
+
+      <h3>Limitations worth knowing</h3>
+      <ul>
+        <li><strong>Apple touch icons</strong> need real PNG files; iOS does not render them from data URIs.</li>
+        <li><strong>Web app manifests</strong> reference icons by file path and do not accept data URIs in the icon list.</li>
+        <li><strong>Caching.</strong> An inline favicon re-downloads with every HTML page; a file-based favicon is fetched once and cached. At 1–2 KB this is negligible, at 50 KB it is not.</li>
+      </ul>
+
+      <h3>Private, browser-only encoding</h3>
+      <p>
+        The generator uses the browser's <code>FileReader</code> API. Your favicon is read on the current device and
+        the data URI is assembled locally — the file is not uploaded and nothing is stored. The same privacy applies
+        in reverse: Base64 is an encoding, not encryption, so treat the generated string with the same care as the
+        source image.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/image-to-base64"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
+        <a class="sib-card" href="/data-uri-generator"><strong>Data URI Generator</strong><span>Turn any image into a data URI for CSS or HTML.</span></a>
+        <a class="sib-card" href="png-to-base64"><strong>PNG to Base64</strong><span>Encode PNG images, transparency kept.</span></a>
+        <a class="sib-card" href="jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
+        <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
+        <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
+        <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
+        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
+        <a class="sib-card" href="base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
+        <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
+        <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
+        <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
+        <a class="sib-card" href="base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>Can a favicon be a Base64 data URI?</summary>
+        <p>Yes. All modern browsers support a favicon declared as a data URI in a <code>&lt;link rel="icon"&gt;</code> element. The browser renders the inline image exactly like a favicon loaded from a separate <code>/favicon.ico</code> file.</p>
+      </details>
+      <details>
+        <summary>How do I add a Base64 favicon to my HTML?</summary>
+        <p>Paste the generated <code>&lt;link rel="icon" type="image/png" href="data:image/png;base64,..." /&gt;</code> tag into the <code>&lt;head&gt;</code> of your page. The generator produces the complete tag — copy and paste is all it takes.</p>
+      </details>
+      <details>
+        <summary>What size should a Base64 favicon be?</summary>
+        <p>Keep the source image small — 16×16, 32×32 or 48×48 pixels — and the encoded data URI under a few kilobytes. The favicon ships inside every page load, so a large payload would bloat your HTML.</p>
+      </details>
+      <details>
+        <summary>Why use an inline favicon instead of favicon.ico?</summary>
+        <p>An inline favicon saves one HTTP request, works in single-file HTML documents, and keeps working when a page is opened from the local file system where relative favicon links may not resolve.</p>
+      </details>
+      <details>
+        <summary>Do I still need a favicon.ico file?</summary>
+        <p>It is a good idea to keep one. Some crawlers, bookmark services and older clients request <code>/favicon.ico</code> directly instead of reading link tags. A real file at that path alongside the inline favicon covers every case.</p>
+      </details>
+      <details>
+        <summary>Can SVG favicons be inlined as a data URI?</summary>
+        <p>Yes — use the MIME type <code>image/svg+xml</code> and <code>type="image/svg+xml"</code> on the link tag. SVG favicons scale to any size and often encode smaller than PNG, but declare a PNG data URI as fallback for older browsers.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/image-to-base64">Image to Base64</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="png-to-base64">PNG to Base64</a>
+        <a href="jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="svg-to-base64">SVG to Base64</a>
+        <a href="webp-to-base64">WebP to Base64</a>
+        <a href="gif-to-base64">GIF to Base64</a>
+        <a href="base64-to-image">Base64 to Image</a>
+        <a href="base64-to-png">Base64 to PNG</a>
+        <a href="base64-to-jpg">Base64 to JPG</a>
+        <a href="base64-to-svg">Base64 to SVG</a>
+        <a href="base64-to-webp">Base64 to WebP</a>
+        <a href="base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
