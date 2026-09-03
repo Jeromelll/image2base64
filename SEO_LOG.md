@@ -9,6 +9,15 @@
 - 坑：批量接线脚本第一版把「卡片是否已插」的判重条件与 footer 插入共用同一个 href 检查，footer 先插导致卡片全部漏插；已修正为独立判重标记后重跑。批量 sed/python 改动后必须 grep -c 复核两类锚点。
 - 预期：吃 data uri / inline favicon 两个未覆盖查询空间；成功指标同前——非品牌点击 0→>0。
 
+## 2026-09-03 — 隐私优先行为分析上线（D1 事件库）
+
+- 目的：回答「用户在网站上具体干了什么」→ 反推找需求与页面调整。
+- 架构：Worker `POST /api/evt` 接收事件写入 D1（`image2base64-events`，表 `events`）；app.js 埋点 page_view（带 referrer）/ convert（mime+体积档）/ copy（哪个输出框）/ decode / download / error（编码或解码报错原因）/ sample（点了样例图）。Worker 侧自动补 country（request.cf）与 device（UA 派生）。
+- 隐私口径：无 cookie、无 IP 存储、无文件内容/文件名、无个人标识，first-party 自有管道——贴合 "No upload" 品牌，已同步更新 privacy.html「What we may collect」。
+- 关键坑：**Workers 静态资产请求默认不经过 Worker 代码**（asset router 直接命中），服务端记 page_view 不可行 → page_view 由 app.js boot 时上报。另 Analytics Engine 绑定需控制台手动开通（error 10089），故选 D1（CLI 全流程可建可查）。
+- 端到端已验证：真实浏览器 page_view / sample / convert / copy 全部落库；/api/evt 204；测试数据已清理。Version `e0a18ed0`（行为分析部署）。
+- 查询方式：`npx wrangler@4 d1 execute image2base64-events --remote --command "SELECT ..."`（见 image2base64-deploy 技能的查询样例）。
+
 ## 2026-09-03 — Loop Engineering：/faq FAQ 内容页 + 全站 Feedback 入口
 
 - 动机：飞哥 4:2:4 框架（找需求:开发:运营）中的运营项——用户问题反哺 SEO 长尾词（Loop Engineering），一鱼两吃。
