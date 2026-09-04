@@ -1,5 +1,16 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-04 — ④a 补强平移到 /png-to-base64（关键词优先级 ① 页面）
+
+- 背景：哥飞 SEO Agent `keyword_volume`（Google Ads 规划师官方口径 US）两轮 19 词盘点：`png to base64` 720/KD 41.8 为全站第 1 优先内容词（DR9 弱站已进前十，SERP 有缝）；`base64 to png` 480/KD 32.4 次之；`base64 to image` 2,900/KD 51.4 第三。页面均已存在（EMD 全家桶），故动作为**补强现有页**而非新建。
+- 改动：把 9/3 draft ④a（jpg 页体验补强，commit `5c17fc4`）平移到 png-to-base64.html——dropzone 样例图 chips（"No PNG handy?"）、结果区新增 **Base64 size** 与 **Dimensions** 两格（4→6）、**膨胀率实算提示条**（按 file.type 推导格式标签，PNG 页显示 PNG/.png）。
+- app.js 参数化：`makeSampleJpeg` → `makeSampleImage(kind, mime, ext, done)`，mime/ext 由页面 `data-accept` 推导（png 页 canvas 输出真 PNG）；overhead 文案格式标签由 `file.type` 推导，**jpg 页输出与改动前逐字一致**（已回归验证）。改动全部守卫式，其余 12 个工具页零影响；webp 页未来可低成本跟进（canvas 支持 webp 编码），svg/gif 页不适用。
+- 本地验证：headless Chrome 实测 png 页两枚样例 chip——type=image/png、dims/b64size 回填、`data:image/png;base64,` 前缀、无报错；jpg 页回归通过（"JPG" 文案不变）。
+- 部署：`wrangler deploy` Version `5fe41dc4`。线上已验证：png 页 200 + chips 3 处命中、app.js 含 makeSampleImage；check_seo_consistency `fail=0`（2 warn 为已知 jpg/jpeg 合并）。
+- 坑（复用价值）：① 同一文件多个 Edit 并行执行会互相覆盖（写回竞态），必须串行——本次 png 页 HTML 与 app.js 各被吞 1 处、复核 grep 时才抓回；② 本机 BSD grep 不支持 `\|`，一律用 `grep -E`，两次假阴性均由此起。
+- 预期：拉 png 页交互深度/停留时长（样例图让无素材访客完成完整转换）→ 支撑 `png to base64` 排名；成功指标 = GSC 该词点击 0→>0、page D1 事件中 png 页 sample/convert 事件上升。
+- 后续（按关键词优先级）：② `base64 to png`（480/32.4，decode 方向需另写解码逻辑，等 png 页 GSC 一个月数据再定投入）；③ `base64 to image` 页补强同款（2,900/51.4，converter 长尾 +276% 并入）。
+
 ## 2026-09-04 — 全站 footer Guides 栏补齐（对比页获得站点级入口）
 
 - 上一条 FAQ/对比页部署仅给首页/faq 加了 Guides 栏；本条把其余 20 页（全部 14 工具页 + about/privacy/contact/editorial + image-to-base64/data-uri-generator/base64-favicon）footer 统一加上 Guides 导航，指向两个对比页——两个新页由此获得全站每页 1 条入口。

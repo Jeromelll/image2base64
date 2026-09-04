@@ -105,7 +105,8 @@
     "No upload — files never leave your browser",
     "Copy as Base64 or data URI",
     "Drag & drop",
-    "Batch conversion"
+    "Batch conversion",
+    "Built-in sample images"
   ]
 }
 </script>
@@ -146,6 +147,12 @@
           <p>or paste from your clipboard · transparency is preserved</p>
           <button id="pick" class="btn btn-primary" type="button">Choose PNG</button>
           <input id="file" class="visually-hidden" type="file" accept="image/png" />
+
+          <div class="dz-samples">
+            <span class="dz-samples-label">No PNG handy? Try a sample:</span>
+            <button class="sample-chip" type="button" data-sample="photo">🏞️ Sample photo</button>
+            <button class="sample-chip" type="button" data-sample="avatar">🙂 Sample avatar</button>
+          </div>
         </div>
 
         <p id="enc-error" class="error" hidden></p>
@@ -157,9 +164,13 @@
               <div><dt>File</dt><dd id="m-name">—</dd></div>
               <div><dt>Type</dt><dd id="m-type">—</dd></div>
               <div><dt>Size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Base64 size</dt><dd id="m-b64size">—</dd></div>
               <div><dt>Base64 length</dt><dd id="m-len">—</dd></div>
+              <div><dt>Dimensions</dt><dd id="m-dims">—</dd></div>
             </dl>
           </div>
+
+          <p id="overhead-note" class="overhead-note" hidden></p>
 
           <div class="field">
             <div class="field-head">

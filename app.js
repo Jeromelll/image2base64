@@ -157,11 +157,16 @@
         // exact number for this file instead of a flat estimate.
         if (overheadNote && file.size > 0) {
           var pct = (((dataUri.length - file.size) / file.size) * 100).toFixed(1);
+          // Derive a friendly format label + extension from the actual file type
+          // (jpeg page shows "JPG"/".jpg" exactly as before; png page shows "PNG"/".png").
+          var sub = (file.type.split("/")[1] || "image").toLowerCase();
+          var fmtLabel = sub === "jpeg" ? "JPG" : sub.toUpperCase();
+          var fmtExt = sub === "jpeg" ? "jpg" : sub;
           var msg = "Base64 encoding added <strong>≈ " + pct + "%</strong> of overhead: this " +
-            bytesToSize(file.size) + " JPG became <strong>" + bytesToSize(dataUri.length) +
+            bytesToSize(file.size) + " " + fmtLabel + " became <strong>" + bytesToSize(dataUri.length) +
             "</strong> as a data URI.";
           if (file.size > 100 * 1024) {
-            msg += " That's a big inline payload — for large photos a normal, cacheable <code>.jpg</code> file usually loads faster.";
+            msg += " That's a big inline payload — for large photos a normal, cacheable <code>." + fmtExt + "</code> file usually loads faster.";
           } else {
             msg += " Small enough to inline comfortably in HTML, CSS or JSON.";
           }
@@ -179,7 +184,9 @@
 
     // Sample images: drawn locally on a canvas, then fed through the same
     // pipeline as a real file. Nothing is downloaded; zero extra requests.
-    function makeSampleJpeg(kind, done) {
+    // mime/ext are derived from the page's data-accept so each page ships
+    // samples in its own format (png page -> real PNGs, jpeg page -> JPGs).
+    function makeSampleImage(kind, mime, ext, done) {
       var c = document.createElement("canvas");
       if (kind === "avatar") { c.width = 160; c.height = 160; } else { c.width = 480; c.height = 320; }
       var ctx = c.getContext("2d");
@@ -215,21 +222,27 @@
 
       c.toBlob(function (blob) {
         if (!blob || !done) return;
-        var name = kind === "avatar" ? "sample-avatar.jpg" : "sample-photo.jpg";
+        var name = kind === "avatar" ? "sample-avatar." + ext : "sample-photo." + ext;
         try {
-          done(new File([blob], name, { type: "image/jpeg" }));
+          done(new File([blob], name, { type: mime }));
         } catch (err) {
           blob.name = name; // very old browsers: carry the name on the Blob
           done(blob);
         }
-      }, "image/jpeg", 0.88);
+      }, mime, 0.88);
     }
 
     // Sample chips (only present on pages that ship them)
     drop.querySelectorAll(".sample-chip").forEach(function (chip) {
       chip.addEventListener("click", function () {
         track("sample", chip.getAttribute("data-sample") || "photo");
-        makeSampleJpeg(chip.getAttribute("data-sample") || "photo", handleFile);
+        var sampleMime = accept === "png" ? "image/png"
+                       : accept === "webp" ? "image/webp"
+                       : "image/jpeg";
+        var sampleExt = accept === "png" ? "png"
+                      : accept === "webp" ? "webp"
+                      : "jpg";
+        makeSampleImage(chip.getAttribute("data-sample") || "photo", sampleMime, sampleExt, handleFile);
       });
     });
 
