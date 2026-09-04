@@ -1,5 +1,14 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-04 — 全站 footer Guides 栏补齐（对比页获得站点级入口）
+
+- 上一条 FAQ/对比页部署仅给首页/faq 加了 Guides 栏；本条把其余 20 页（全部 14 工具页 + about/privacy/contact/editorial + image-to-base64/data-uri-generator/base64-favicon）footer 统一加上 Guides 导航，指向两个对比页——两个新页由此获得全站每页 1 条入口。
+- 坑（记录在案）：批量插入脚本把 Guides nav 插进了 About nav 的闭合 `</nav>` 之前（feedback-link 与 `</nav>` 之间的锚点定位错误）= nav 嵌套，HTML 语义不合法。已用幂等修复脚本（先正则移除 Guides 块 → 重插到 About nav 闭合之后、footer-inner `</div>` 之前）修正，并用栈式解析校验 24 页全部为兄弟 nav。
+- 部署：`wrangler deploy` Version `3e53faf3`（2026-09-04 11:16 CST）。
+- 线上已验证：png-to-base64 / about / privacy / base64-to-svg / image-to-base64 均含新页链接。check_seo_consistency `ok=68 warn=2 fail=0`。
+- 后续：新增「资源/指南类」页面时 footer Guides 栏需同步（本 repo 无模板，靠脚本批量，先跑幂等脚本再人工抽查）。
+- 附：本 repo 存在多客户端并发操作（另一会话同时追加了 SEO_LOG 目录提交轮条目）；操作前先 `git pull`/检查 `git status`，避免旧索引覆盖。
+
 ## 2026-09-04 — /data-uri-generator + /base64-favicon 免费目录/清单提交轮（7 笔）
 
 - 范围：只投「接受独立工具页」的渠道 + GitHub awesome-list 类；主站已提交过的渠道（PH/TAAFT/AlternativeTo/SaaSHub/alternative.me/sitelike.org）不重复；付费与需登录渠道跳过（与 7/2 轮结论一致）。无社交帖类动作。
