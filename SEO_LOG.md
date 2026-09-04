@@ -1,5 +1,20 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-04 — /data-uri-generator + /base64-favicon 免费目录/清单提交轮（7 笔）
+
+- 范围：只投「接受独立工具页」的渠道 + GitHub awesome-list 类；主站已提交过的渠道（PH/TAAFT/AlternativeTo/SaaSHub/alternative.me/sitelike.org）不重复；付费与需登录渠道跳过（与 7/2 轮结论一致）。无社交帖类动作。
+- **Startup Stash（Typeform，2 笔 submitted）**：Data URI Generator + Base64 Favicon Generator 分别走 `/add-listing/`（原 `/submit` 已 404，入口改名 add-listing）。Development 类目、logo 可选未传、广告 interest=No。确认页 "Thank you for applying to get listed on StartupStash"。Email jeromell@be-winner.com。
+- **Launching Next（2 笔 submitted）**：同表单两连投，确认页 `/thanks/?i=148606`（Data URI）与 `/thanks/?i=148607`（Favicon）。type=A side project、营销预算=$0、newsletter_optin 已取消勾选。$99 加急付费档未购买。
+- **GitHub awesome-list（3 个 PR，均为查重后新提交）**：
+  - `hilmanski/freeStuffDev` **PR #2071**：新增 `src/content/tools/data-uri-generator.md` + `base64-favicon.md`（格式照 PR#2051）。主站条目 PR#2051 仍 OPEN。
+  - `iRajatDas/awesome-image-tools` **PR #31**：readme Developer tools 区 Image2Base64 行后插 2 行（🔒 标记一致）。主站条目 PR#5 已 merged。
+  - `zhaoolee/OnlineToolsBook` **PR #24**：新增 T046《Data URI 生成器》/ T047《Base64 Favicon 生成器》（fork 默认分支是 master；编号避开 OPEN 的 PR#23=T045）。
+  - 查重：gh search 三 repo + 全网均无 data-uri-generator / base64-favicon 相关既有 PR/issue。
+- **跳过**：Microlaunch（Cloudflare 人机质询）；Uneed/DevHunt/TinyLaunch/PitchWall/Fazier 等需登录（历史 blocked）；We Are Founders/Jike/Verified Tools 付费或免费=nofollow；Tier 3 AI 目录类目不符。
+- **过程坑（复用价值）**：① 浏览器 daemon 被并行任务抢 tab（页面被导航到 saashub/microlaunch），`--session dirsub0904` 独立会话隔离后解决；② Launching Next 的 radio 组（funding/marketing_budget）点击被样式层拦截，JS 直接 set checked+dispatch change 可靠（普通 HTML form，提交时读取 DOM checked）；③ newsletter_optin 记得取消默认勾选；④ 真正的提交控件是 `input[type=submit][value="Submit Startup"]`，snapshot 的 button ref 点击无效。
+- **待办**：Startup Stash / Launching Next 均为人工审核制，留意 jeromell@be-winner.com 的收录通知邮件（约 1-2 周）；三个 GitHub PR 等维护者合并；通过后跑 backlink verification（T+8 天起，参照 8/29 cadence）。
+- tracker 已同步：`/Users/jerome/Research/image2base64/SEO/directory-submissions-tracker.csv` 追加 13 行（7 submitted + 6 skipped/说明）。
+
 ## 2026-09-04 — FAQ 吃 PAA 长尾 + 两个对比内容页（SEETO 冷邮件诊断 → 顺手做的 SEO 动作）
 
 - 触发：SEETO AI 冷邮件给 image2base64.com 免费打分（73/100），其「加 FAQ / 加对比内容」建议与本阶段「关键词拓展」优先级重合。站点实际已有 FAQ（index 5 问 + faq.html 11 问，均带 FAQPage schema），故只补缺口，不为诊断买单。
