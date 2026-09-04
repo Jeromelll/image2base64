@@ -102,6 +102,46 @@
         "@type": "Answer",
         "text": "Yes. Paste the Base64 string into one of our decoders — Base64 to Image, Base64 to PNG, Base64 to JPG, Base64 to WebP, Base64 to GIF, or Base64 to SVG — and preview or download the decoded image. Decoding also runs entirely in your browser."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I convert an image to Base64 in JavaScript?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use the FileReader API's readAsDataURL() method on the selected file, and resolve when the load event fires: const reader = new FileReader(); reader.onload = () => resolve(reader.result); reader.readAsDataURL(file);. The result is a complete data URI ready for HTML, CSS or JSON. Our drag-and-drop converter produces the same output without any code."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between a data URI and a raw Base64 string?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A data URI is the complete form — data:image/png;base64,<payload> — carrying the MIME type, so browsers and CSS accept it directly. A raw Base64 string is just the payload: shorter, but you must prepend the scheme and MIME type yourself before it can be used as an image source."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Base64 slow down a website?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "It can. Encoded images are roughly 33% larger than the original file and, unlike separate files, cannot be cached independently or fetched in parallel. A few small icons make no noticeable difference; large inlined photos can delay first render. Inline tiny assets, keep large images as normal files."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I Base64-encode SVG images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Usually not. SVG is already text — you can inline the markup directly or use a URL-encoded data:image/svg+xml URI, which stays readable and compresses well. Base64 adds roughly 33% bloat to SVG for no benefit; reserve it for binary formats such as PNG and JPG."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How can I verify that my image is never uploaded?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Open your browser's developer tools, switch to the Network tab, and convert an image. On this site no request carries your file — and the converter keeps working in airplane mode once the page has loaded, which is impossible when a server does the encoding."
+      }
     }
   ]
 }
@@ -141,6 +181,9 @@
     <h3>Is it safe to convert images to Base64 here? Do you upload my images?</h3>
     <p>All conversion runs entirely in your browser using client-side JavaScript. Your images are <strong>never uploaded to our servers</strong>, never stored, and never sent anywhere — the tool even works offline once the page has loaded. This makes it safe for confidential screenshots, logos, and private assets.</p>
 
+    <h3>How can I verify that my image is never uploaded?</h3>
+    <p>Open your browser's developer tools (right-click → Inspect → <strong>Network</strong> tab), then convert an image. On this site you will not see any request carrying your file — the only activity is the page itself. The strongest test: go fully offline (airplane mode) after the page loads. The converter still works, which is impossible if a server is doing the encoding.</p>
+
     <h2>Sizes &amp; formats</h2>
 
     <h3>Why is the Base64 string larger than my original image?</h3>
@@ -170,6 +213,31 @@
     <h3>When should I use Base64 instead of a regular image file?</h3>
     <p>Use Base64 for small, frequently reused assets — icons, logos, UI elements — where saving an HTTP request or keeping everything in a single file (HTML email templates, single-file demos, JSON APIs) matters. For large photos or images served across many pages, regular image files with browser caching are more efficient.</p>
 
+    <h3>How do I convert an image to Base64 in JavaScript?</h3>
+    <p>Use the <code>FileReader</code> API's <code>readAsDataURL()</code> method on the selected file:</p>
+    <pre><code>const file = fileInput.files[0];
+const dataUri = await new Promise((resolve, reject) =&gt; {
+  const reader = new FileReader();
+  reader.onload = () =&gt; resolve(reader.result);
+  reader.onerror = reject;
+  reader.readAsDataURL(file);
+});</code></pre>
+    <p><code>dataUri</code> is now the full data URI — for example <code>data:image/png;base64,iVBOR...</code> — ready to paste into an <code>&lt;img&gt;</code> tag, CSS or JSON. If you would rather not write code, our <a href="/">converter</a> produces the same output with a drag and drop.</p>
+
+    <h2>Concepts &amp; performance</h2>
+
+    <h3>What is the difference between a data URI and a raw Base64 string?</h3>
+    <p>A <strong>data URI</strong> is the complete, self-describing form: <code>data:image/png;base64,iVBOR...</code>. The <code>data:</code> scheme tells the browser this is inline data, <code>image/png</code> is the MIME type, and everything after <code>base64,</code> is the payload. A <strong>raw Base64 string</strong> is only that payload — shorter and easier to store, but you must add the scheme and MIME type yourself before a browser or CSS file will accept it. Our converter outputs both.</p>
+
+    <h3>Does Base64 slow down a website?</h3>
+    <p>It can. A Base64 image is roughly <strong>33% larger</strong> than the original file, and unlike a separate file it cannot be cached independently or fetched in parallel — every page that uses it re-parses the whole string. For a few small icons the impact is negligible; for large photos it can noticeably delay first render. Rule of thumb: inline tiny assets, keep large images as normal files.</p>
+
+    <h3>Should I Base64-encode SVG images?</h3>
+    <p>Usually not. SVG is already text, so it does not need encoding to be embedded — you can inline the markup directly, or use a URL-encoded <code>data:image/svg+xml</code> URI, which stays readable and compresses well. Base64 works anywhere a data URI works, but for SVG it adds roughly <strong>33% bloat</strong> with no benefit. Reserve Base64 for binary formats like PNG and JPG (for those, try our <a href="/svg-to-base64">SVG to Base64</a> page only when you genuinely need the encoded form).</p>
+
+    <h2>Choosing a tool</h2>
+    <p>Wondering how this site differs from upload-based converters? We broke down the difference between <a href="/online-vs-local-base64-converter">online vs. in-browser Base64 converters</a> and compared Image2Base64 with the most popular <a href="/image-to-base64-alternatives">alternatives</a>.</p>
+
     <h2>Still have a question?</h2>
     <p>Email us at <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">jeromell@be-winner.com</a> — real questions from users get answered and added to this page.</p>
   </section>
@@ -189,6 +257,11 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>

@@ -148,3 +148,18 @@ details>p{margin:0 0 16px;color:var(--ink-soft)}
 .footer-brand .brand{color:#fff}
 .footer-brand p{max-width:280px;color:#7d87ab;font-size:.9rem;margin:.6em 0 0}
 .copyright{border-top:1px solid #232a44;padding-top:18px;font-size:.82rem;color:#6b76a3;text-align:center}
+
+/* Comparison tables (guide pages) */
+.cmp-scroll{overflow-x:auto;margin:20px 0}
+.cmp{width:100%;border-collapse:collapse;background:#fff;font-size:.92rem;line-height:1.5}
+.cmp caption{caption-side:top;text-align:left;font-weight:700;font-size:.95rem;padding:0 2px 10px;color:var(--ink)}
+.cmp th,.cmp td{border:1px solid var(--line);padding:10px 12px;text-align:left;vertical-align:top}
+.cmp thead th{background:#f2f4fb;font-size:.78rem;text-transform:uppercase;letter-spacing:.04em;color:var(--ink-soft)}
+.cmp tbody th{font-weight:600;background:var(--panel)}
+.cmp tr:nth-child(even) td{background:#fafbff}
+.cmp .ok{color:var(--accent);font-weight:700}
+.cmp .warn{color:var(--muted)}
+.cmp .me td{background:#eceeff}
+.cmp .me{background:#eceeff}
+.cmp-note{font-size:.86rem;color:var(--muted);margin:-8px 0 20px}
+article.guide{max-width:840px}

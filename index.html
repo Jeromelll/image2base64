@@ -105,6 +105,22 @@
         "@type": "Answer",
         "text": "Yes, slightly. Base64 encoding increases the size by about 33% compared with the raw file, because it uses 4 text characters for every 3 bytes. For small images like icons and logos this is usually fine, but for large photos it is better to keep them as normal image files."
       }
+    },
+    {
+      "@type": "Question",
+      "name": "Does this converter work offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Once the page has loaded, the entire tool runs locally in your browser — there is no server call during conversion, so it keeps working even without an internet connection."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a file size limit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "There is no hard limit — encoding happens in your device's memory, not on a server. Files up to roughly 5 MB convert comfortably; larger images work but produce very long strings and can slow your browser."
+      }
     }
   ]
 }
@@ -276,6 +292,11 @@
         no server — you can confirm it in your browser's Network tab. That makes it safe for screenshots, internal
         diagrams, or anything you'd rather not send to a third-party site.
       </p>
+      <p>
+        Not every Base64 tool works this way. Curious how the different kinds compare? Read our guide to
+        <a href="online-vs-local-base64-converter">online vs. in-browser Base64 converters</a>, or see how
+        <a href="image-to-base64-alternatives">Image2Base64 compares with the alternatives</a>.
+      </p>
     </div>
   </section>
 
@@ -346,6 +367,14 @@
         <summary>Does Base64 make my image larger?</summary>
         <p>Slightly — about 33% larger than the raw file, since it uses 4 text characters per 3 bytes. Fine for small icons and logos; for large photos, keep them as normal image files.</p>
       </details>
+      <details>
+        <summary>Does this converter work offline?</summary>
+        <p>Yes. Once the page has loaded, the whole tool runs locally in your browser — there is no server call during conversion, so it keeps working even without an internet connection.</p>
+      </details>
+      <details>
+        <summary>Is there a file size limit?</summary>
+        <p>No hard limit — encoding happens in your device's memory, not on a server. Files up to roughly 5&nbsp;MB convert comfortably; larger images work but produce very long strings that can slow your browser.</p>
+      </details>
     </div>
   </section>
 </main>
@@ -382,6 +411,11 @@
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>

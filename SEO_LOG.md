@@ -1,4 +1,19 @@
-## 2026-09-03 — 上线 /data-uri-generator + /base64-favicon（GSC 数据驱动的相邻意图扩页）
+# Image2Base64 SEO 日志
+
+## 2026-09-04 — FAQ 吃 PAA 长尾 + 两个对比内容页（SEETO 冷邮件诊断 → 顺手做的 SEO 动作）
+
+- 触发：SEETO AI 冷邮件给 image2base64.com 免费打分（73/100），其「加 FAQ / 加对比内容」建议与本阶段「关键词拓展」优先级重合。站点实际已有 FAQ（index 5 问 + faq.html 11 问，均带 FAQPage schema），故只补缺口，不为诊断买单。
+- FAQ 增量（吃 PAA 型问题词，非新功能）：faq.html 11→16 问，新增 JS 写法 / data URI vs raw Base64 / Base64 是否拖慢网站 / SVG 是否该 Base64（专业观点：通常不该）/ 如何自行验证不上传（Network tab + 飞行模式方法）。index.html #faq 区块 +2（works offline / file size limit），details 与 FAQPage JSON-LD 同步。
+- 新页 1：`online-vs-local-base64-converter.html`——三类转换器（server-based 上传 / in-browser / 桌面 CLI）对比表 + 「判定是否上传」三方法 + 选型判据 + 4 组 FAQ schema。用「online ≠ upload」的澄清立口碑。
+- 新页 2：`image-to-base64-alternatives.html`——诚实列出 base64.guru / base64encode.org / base64-image.de / Online-Convert / cryptii（各 1-2 行定位 + 官方链接 nofollow，不替竞品断言内部行为，指向可自验方法）+ 「典型 server-based vs 本站」对比表 + 4 组 FAQ schema + fairness 段（反 self-serving 失衡）。
+- 内链：新页互链；首页 #guide Privacy 段后 + 首页/faq 页 footer 新增 Guides 栏（两新页入口）；faq.html 正文「Choosing a tool」段内链。其余 21 页 footer 未动（本次范围控制，全站 Guides 栏后续轮换补齐）。
+- styles.css 新增 .cmp 对比表系列类（纯追加，不动现有）。
+- 部署：`wrangler deploy` Version `534fe64a`（2026-09-04 11:08 CST，6 文件：两新页 + index + faq + styles + sitemap）。
+- 线上已验证：两新页 200、title/canonical 正确；sitemap 含 2 新条目（priority 0.6）；index 含 footer+guide 内链与新 FAQ；faq 含 5 新问。check_seo_consistency `ok=68 warn=2 fail=0`（2 warn 仍为已知 jpg/jpeg 合并）。
+- 预期：吃 data uri vs base64 / svg base64 / base64 javascript 等概念词 + alternatives/comparison 交易词；对比页兼作外链落点（引用「如何判断工具是否上传」的方法类内容）。
+- 坑：BSD grep 不支持 `\|`（用 grep -E）；rsync 后核对 dist 用 grep -c 单模式。
+
+
 
 - 选题依据：GSC 9/3 导出（28 天）显示 12 个格式词页全部收录、均有曝光但 0 点击、排名 10–90 位——瓶颈是域名权重不是页面数；故新页只选**现有查询空间之外的相邻意图**，不开新格式词变体。两个词都离主产品最近（同一个编码引擎、同一批用户）。
 - 新页 1：`data-uri-generator.html`，主词 `data uri generator`，辅词 base64 to data uri / data uri css。encoder 全量复用（data URI + HTML + CSS 三个输出）。
