@@ -1,5 +1,15 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-05 — ④a 平移到 /base64-to-png（关键词优先级 ②，decode 方向）
+
+- 背景：竞对 gap 分析（SEO Agent 域名概况两竞对 + 官方口径核词）确认 `base64 to png`（官方 480/月、KD 32.4 全族最低、前十有 DR 0-4 新站在赢）是 19 词盘点里的 ② 号优先词；页面已存在，动作为补强。
+- 改动：decode 版补强——① 输入区新增样例 Base64 chips（"No Base64 handy? Try a sample:"），canvas 现场绘制 → `toDataURL("image/png")` → 填入输入框 → 自动触发解码，零网络请求零静态资源；② 结果区 muted 文案升级为 4 格指标（Source type / Dimensions / PNG size / Base64 input）；③ 新增体积对比提示条（N chars → X KB，binary ≈25% lighter 教育语义）。
+- app.js：绘制逻辑提为模块级 `drawSampleScene(ctx, kind)`（encoder/decoder 共用）；`showResult` 加可选 `extra` 参数回填指标（全守卫，其他 12 个 decode 相关页零影响）；decoder 新增 `makeSampleDataUri` + chips 绑定（含 track("sample") 埋点，与 encode 页口径一致）。
+- 本地验证：headless Chrome 实测 base64-to-png 两枚样例——PNG 检测、480×320/160×160、16.1KB/5.9KB、blob 下载链接、无报错；png encode 页回归通过（重构等价）。
+- 部署：`wrangler deploy` Version `d9c828a6`。线上已验证：页 200 + chips/指标 4 处命中、app.js 含 drawSampleScene；check_seo_consistency `fail=0`（2 warn 为已知 jpg/jpeg 合并）。
+- 月度闸门自动化已建（WorkBuddy，每月 5 号 10:00，首跑 2026-10-05）：D1 事件环比 + GSC 闸门判定（png to base64 点击 0→>0 则继续平移 ③ base64-to-image；仍 0 且曝光不增则停补强转外链），报告落 ~/webcafe/marketing/gsc-monthly-review-YYYY-MM.md。
+- 竞对 gap 分析结论（SEO Agent，官方口径，回写 se-gefei-agent-QA-competitor-gap-2026-09-05.md）：最大机会是开「decode 还原文件」新品类——base64 to pdf 1600/月/KD45.7（前十有 DR 0 弱占位）+ base64 to text 1000/53.1 + pdf to base64 390/47.2，base64.guru 靠此品类吃下大块 ETV 且无强站正面占坑；次优先是把 image-to-base64 页的 title/H2/intro 补齐 image as base64 / base64 image encoder 等变体说法（1900+880/月，不新建页）。
+
 ## 2026-09-04 — ④a 补强平移到 /png-to-base64（关键词优先级 ① 页面）
 
 - 背景：哥飞 SEO Agent `keyword_volume`（Google Ads 规划师官方口径 US）两轮 19 词盘点：`png to base64` 720/KD 41.8 为全站第 1 优先内容词（DR9 弱站已进前十，SERP 有缝）；`base64 to png` 480/KD 32.4 次之；`base64 to image` 2,900/KD 51.4 第三。页面均已存在（EMD 全家桶），故动作为**补强现有页**而非新建。
@@ -425,3 +435,12 @@ Last updated: 2026-09-02 CST
 - Privacy: Advertising 章节补第三方（含 Google）Cookie/web beacon 广告披露 + Google Ads Settings / aboutads.info 退出链接，Last updated → 2026-08-29。git `d135e38`。
 - **部署通道确认**：image2base64.com 线上走 **Worker（worker.js + ./dist 静态资产）**，Pages 项目（image2base64-1ya.pages.dev）未挂自定义域。改站后必须：同步 dist 副本 → `cd repo && npx wrangler deploy`。只 push git 不上线。
 - 线上已验证：/privacy 新文案 200；/jpeg-to-base64 301→/jpg-to-base64 正常；/ads.txt 200。
+
+## 2026-09-05 · Launchstag 收录提交（Jerome 指派，转来 claim 邮件后执行）
+- submitted: Launchstag claim `e8f57bf2-39e4-4b29-bdb1-b3f48a835280`（平台已自动预收录 Image to Base64 Converter，claim 认领制）。
+- 验证邮箱口径：先试 `jeromell@be-winner.com`（站点联系邮箱）→ 验证码邮件 45 分钟未同步进 Apple Mail（AppleScript 又被 TCC 卡），**弃用**；改用枢纽 Gmail `jiamu970214@gmail.com` 收码完成验证（服务器 Gmail API 现成通道）。**listing 账号归属 = 枢纽 Gmail**。
+- 表单内容：Name `Jerome`；Product name 平台预填 `Image to Base64 Converter`；URL 平台预填 `https://image2base64.com/`（首页）；Tagline 改写为 `Free image to Base64 converter — PNG, JPG, GIF, WebP, SVG. No upload, 100% in-browser.`（86/100，原 AI 预填只提 PNG，与首页主词不符）；Description 360 字符（100% in-browser / no upload / 多格式双向卖点）；分类 3/4：Developer Tools + Design + SEO；Pricing `Free`；Launch date 2026-09-29（免费排队槽，提交后系统显示排期 **2026-10-04**）。
+- Logo：上传 `icon-512.png`（33KB）。IAB 文件选择器不支持，走 Computer Use + 原生 Open 面板（期间授了一次 ZCode Computer Use 屏幕控制 TCC 权限）。
+- **徽章（Free 方案 dofollow 条件）**：`badge-light.svg` 198×62 加进首页 footer 版权行上方（`index.html` + dist 同步 + `npx wrangler deploy`，commit `a56b5e1`）；线上验证首页 HTML 含 launchstag 徽章后点 Verify → **✓ Badge verified，listing 排期 2026-10-04 上线**。
+- Listing 页：`https://launchstag.com/p/image-to-base64-converter`（已 200，标题正确）。
+- 备注：付费档（Premium $15 首页 7 天 / Growth $29）未购买，按免费排队走。Premium 免徽章 + 提前排期，若 10/4 前想要更早上线再议。

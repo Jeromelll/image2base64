@@ -64,6 +64,38 @@
     document.body.removeChild(ta);
     done();
   }
+  // Draw a sample scene (photo or avatar) shared by encoder and decoder
+  // sample chips. Canvas stays local; nothing is downloaded.
+  function drawSampleScene(ctx, kind) {
+    if (kind === "avatar") {
+      var bg = ctx.createLinearGradient(0, 0, 0, 160);
+      bg.addColorStop(0, "#8ec9ff");
+      bg.addColorStop(1, "#dbeaff");
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, 160, 160);
+      ctx.fillStyle = "#f2c19a";                                    // shoulders
+      ctx.beginPath(); ctx.arc(80, 172, 52, Math.PI, 2 * Math.PI); ctx.fill();
+      ctx.fillStyle = "#f6d0ae";                                    // head
+      ctx.beginPath(); ctx.arc(80, 70, 30, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#3b2f2a";                                    // hair
+      ctx.beginPath(); ctx.arc(80, 64, 30, Math.PI, 2 * Math.PI); ctx.fill();
+    } else {
+      ctx.fillStyle = "#eef2ff";
+      ctx.fillRect(0, 0, 480, 320);
+      var sky = ctx.createLinearGradient(0, 0, 0, 210);
+      sky.addColorStop(0, "#5b6cff");
+      sky.addColorStop(1, "#c9d4ff");
+      ctx.fillStyle = sky;
+      ctx.fillRect(0, 0, 480, 210);
+      ctx.fillStyle = "#ffd66e";                                    // sun
+      ctx.beginPath(); ctx.arc(360, 70, 34, 0, Math.PI * 2); ctx.fill();
+      ctx.fillStyle = "#19c39a";                                    // back hill
+      ctx.beginPath(); ctx.moveTo(0, 320); ctx.quadraticCurveTo(140, 100, 300, 320); ctx.fill();
+      ctx.fillStyle = "#0f9d7c";                                    // front hill
+      ctx.beginPath(); ctx.moveTo(160, 320); ctx.quadraticCurveTo(330, 140, 480, 320); ctx.fill();
+    }
+  }
+
   // Wire any [data-copy="#targetId"] button to copy that element's value/text.
   function wireCopyButtons(root) {
     (root || document).querySelectorAll("[data-copy]").forEach(function (btn) {
@@ -208,33 +240,7 @@
       var ctx = c.getContext("2d");
       if (!ctx) return;
 
-      if (kind === "avatar") {
-        var bg = ctx.createLinearGradient(0, 0, 0, 160);
-        bg.addColorStop(0, "#8ec9ff");
-        bg.addColorStop(1, "#dbeaff");
-        ctx.fillStyle = bg;
-        ctx.fillRect(0, 0, 160, 160);
-        ctx.fillStyle = "#f2c19a";                                    // shoulders
-        ctx.beginPath(); ctx.arc(80, 172, 52, Math.PI, 2 * Math.PI); ctx.fill();
-        ctx.fillStyle = "#f6d0ae";                                    // head
-        ctx.beginPath(); ctx.arc(80, 70, 30, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#3b2f2a";                                    // hair
-        ctx.beginPath(); ctx.arc(80, 64, 30, Math.PI, 2 * Math.PI); ctx.fill();
-      } else {
-        ctx.fillStyle = "#eef2ff";
-        ctx.fillRect(0, 0, 480, 320);
-        var sky = ctx.createLinearGradient(0, 0, 0, 210);
-        sky.addColorStop(0, "#5b6cff");
-        sky.addColorStop(1, "#c9d4ff");
-        ctx.fillStyle = sky;
-        ctx.fillRect(0, 0, 480, 210);
-        ctx.fillStyle = "#ffd66e";                                    // sun
-        ctx.beginPath(); ctx.arc(360, 70, 34, 0, Math.PI * 2); ctx.fill();
-        ctx.fillStyle = "#19c39a";                                    // back hill
-        ctx.beginPath(); ctx.moveTo(0, 320); ctx.quadraticCurveTo(140, 100, 300, 320); ctx.fill();
-        ctx.fillStyle = "#0f9d7c";                                    // front hill
-        ctx.beginPath(); ctx.moveTo(160, 320); ctx.quadraticCurveTo(330, 140, 480, 320); ctx.fill();
-      }
+      drawSampleScene(ctx, kind);
 
       c.toBlob(function (blob) {
         if (!blob || !done) return;
@@ -336,6 +342,12 @@
     var acceptMime = (input.getAttribute("data-accept-mime") || "").toLowerCase();
     var quality = parseFloat(input.getAttribute("data-quality") || "0.92");
     var activeObjectUrl = "";
+    // Optional result readouts (only present on pages that ship them)
+    var dSrcType = $("#d-srctype");
+    var dDims = $("#d-dims");
+    var dSize = $("#d-size");
+    var dB64Len = $("#d-b64len");
+    var dNote = $("#d-note");
 
     function showError(msg) {
       if (!errBox) return;
@@ -469,7 +481,7 @@
       });
     }
 
-    function showResult(blob, mime, note) {
+    function showResult(blob, mime, note, extra) {
       revokeActiveUrl();
       activeObjectUrl = URL.createObjectURL(blob);
       img.src = activeObjectUrl;
@@ -478,6 +490,19 @@
         dlBtn.setAttribute("download", "decoded." + (outputExt || extensionForMime(mime)));
       }
       if (resultNote) resultNote.textContent = note;
+      if (extra) {
+        if (dSrcType) dSrcType.textContent = mimeLabel(extra.srcMime || mime);
+        if (dDims) dDims.textContent = extra.dims || "—";
+        if (dSize) dSize.textContent = bytesToSize(blob.size);
+        if (dB64Len) dB64Len.textContent = (extra.srcChars || 0).toLocaleString() + " chars";
+        if (dNote) {
+          dNote.innerHTML = "Decoded <strong>" + (extra.srcChars || 0).toLocaleString() +
+            " chars</strong> of Base64 into a <strong>" + bytesToSize(blob.size) + "</strong> " +
+            mimeLabel(mime) + " (" + (extra.dims || "—") +
+            ") — binary is ≈25% lighter than its Base64 text. Ready to download below.";
+          dNote.hidden = false;
+        }
+      }
       if (resWrap) resWrap.hidden = false;
       resWrap.scrollIntoView({ behavior: "smooth", block: "nearest" });
       track("decode", mime, outputMime || "original");
@@ -509,11 +534,13 @@
       var sourceBlob = new Blob([parsed.bytes], { type: parsed.mime });
       var sourceUrl = URL.createObjectURL(sourceBlob);
       loadImage(sourceUrl).then(function (source) {
+        var dims = source.naturalWidth + " × " + source.naturalHeight + " px";
         if (!outputMime) {
           showResult(
             sourceBlob,
             parsed.mime,
-            "Detected " + mimeLabel(parsed.mime) + ". Preview it here or download the original image bytes."
+            "Detected " + mimeLabel(parsed.mime) + ". Preview it here or download the original image bytes.",
+            { srcMime: parsed.mime, dims: dims, srcChars: v.length }
           );
           return null;
         }
@@ -522,7 +549,8 @@
             convertedBlob,
             outputMime,
             "Converted " + mimeLabel(parsed.mime) + " to " + mimeLabel(outputMime) +
-            " in your browser."
+            " in your browser.",
+            { srcMime: parsed.mime, dims: dims, srcChars: v.length }
           );
         });
       }).catch(function (e) {
@@ -532,6 +560,37 @@
         URL.revokeObjectURL(sourceUrl);
       });
     }
+
+    // Sample data URIs: drawn locally on a canvas, then fed through the same
+    // decode pipeline as pasted text. Nothing is downloaded; zero extra requests.
+    function makeSampleDataUri(kind) {
+      return new Promise(function (resolve) {
+        var c = document.createElement("canvas");
+        if (kind === "avatar") { c.width = 160; c.height = 160; } else { c.width = 480; c.height = 320; }
+        var ctx = c.getContext("2d");
+        if (!ctx) return resolve("");
+        drawSampleScene(ctx, kind);
+        c.toBlob(function (blob) {
+          if (!blob) return resolve("");
+          var reader = new FileReader();
+          reader.onload = function () { resolve(String(reader.result || "")); };
+          reader.onerror = function () { resolve(""); };
+          reader.readAsDataURL(blob);
+        }, "image/png");
+      });
+    }
+
+    // Sample chips (only present on pages that ship them)
+    document.querySelectorAll(".sample-chip").forEach(function (chip) {
+      chip.addEventListener("click", function () {
+        track("sample", chip.getAttribute("data-sample") || "photo");
+        makeSampleDataUri(chip.getAttribute("data-sample") || "photo").then(function (uri) {
+          if (!uri) { showError("Could not generate the sample in this browser."); return; }
+          input.value = uri;
+          decode();
+        });
+      });
+    });
 
     if (decodeBtn) decodeBtn.addEventListener("click", decode);
     if (dlBtn) dlBtn.addEventListener("click", function () {

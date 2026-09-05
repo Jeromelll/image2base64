@@ -83,6 +83,8 @@
     "100% client-side",
     "No upload — data never leaves your browser",
     "Paste Base64 or data URI",
+    "Built-in sample data",
+    "Size & dimension readout",
     "Preview before download",
     "Download decoded image"
   ]
@@ -128,6 +130,13 @@
             data-output-mime="image/png" data-output-ext="png"
             placeholder="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAA...   — or just the raw Base64 body"></textarea>
         </div>
+
+        <div class="dz-samples">
+          <span class="dz-samples-label">No Base64 handy? Try a sample:</span>
+          <button class="sample-chip" type="button" data-sample="photo">🏞️ Sample photo</button>
+          <button class="sample-chip" type="button" data-sample="avatar">🙂 Sample avatar</button>
+        </div>
+
         <button id="decode" class="btn btn-primary" type="button">Convert to PNG</button>
 
         <p id="dec-error" class="error" hidden></p>
@@ -135,10 +144,16 @@
         <div id="dec-results" class="results" hidden>
           <div class="result-head">
             <div class="preview-box"><img id="decoded-img" alt="Preview of the decoded Base64 image" width="120" height="120" /></div>
-            <div class="meta" style="align-self:center">
-              <p class="muted" style="margin:0">Preview of your decoded image. Use the button below to save it as a PNG file.</p>
-            </div>
+            <dl class="meta" style="align-self:center">
+              <div><dt>Source type</dt><dd id="d-srctype">—</dd></div>
+              <div><dt>Dimensions</dt><dd id="d-dims">—</dd></div>
+              <div><dt>PNG size</dt><dd id="d-size">—</dd></div>
+              <div><dt>Base64 input</dt><dd id="d-b64len">—</dd></div>
+            </dl>
           </div>
+
+          <p id="d-note" class="overhead-note" hidden></p>
+
           <a id="download" class="btn btn-primary" download="decoded.png" href="#">Download PNG</a>
         </div>
       </div>
