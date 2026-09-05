@@ -99,6 +99,7 @@
     var outRaw = $("#out-raw");      // textarea: raw base64 only
     var rawWrap = $("#raw-wrap");
     var prefixToggle = $("#prefix-toggle"); // checkbox: show raw (no prefix)
+    var creditToggle = $("#credit-toggle"); // checkbox: append opt-in "via Image2Base64" credit to the HTML snippet
     var outHtml = $("#out-html");
     var outCss = $("#out-css");
     var outLink = $("#out-link");    // optional: favicon <link rel="icon"> snippet
@@ -106,6 +107,20 @@
 
     // The format this page is tuned for, e.g. "png" / "jpeg". Empty = any image.
     var accept = (drop.getAttribute("data-accept") || "").toLowerCase();
+
+    // Last encoded data URI, so the opt-in credit toggle can rebuild the
+    // HTML snippet without re-reading the file.
+    var lastDataUri = null;
+
+    // HTML <img> snippet builder. The credit link is strictly opt-in:
+    // default off, only appended when the visitor ticks the checkbox.
+    function buildHtmlSnippet(dataUri) {
+      var snippet = '<img src="' + dataUri + '" alt="" />';
+      if (creditToggle && creditToggle.checked) {
+        snippet += ' <small><a href="https://image2base64.com/">via Image2Base64</a></small>';
+      }
+      return snippet;
+    }
 
     // Report natural dimensions as soon as the preview bitmap is ready.
     if (preview) {
@@ -141,7 +156,8 @@
 
         outData.value = dataUri;
         outRaw.value = raw;
-        if (outHtml) outHtml.value = '<img src="' + dataUri + '" alt="" />';
+        lastDataUri = dataUri;
+        if (outHtml) outHtml.value = buildHtmlSnippet(dataUri);
         if (outCss) outCss.value = "background-image: url(" + dataUri + ");";
         if (outLink) outLink.value = '<link rel="icon" type="' + (file.type || "image/png") + '" href="' + dataUri + '" />';
 
@@ -289,6 +305,14 @@
       var sync = function () { rawWrap.hidden = !prefixToggle.checked; };
       prefixToggle.addEventListener("change", sync);
       sync();
+    }
+
+    // Credit toggle: rebuild the HTML snippet without touching the file input
+    if (creditToggle && outHtml) {
+      creditToggle.addEventListener("change", function () {
+        track("credit", creditToggle.checked ? "on" : "off");
+        if (lastDataUri) outHtml.value = buildHtmlSnippet(lastDataUri);
+      });
     }
 
     wireCopyButtons(drop.closest("section") || document);
