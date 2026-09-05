@@ -7,7 +7,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Base64 to PNG Converter - Decode and Save, No Upload</title>
-<meta name="description" content="Convert a Base64 string or data URI into a PNG file in your browser. 100% client-side, transparency preserved - preview and download your .png with no upload." />
+<meta name="description" content="Free base64 to PNG converter: decode a base64 string or data URI into a transparent PNG right in your browser. No upload, no signup - preview and download instantly." />
 <link rel="canonical" href="https://image2base64.com/base64-to-png" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -58,6 +58,30 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Yes. Decoding happens entirely in your browser. Nothing is uploaded, so your data stays on your device."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I decode a Base64 string from a JPG or WebP into a PNG?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The tool renders whatever image the string contains and re-exports it as PNG. Note that converting a lossy source like JPG to PNG does not restore lost quality — it saves the current pixels in a lossless container."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is my downloaded PNG smaller than the Base64 string?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Base64 encoding inflates binary data by roughly 33% so it can travel through text-only channels. Decoding reverses that, so the PNG file returns to its true binary size."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does a PNG Base64 string look like?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PNG files always start with the same signature, which appears as iVBORw0KGgo at the start of the Base64 payload. JPEG strings start with /9j/ instead."
       }
     }
   ]
@@ -162,32 +186,115 @@
 
   <section id="guide" class="content-section">
     <div class="wrap prose">
-      <h2>Base64 to PNG, explained</h2>
+      <h2>How to convert Base64 to PNG</h2>
       <p>
-        A Base64 image string is just text that encodes an image's binary data. This converter detects the source image,
-        renders it, and exports a real <strong>.png</strong> file in your browser. It accepts PNG, JPG, GIF, WebP and
-        SVG Base64 input. PNG is a
-        lossless format that keeps every pixel exact and supports transparent backgrounds — ideal when you need a crisp
-        logo, icon, or screenshot.
+        The whole process takes under a minute and never leaves your browser:
+      </p>
+      <ol>
+        <li><strong>Copy the Base64 string.</strong> Grab the full data URI (<code>data:image/png;base64,iVBOR...</code>) or just the raw Base64 body — the converter accepts both and detects the source format automatically.</li>
+        <li><strong>Paste it into the decoder above.</strong> You can paste directly, drag a .txt file onto the box, or click one of the sample chips to see the tool work before using your own data.</li>
+        <li><strong>Click <em>Convert to PNG</em> and download.</strong> You get an instant preview plus the exact dimensions, the decoded PNG file size, and the length of the Base64 input. Hit <em>Download PNG</em> to save a real <strong>.png</strong> file.</li>
+      </ol>
+
+      <h2>Base64 string vs. data URI: what's the difference?</h2>
+      <p>
+        A <strong>Base64 string</strong> is pure text: the binary bytes of an image re-encoded into 64 safe ASCII
+        characters (<code>A–Z</code>, <code>a–z</code>, <code>0–9</code>, <code>+</code>, <code>/</code>), plus
+        <code>=</code> padding. It has no header, so on its own it does not say what format the bytes represent.
+      </p>
+      <p>
+        A <strong>data URI</strong> wraps that Base64 payload in a standard header:
+        <code>data:image/png;base64,</code> followed by the string. The header is what tells browsers, CSS, and HTML
+        exactly how to interpret the bytes. If you have the choice, paste the full data URI — it removes all guesswork.
+        A bare string still works here: the decoder sniffs the file signature (PNG starts with
+        <code>iVBOR</code> in Base64, JPEG with <code>/9j/</code>) and routes the decode accordingly.
+      </p>
+      <p>
+        One more thing worth knowing: Base64 makes data roughly <strong>33% larger</strong> than the binary original.
+        That overhead is the price of moving binary data through text-only channels — HTML, CSS, JSON, or email. When
+        you decode back to PNG, the file shrinks back to its true size, which is exactly what the size readout above shows.
       </p>
 
-      <h3>When to choose PNG</h3>
+      <h2>Base64 to PNG vs. Base64 to other formats</h2>
+      <p>
+        The decoder renders the source image and re-exports it, so the output format is your choice — not dictated by
+        the input. Pick the format that matches what the image needs to do:
+      </p>
       <ul>
-        <li><strong>Transparency matters.</strong> PNG keeps an alpha channel, so logos and icons stay clean on any background.</li>
-        <li><strong>You need pixel-perfect output.</strong> PNG is lossless — no compression artifacts, unlike JPG.</li>
-        <li><strong>UI, charts, or line art.</strong> Sharp edges and text stay sharp at any size.</li>
+        <li><strong>PNG (this tool)</strong> — lossless and alpha-channel aware. Choose it for logos, icons, UI
+          elements, screenshots, and anything that must stay pixel-exact or sit on a transparent background. If your
+          Base64 came from a PNG, decoding to PNG is a perfect round trip: zero quality loss.</li>
+        <li><strong>JPG</strong> — much smaller files for photographs, but lossy and no transparency. Use the
+          <a href="/base64-to-jpg">Base64 to JPG decoder</a> when the image is a photo and file size matters more than
+          pixel perfection.</li>
+        <li><strong>WebP</strong> — modern compression, supports both lossless and lossy modes plus transparency. The
+          <a href="/base64-to-webp">Base64 to WebP decoder</a> is a good middle ground for web assets where you still
+          want transparency at a smaller size.</li>
+        <li><strong>Original format</strong> — not sure what the string contains? The
+          <a href="/base64-to-image">Base64 to Image decoder</a> auto-detects PNG, JPG, GIF, WebP and SVG and saves in
+          the source format.</li>
+        <li><strong>Going the other way?</strong> To encode a PNG file into a Base64 data URI, use the
+          <a href="/png-to-base64">PNG to Base64 encoder</a>.</li>
       </ul>
 
-      <h3>What you can paste</h3>
-      <ul>
-        <li><strong>A full data URI</strong> — <code>data:image/png;base64,iVBOR...</code>. This is the most reliable form because it names the exact format.</li>
-        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The source format is detected automatically.</li>
-      </ul>
+      <h2>Decode Base64 to PNG in code</h2>
+      <p>
+        Prefer to do it in your own toolchain? Every mainstream language ships a Base64 decoder. Here are the four most
+        requested snippets (these match what people actually search for):
+      </p>
+
+      <h3>JavaScript (browser)</h3>
+      <p>
+        In the browser a PNG data URI is already a downloadable resource — no library needed. Bare Base64 needs the
+        header re-attached first:
+      </p>
+      <pre><code>// Decode a Base64 PNG and trigger a download
+const b64 = "iVBORw0KGgoAAAANSUhEUg..."; // bare Base64 or full data URI
+const dataUri = b64.startsWith("data:")
+  ? b64
+  : "data:image/png;base64," + b64;
+
+const link = document.createElement("a");
+link.href = dataUri;
+link.download = "image.png";
+document.body.appendChild(link);
+link.click();
+link.remove();</code></pre>
+
+      <h3>Python</h3>
+      <pre><code>import base64, re
+
+raw = "iVBORw0KGgoAAAANSUhEUg..."  # bare Base64 or data URI
+raw = re.sub("^data:image/png;base64,", "", raw)
+
+with open("image.png", "wb") as f:
+    f.write(base64.b64decode(raw))</code></pre>
+
+      <h3>C#</h3>
+      <pre><code>var b64 = "iVBORw0KGgoAAAANSUhEUg...";
+// Strip a data URI header if present
+if (b64.StartsWith("data:image/png;base64,"))
+    b64 = b64.Substring("data:image/png;base64,".Length);
+
+byte[] bytes = Convert.FromBase64String(b64);
+File.WriteAllBytes("image.png", bytes);</code></pre>
+
+      <h3>PowerShell</h3>
+      <pre><code>$b64 = "iVBORw0KGgoAAAANSUhEUg..."
+$b64 = $b64 -replace '^data:image/png;base64,', ''
+[IO.File]::WriteAllBytes("image.png", [Convert]::FromBase64String($b64))</code></pre>
+
+      <p>
+        All four assume the Base64 payload is a PNG (it starts with <code>iVBOR</code>). If your string came from a
+        JPEG or WebP source, the bytes you write out will be in that format — rename the extension accordingly, or run
+        it through this converter to re-export as a true PNG.
+      </p>
 
       <h3>Private by design</h3>
       <p>
         Decoding uses the browser's native image handling — the string is turned into an image element locally and
-        never sent anywhere. Safe for confidential assets.
+        never sent anywhere. Nothing is uploaded, logged, or stored, so it is safe for confidential assets, internal
+        tools, and production screenshots alike.
       </p>
     </div>
   </section>
@@ -199,17 +306,17 @@
         <a class="sib-card" href="/image-to-base64"><strong>Image to Base64</strong><span>Encode any image into a data URI.</span></a>
         <a class="sib-card" href="/data-uri-generator"><strong>Data URI Generator</strong><span>Turn any image into a data URI for CSS or HTML.</span></a>
         <a class="sib-card" href="/base64-favicon"><strong>Base64 Favicon</strong><span>Inline your favicon with a data URI link tag.</span></a>
-        <a class="sib-card" href="png-to-base64"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
-        <a class="sib-card" href="jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
-        <a class="sib-card" href="jpg-to-base64"><strong>JPEG to Base64</strong><span>Encode JPEG photos with the .jpeg extension.</span></a>
-        <a class="sib-card" href="svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
-        <a class="sib-card" href="webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
-        <a class="sib-card" href="gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
-        <a class="sib-card" href="base64-to-image"><strong>Base64 to Image</strong><span>Auto-detect PNG, JPG, GIF, WebP or SVG.</span></a>
-        <a class="sib-card" href="base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
-        <a class="sib-card" href="base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
-        <a class="sib-card" href="base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
-        <a class="sib-card" href="base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
+        <a class="sib-card" href="/png-to-base64"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
+        <a class="sib-card" href="/jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
+        <a class="sib-card" href="/jpg-to-base64"><strong>JPEG to Base64</strong><span>Encode JPEG photos with the .jpeg extension.</span></a>
+        <a class="sib-card" href="/svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
+        <a class="sib-card" href="/webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
+        <a class="sib-card" href="/gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
+        <a class="sib-card" href="/base64-to-image"><strong>Base64 to Image</strong><span>Auto-detect PNG, JPG, GIF, WebP or SVG.</span></a>
+        <a class="sib-card" href="/base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
+        <a class="sib-card" href="/base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
+        <a class="sib-card" href="/base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
+        <a class="sib-card" href="/base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
       </div>
     </div>
   </section>
@@ -229,6 +336,18 @@
         <summary>Is the decoder private?</summary>
         <p>Yes. Decoding happens entirely in your browser. Nothing is uploaded, so your data stays on your device.</p>
       </details>
+      <details>
+        <summary>Can I decode a Base64 string from a JPG or WebP into a PNG?</summary>
+        <p>Yes. The tool renders whatever image the string contains and re-exports it as PNG. Keep in mind: converting a lossy source (JPG) to PNG does not restore lost quality — it just saves the current pixels in a lossless container. For a JPG source you may prefer the Base64 to JPG decoder.</p>
+      </details>
+      <details>
+        <summary>Why is my downloaded PNG smaller than the Base64 string?</summary>
+        <p>Base64 encoding inflates binary data by roughly 33% so it can travel through text-only channels. Decoding reverses that: the PNG file returns to its true binary size, which is why the size readout above shows the file lighter than the text you pasted.</p>
+      </details>
+      <details>
+        <summary>What does a PNG Base64 string look like?</summary>
+        <p>PNG files always start with the same 8-byte signature, which appears as <code>iVBORw0KGgo</code> at the start of the Base64 payload. JPEG strings start with <code>/9j/</code>. If your string starts with iVBOR, it is PNG data.</p>
+      </details>
     </div>
   </section>
 </main>
@@ -245,17 +364,17 @@
         <a href="/image-to-base64">Image to Base64</a>
         <a href="/data-uri-generator">Data URI Generator</a>
         <a href="/base64-favicon">Base64 Favicon</a>
-        <a href="png-to-base64">PNG to Base64</a>
-        <a href="jpg-to-base64">JPG / JPEG to Base64</a>
-        <a href="svg-to-base64">SVG to Base64</a>
-        <a href="webp-to-base64">WebP to Base64</a>
-        <a href="gif-to-base64">GIF to Base64</a>
-        <a href="base64-to-image">Base64 to Image</a>
-        <a href="base64-to-png">Base64 to PNG</a>
-        <a href="base64-to-jpg">Base64 to JPG</a>
-        <a href="base64-to-svg">Base64 to SVG</a>
-        <a href="base64-to-webp">Base64 to WebP</a>
-        <a href="base64-to-gif">Base64 to GIF</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
       </nav>
       <nav class="footer-nav" aria-label="About">
         <span class="head">About</span>

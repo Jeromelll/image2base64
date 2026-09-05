@@ -454,3 +454,22 @@ Last updated: 2026-09-02 CST
 - **徽章（Free 方案 dofollow 条件）**：`badge-light.svg` 198×62 加进首页 footer 版权行上方（`index.html` + dist 同步 + `npx wrangler deploy`，commit `a56b5e1`）；线上验证首页 HTML 含 launchstag 徽章后点 Verify → **✓ Badge verified，listing 排期 2026-10-04 上线**。
 - Listing 页：`https://launchstag.com/p/image-to-base64-converter`（已 200，标题正确）。
 - 备注：付费档（Premium $15 首页 7 天 / Growth $29）未购买，按免费排队走。Premium 免徽章 + 提前排期，若 10/4 前想要更早上线再议。
+
+## 2026-09-05（下午）— GSC 挂载实测 + Agent 首次 GSC 读数
+- bsk 后台实测：seo.web.cafe「GSC 数据」面板里 image2base64.com **早已挂载**（6/27~8/31，66 天，点击 147 / 曝光 2,072）；「连接 GSC 只读授权」通道**站点未开放**（"授权通道暂未开通"）→ 数据通道 = 手动上传月度 xlsx
+- 验证提问跑通（13 积分）：Agent gsc_report 完整读数。关键结论：
+  - 点击 100% 来自品牌词（https://www.image2base64.com/ 查询 183/254），7→8 月 +90.9% 为外部引流假涨，非品牌 SEO 流量 = 0
+  - **P0 = 刚补强的两页**：/base64-to-png 19.5 位（480/KD32.4，前十全是 DR2~9 弱站）、/png-to-base64 22.5 位（720/41.8）——推一把就进前十
+  - /base64-to-jpg 6.3 位 0 点击待查 query 明细；http 旧版 71 曝光 = 301 正常的历史残留
+  - 监控口径改为「非品牌词曝光 + 平均位置」
+- 月度自动化 prompt 已按实测修订（GSC 走库内上传数据 + 数据窗口未覆盖时报告"X 月未上传"，不冒充闸门判定）
+- 操作清单更新：`~/webcafe/marketing/manual-ops-checklist-2026-09-05.md`
+
+## 2026-09-05（晚）— P0 修复批：全站内链 404 Bug + base64-to-png 扩写
+- **P0 内链 Bug（curl 实锤后修复）**：全站 24 页 ~570 处「More tools/正文」内链缺前导 `/`（如 href="png-to-base64"），浏览器解析成子路径 404（/base64-to-png/png-to-base64 实测 404）。perl 批量改为根相对 href="/xxx"；styles.css 与 mailto 保持相对不动
+- **base64-to-png 正文 560→1226 词**：按 Agent 体检提纲补 How-to 3 步 / Base64 vs data URI（含 iVBOR、/9j/ 签名、33% 膨胀）/ 格式对比（内链 /base64-to-jpg、/base64-to-webp、/base64-to-image、/png-to-base64）/ JS·Python·C#·PowerShell 四段解码代码（对应 Google 相关搜索）/ FAQ 3→6 条（HTML details + FAQPage JSON-LD 同步）
+- **description 换精确词打头**："Free base64 to PNG converter: decode a base64 string or data URI into a transparent PNG..."（词命中 67%→100%）
+- **png-to-base64 Title 61→59 字符**（and→&）
+- 部署 Version `3a4b39d7-7b77-4dc3-a2bd-a59681d7f826`；上线验证：base64-to-png 3×根相对链+新 desc+代码块、png title、svg 页根相对链、check_seo fail=0（2 jpg/jpeg warn 属预期）
+- 依据：哥飞 SEO Agent 两页体检（onpage_audit 75/98 分 + SERP 解密），报告存 ~/webcafe/marketing/onpage-audit-p0-pages-2026-09-05.md
+- 后续观察：1~2 周看 GSC 曝光，base64-to-png 平均位 19.5 → 15 位内 = 方向对；10/5 自动化复核
