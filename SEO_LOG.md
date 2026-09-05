@@ -1,5 +1,15 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-05 — 全站转换页新增可选「via Image2Base64」署名链接（外链钩子①上线）
+
+- 来源：即刻 indie hacker 对标（@唐唐同学）手法迁移——「晒成绩+送好处」二合一结构，给社区分享者一个自愿带署名的理由（outreach.md §六）。
+- 改动：9 个转换页（index / image-to-base64 / data-uri-generator / png / jpg / jpeg / gif / webp / svg-to-base64）HTML `<img>` 片段输出框下新增 `credit-toggle` 勾选（**默认关**）；勾选后片段追加 `<small><a href="https://image2base64.com/">via Image2Base64</a></small>`；切换即时重建片段（`lastDataUri` 缓存，不重读文件）；`track("credit", on|off)` 埋点与 copy 事件口径一致。
+- app.js：`buildHtmlSnippet()` 收口 HTML 片段生成；全部守卫式，无该控件的页面零影响。
+- 本地验证：playwright headless 实测 png 页完整转换流——默认无署名 / 勾选带链接 / 取消还原 / 控件可见，4 断言全过；提交版 blob（git archive HEAD 提取）复测同过。
+- 部署：`wrangler deploy` Version `9d269ddb`（2026-09-05 13:52 CST）。线上已验证：首页 + png / image / webp / jpg 四工具页 canonical URL 均含 credit-toggle；check_seo_consistency `fail=0`（2 warn 为已知 jpg/jpeg 合并）。
+- 坑（复用价值）：① 工具页 URL 307 到无 `.html` canonical，curl 不带 `-L` 拿到空 body，grep 0 ≠ 未上线；② 本仓库存在多会话并发写（同日 SEO Agent 平移 sample chips），提交前须 `git diff` 逐块核对——本次首次提交曾卷入并发快照，已用 `git hash-object -w` + `git update-index --cacheinfo` 拆出纯净提交，对方 WIP 原样保留在工作区。
+- 预期：社区分享者自愿带署名链 → 长尾真实外链；观察 D1 `credit` 事件 on/off 比例 + GSC Links 是否新增非 dev.to 域。
+
 ## 2026-09-05 — ④a 平移到 /base64-to-png（关键词优先级 ②，decode 方向）
 
 - 背景：竞对 gap 分析（SEO Agent 域名概况两竞对 + 官方口径核词）确认 `base64 to png`（官方 480/月、KD 32.4 全族最低、前十有 DR 0-4 新站在赢）是 19 词盘点里的 ② 号优先词；页面已存在，动作为补强。
