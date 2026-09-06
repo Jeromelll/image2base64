@@ -1,5 +1,16 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-06 — 每日选词落地：3 个场景长尾新页上线（compress / size-calculator / email-signature）
+
+- 来源：WorkBuddy 每日选词自动化（i2b64_keywords.json）首次产出 + 人工拍板。免费信号验证结论：大词 `base64 image converter online` 被 base64-image.de/base64.sh 等专门站垄断，机会在「SERP 只有博客文章在顶」的场景限定长尾。
+- 新页：① `/compress-png-to-base64` 工具页——canvas 压缩+编码一体（WebP/JPG/PNG 输出、质量滑块、max-width 降采样、前后体积对比+膨胀警示，PNG 输出不缩反涨时诚实报警）；② `/base64-image-size-calculator` 轻量计算器——4×ceil(n/3)+22 前缀精确算 data URI 体积，≤5KB inline / 5-50KB 先压缩 / >50KB 用文件三档 verdict + 实测案例表；③ `/base64-image-email-signature` 内页——复用共享 initEncoder 出 data URI + 诚实兼容表（Apple Mail/iOS/Thunderbird ✓，Gmail/Outlook/Yahoo ✗ 剥离 data URI），给 CID 替代方案。
+- app.js：新增 `initCompressEncoder` + `initCalculator`（守卫式挂载，14 个旧工具页零影响）；修 `initEncoder` 的 `outRaw.value` 无守卫 bug（email 页省略 raw 输出框时 onload 会抛 TypeError、结果区永不显示——CDP 实测抓到）。
+- worker.js：EVENT_NAMES 补 `compress`/`calc`/`credit`——**credit 事件自 9/5 上线起一直被服务端白名单丢弃**（复盘发现），本次一并修复。
+- 站内链接：sitemap +3；全站 27 页 footer Converters/Guides 栏 + 首页卡片 + 新页 sib-grid 互链（幂等脚本，3 新页自身豁免防重复插入）。
+- 验证：`check_seo_consistency` fail=0（2 warn 已知 jpg/jpeg 合并）；CDP headless（Node22 内置 WebSocket 直连 DevTools）5 断言全过——样例图 51.7KB PNG→7.2KB WebP、JPG+256px 降采样 2.7KB、计算器 5MB 输入=6,990,508 chars 精确命中、2KB 判 inline、email 页完整编码流。
+- 坑（复用价值）：① **CI 的 Deploy Worker 步骤因 repo 未配 CLOUDFLARE_API_TOKEN 而静默跳过**（run 10s 假成功），部署仍须本地 `npx wrangler@4.129.0 deploy`（Version `84d8d476`）；线上 curl -L 200 + canonical 已核。② 本仓库并发会话再+1：push 被 remote 拒（对方先合了 CI 提交），`pull --rebase --autostash` 后 push 成功，对方暂存区改动落在 stash 冲突里（其 CI 已自行提交，stash 可弃但留给对方处理）。③ headless Chrome `--virtual-time-budget` 对 canvas toBlob/Image 解码链不生效，验证一律走真时序 CDP。
+- 预期：三页分别对准 compress png to base64 / base64 image size calculator / base64 image email signature；GSC 提交 sitemap 待做；成功指标 = 三词点击 0→>0、D1 compress/calc 事件出现。
+
 ## 2026-09-05 — 全站转换页新增可选「via Image2Base64」署名链接（外链钩子①上线）
 
 - 来源：即刻 indie hacker 对标（@唐唐同学）手法迁移——「晒成绩+送好处」二合一结构，给社区分享者一个自愿带署名的理由（outreach.md §六）。
