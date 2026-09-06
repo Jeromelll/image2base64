@@ -26,7 +26,7 @@ const BLOCKED_EXACT = new Set([
 const ASSET_EXTS = /\.(css|js|mjs|map|png|jpe?g|gif|svg|webp|avif|ico|txt|xml|json|webmanifest|woff2?)$/i;
 
 // Only these client event names are accepted.
-const EVENT_NAMES = new Set(["page_view", "convert", "copy", "decode", "download", "error", "sample"]);
+const EVENT_NAMES = new Set(["page_view", "convert", "copy", "decode", "download", "error", "sample", "compress", "calc", "credit"]);
 
 function deviceType(ua) {
   if (!ua) return "unknown";
