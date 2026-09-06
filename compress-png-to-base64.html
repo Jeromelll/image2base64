@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Compress PNG to Base64 — Shrink First, Then Encode (No Upload)</title>
+<meta name="description" content="Compress a PNG and convert it to Base64 in one step. Resize, pick WebP or JPG quality, and get a smaller data URI - 100% client-side, nothing uploaded." />
+<link rel="canonical" href="https://image2base64.com/compress-png-to-base64" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Compress PNG to Base64 — Shrink First, Then Encode" />
+<meta property="og:description" content="Compress a PNG (resize + WebP/JPG quality) and get a smaller Base64 data URI in one pass — entirely in your browser." />
+<meta property="og:url" content="https://image2base64.com/compress-png-to-base64" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I make a Base64 string smaller?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Compress the image before encoding. Base64 adds roughly 33% to whatever bytes you feed it, so shrinking the source image is the only lever. Resize it to the displayed dimensions and re-encode as WebP or JPG at 60-85% quality — a 200 KB PNG can become a 20-40 KB data URI."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Base64 encoding compress the image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Base64 is an encoding, not a compression method — it makes data about 33% larger. Any real size reduction must happen before encoding, by resizing the image or using a more efficient format such as WebP."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which output format gives the smallest Base64 string?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "WebP almost always wins for the same visual quality — roughly 25-35% smaller than JPEG and far smaller than PNG. It also keeps transparency, so it is a safe default for icons and screenshots alike."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why did the PNG output get bigger after compressing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "PNG is a lossless format, and the browser's canvas re-encodes it without the aggressive optimization of dedicated PNG tools. For real savings choose WebP or JPG output — this tool shows a warning whenever the result is larger than the original."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the compression and conversion private?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The image is decoded, resized, re-encoded and converted to Base64 entirely in your browser with the Canvas and FileReader APIs. Nothing is uploaded to any server."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How small should an image be before inlining it as Base64?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A common rule of thumb: keep the source image under 5 KB for comfortable inlining, and treat anything over 50 KB as too big. Between those limits, compress first and compare — the calculator on this site gives exact numbers."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Compress PNG to Base64",
+  "url": "https://image2base64.com/compress-png-to-base64",
+  "description": "Free PNG compressor + Base64 encoder in one step — resize, choose WebP/JPG quality, get a smaller data URI. 100% client-side, no upload.",
+  "operatingSystem": "Web",
+  "applicationCategory": "UtilitiesApplication",
+  "applicationSubCategory": "ImageConverter",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Compress and encode in one pass",
+    "WebP / JPG quality slider",
+    "Optional downscaling by max width",
+    "Before/after size comparison",
+    "100% client-side — no upload"
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="#tool">Tool</a>
+      <a href="#guide">Guide</a>
+      <a href="#tools">More tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Compress PNG to Base64</h1>
+      <p class="lede">
+        <strong>Compress a PNG, then convert it to Base64</strong> in one pass — resize, pick WebP or JPG
+        quality, and get a smaller data URI. Base64 always adds ~33% to whatever you feed it, so
+        shrinking the source is the only way to get a smaller string.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Your PNG never leaves your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="cdrop" class="dropzone">
+          <div class="dz-icon" aria-hidden="true">🗜️</div>
+          <h2>Drop a PNG to compress and encode it</h2>
+          <p>or paste from your clipboard · output stays in your browser</p>
+          <button id="cpick" class="btn btn-primary" type="button">Choose PNG</button>
+          <input id="cfile" class="visually-hidden" type="file" accept="image/*" />
+
+          <div class="opt-row">
+            <span class="opt">Output
+              <select id="cfmt" aria-label="Output format">
+                <option value="image/webp" selected>WebP (smallest)</option>
+                <option value="image/jpeg">JPG (photos)</option>
+                <option value="image/png">PNG (lossless)</option>
+              </select>
+            </span>
+            <span class="opt">Quality
+              <input id="cquality" type="range" min="10" max="100" value="80" aria-label="Compression quality" />
+              <span id="cqval" class="qval">80%</span>
+            </span>
+            <span class="opt">Max width
+              <select id="cmaxw" aria-label="Maximum width">
+                <option value="0" selected>Original</option>
+                <option value="1280">1280 px</option>
+                <option value="512">512 px</option>
+                <option value="256">256 px</option>
+                <option value="128">128 px</option>
+              </select>
+            </span>
+          </div>
+
+          <div class="dz-samples">
+            <span class="dz-samples-label">No PNG handy? Try a sample:</span>
+            <button class="sample-chip" type="button" data-sample="photo">🏞️ Sample photo</button>
+          </div>
+        </div>
+
+        <p id="c-error" class="error" hidden></p>
+
+        <div id="cresults" class="results" hidden>
+          <div class="result-head">
+            <div class="preview-box"><img id="cpreview" alt="Preview of the compressed image before Base64 encoding" width="120" height="120" hidden /></div>
+            <dl class="meta">
+              <div><dt>Original</dt><dd id="cm-orig">—</dd></div>
+              <div><dt>Compressed</dt><dd id="cm-comp">—</dd></div>
+              <div><dt>Dimensions</dt><dd id="cm-dims">—</dd></div>
+              <div><dt>Data URI size</dt><dd id="cm-b64">—</dd></div>
+            </dl>
+          </div>
+
+          <p id="csavings" class="overhead-note" hidden></p>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="c-out-datauri">Data URI <span class="muted">(use this in HTML/CSS)</span></label>
+              <button class="copy" type="button" data-copy="#c-out-datauri">Copy</button>
+            </div>
+            <textarea id="c-out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="c-out-html">HTML <code>&lt;img&gt;</code> snippet</label>
+              <button class="copy" type="button" data-copy="#c-out-html">Copy</button>
+            </div>
+            <textarea id="c-out-html" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="c-out-css">CSS <code>background-image</code> snippet</label>
+              <button class="copy" type="button" data-copy="#c-out-css">Copy</button>
+            </div>
+            <textarea id="c-out-css" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>Compress first, encode second</h2>
+      <p>
+        Base64 is an encoding, not a compression method: it rewrites every three bytes as four text
+        characters, so a data URI is always about one third larger than the bytes you feed it. Encoding
+        never shrinks anything. That is why this tool merges the two steps that belong together —
+        <strong>compress the PNG, then convert it to Base64</strong> — instead of handing you a huge string
+        and sending you elsewhere.
+      </p>
+
+      <ol>
+        <li><strong>Add a PNG.</strong> Drag it in, pick it, or paste from the clipboard.</li>
+        <li><strong>Pick the output format and quality.</strong> WebP is the default because it is the smallest for the same look and keeps transparency. JPG suits photos; PNG is lossless but rarely shrinks.</li>
+        <li><strong>Optionally cap the width.</strong> An image displayed at 64 px does not need 1024 source pixels — downscaling is the biggest win of all.</li>
+        <li><strong>Copy the result.</strong> You get the full data URI plus ready-to-paste HTML and CSS snippets, with the before/after sizes shown.</li>
+      </ol>
+
+      <h3>Why the PNG option usually does not help</h3>
+      <p>
+        PNG is lossless, and the browser's canvas encoder is not as tuned as dedicated PNG optimizers —
+        re-encoding a PNG through a canvas can even make it larger. If real compression is the goal,
+        choose <strong>WebP</strong> (smaller than JPG and PNG for nearly every kind of image, and it keeps
+        the alpha channel) or <strong>JPG</strong> for photographs. This page shows a warning whenever the
+        result ends up bigger than the original, so you never silently make things worse.
+      </p>
+
+      <h3>How much smaller can it get?</h3>
+      <p>
+        Typical numbers: a 200 KB screenshot resized to its display width and re-encoded as WebP at 80%
+        quality often lands between 20 and 40 KB — a data URI of roughly 27-53 KB instead of 267 KB.
+        The exact figures depend on the image, which is why the tool reports the real result rather than
+        an estimate. If you only need the numbers for a size you already know, the
+        <a href="/base64-image-size-calculator">Base64 image size calculator</a> works from a file size alone.
+      </p>
+
+      <h3>When to inline at all</h3>
+      <p>
+        A compressed data URI is great for icons, logos, small diagrams and anything that must travel
+        inside a single HTML file. For large or reused images, a normal file is still better: the browser
+        can cache it independently, and a 300 KB text blob in your HTML hurts parse time. Use this tool's
+        before/after readout to decide with real numbers.
+      </p>
+
+      <h3>Private by construction</h3>
+      <p>
+        Decoding, resizing, re-encoding and Base64 conversion all happen in your browser through the
+        Canvas and FileReader APIs. The file is never uploaded — you can disconnect from the internet
+        after the page loads and the tool still works.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/image-to-base64"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
+        <a class="sib-card" href="/png-to-base64"><strong>PNG to Base64</strong><span>Encode a PNG as-is, without compressing.</span></a>
+        <a class="sib-card" href="/base64-image-size-calculator"><strong>Base64 Size Calculator</strong><span>Check data URI size before you inline.</span></a>
+        <a class="sib-card" href="/data-uri-generator"><strong>Data URI Generator</strong><span>Turn any image into a data URI for CSS or HTML.</span></a>
+        <a class="sib-card" href="/base64-favicon"><strong>Base64 Favicon</strong><span>Inline your favicon with a data URI link tag.</span></a>
+        <a class="sib-card" href="/jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
+        <a class="sib-card" href="/svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
+        <a class="sib-card" href="/webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
+        <a class="sib-card" href="/base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>How do I make a Base64 string smaller?</summary>
+        <p>Compress the image before encoding. Base64 adds roughly 33% to whatever bytes you feed it, so the source is the only lever: resize to the displayed dimensions and re-encode as WebP or JPG at 60-85% quality.</p>
+      </details>
+      <details>
+        <summary>Does Base64 encoding compress the image?</summary>
+        <p>No. Base64 is an encoding, not compression — it makes data about 33% larger. Any real reduction must happen before encoding.</p>
+      </details>
+      <details>
+        <summary>Which output format gives the smallest Base64 string?</summary>
+        <p>WebP, almost always — roughly 25-35% smaller than JPEG at the same visual quality, and it keeps transparency. JPG suits photos; PNG re-encoding rarely shrinks anything.</p>
+      </details>
+      <details>
+        <summary>Why did the PNG output get bigger after compressing?</summary>
+        <p>PNG is lossless and the browser's canvas encoder is less tuned than dedicated PNG tools. Choose WebP or JPG instead — the tool warns you whenever the result is larger than the original.</p>
+      </details>
+      <details>
+        <summary>Is the compression and conversion private?</summary>
+        <p>Yes. Everything runs in your browser with the Canvas and FileReader APIs. The file is never uploaded to any server.</p>
+      </details>
+      <details>
+        <summary>How small should an image be before inlining it as Base64?</summary>
+        <p>Keep the source under 5 KB for comfortable inlining; treat anything over 50 KB as too big. In between, compress first and compare — the <a href="/base64-image-size-calculator">size calculator</a> gives exact numbers.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/image-to-base64">Image to Base64</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -76,6 +76,21 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://image2base64.com/compress-png-to-base64</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/base64-image-size-calculator</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/base64-image-email-signature</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
     <loc>https://image2base64.com/about</loc>
     <changefreq>yearly</changefreq>
     <priority>0.3</priority>

@@ -187,7 +187,7 @@
         var raw = comma >= 0 ? dataUri.slice(comma + 1) : dataUri;
 
         outData.value = dataUri;
-        outRaw.value = raw;
+        if (outRaw) outRaw.value = raw;
         lastDataUri = dataUri;
         if (outHtml) outHtml.value = buildHtmlSnippet(dataUri);
         if (outCss) outCss.value = "background-image: url(" + dataUri + ");";
@@ -600,12 +600,256 @@
     wireCopyButtons(input.closest("section") || document);
   }
 
+  // ====================================================================
+  // COMPRESS-THEN-ENCODE  (compress-png-to-base64 page)
+  // Re-encodes via canvas: optional downscale + JPEG/WebP quality,
+  // then emits the data URI. Nothing leaves the browser.
+  // ====================================================================
+  function initCompressEncoder() {
+    var drop = $("#cdrop");
+    if (!drop) return;
+
+    var fileInput = $("#cfile");
+    var pickBtn = $("#cpick");
+    var fmtSel = $("#cfmt");
+    var quality = $("#cquality");
+    var qVal = $("#cqval");
+    var maxWSel = $("#cmaxw");
+    var results = $("#cresults");
+    var preview = $("#cpreview");
+    var mOrig = $("#cm-orig");
+    var mComp = $("#cm-comp");
+    var mDims = $("#cm-dims");
+    var mB64 = $("#cm-b64");
+    var savings = $("#csavings");
+    var outData = $("#c-out-datauri");
+    var outHtml = $("#c-out-html");
+    var outCss = $("#c-out-css");
+    var errBox = $("#c-error");
+
+    function showError(msg) {
+      if (!errBox) return;
+      errBox.textContent = msg;
+      errBox.hidden = !msg;
+      if (msg) track("error", "compress", msg.slice(0, 60));
+    }
+
+    if (quality && qVal) {
+      var syncQ = function () { qVal.textContent = quality.value + "%"; };
+      quality.addEventListener("input", syncQ);
+      syncQ();
+    }
+
+    function fmtLabel(mime) {
+      if (mime === "image/webp") return "WebP";
+      if (mime === "image/jpeg") return "JPG";
+      return "PNG";
+    }
+
+    function render(dataUri, origBytes, compBytes, w, h) {
+      var comma = dataUri.indexOf(",");
+      outData.value = dataUri;
+      outHtml.value = '<img src="' + dataUri + '" alt="" width="' + w + '" height="' + h + '" />';
+      outCss.value = "background-image: url(" + dataUri + ");";
+      if (preview) { preview.src = dataUri; preview.hidden = false; }
+      if (mOrig) mOrig.textContent = bytesToSize(origBytes);
+      if (mComp) mComp.textContent = bytesToSize(compBytes);
+      if (mDims) mDims.textContent = w + " × " + h + " px";
+      if (mB64) mB64.textContent = bytesToSize(dataUri.length);
+      if (savings) {
+        if (compBytes < origBytes) {
+          var pct = (((origBytes - compBytes) / origBytes) * 100).toFixed(0);
+          savings.innerHTML = "Compressed <strong>" + bytesToSize(origBytes) + " → " +
+            bytesToSize(compBytes) + "</strong> (−" + pct + "%). The data URI is " +
+            bytesToSize(dataUri.length) + " of text.";
+          savings.style.display = "";
+        } else {
+          savings.innerHTML = "Re-encoding did not shrink this image (" + bytesToSize(origBytes) +
+            " → " + bytesToSize(compBytes) + "). Try <strong>WebP</strong>, a lower quality value, or a smaller max width.";
+          savings.style.display = "";
+        }
+        savings.hidden = false;
+      }
+      results.hidden = false;
+      track("compress", (fmtSel ? fmtSel.value : "?"), sizeBucket(origBytes));
+    }
+
+    function process(file) {
+      showError("");
+      if (!file) return;
+      if (!/^image\//.test(file.type)) {
+        showError("That doesn't look like an image file. Please choose a PNG, JPG or WebP.");
+        return;
+      }
+      var mime = fmtSel ? fmtSel.value : "image/webp";
+      var q = quality ? parseInt(quality.value, 10) / 100 : 0.8;
+      var maxW = maxWSel ? parseInt(maxWSel.value, 10) : 0;
+
+      var source = new Image();
+      var srcUrl = URL.createObjectURL(file);
+      source.onload = function () {
+        var w = source.naturalWidth, h = source.naturalHeight;
+        if (maxW > 0 && w > maxW) { h = Math.round(h * (maxW / w)); w = maxW; }
+        var canvas = document.createElement("canvas");
+        canvas.width = w; canvas.height = h;
+        var ctx = canvas.getContext("2d");
+        if (!ctx) { URL.revokeObjectURL(srcUrl); showError("Your browser could not process this image."); return; }
+        ctx.drawImage(source, 0, 0, w, h);
+        URL.revokeObjectURL(srcUrl);
+        // PNG output from a canvas re-encode rarely shrinks a real PNG —
+        // the honest path is JPEG (photos) or WebP (everything, alpha kept).
+        canvas.toBlob(function (blob) {
+          if (!blob) { showError("Your browser could not encode this image in the selected format."); return; }
+          var reader = new FileReader();
+          reader.onload = function () { render(String(reader.result || ""), file.size, blob.size, w, h); };
+          reader.onerror = function () { showError("Sorry — the compressed image could not be read back."); };
+          reader.readAsDataURL(blob);
+        }, mime, q);
+      };
+      source.onerror = function () {
+        URL.revokeObjectURL(srcUrl);
+        showError("Sorry — the image could not be loaded. Try another file.");
+      };
+      source.src = srcUrl;
+    }
+
+    // Sample: a deliberately detailed 960×640 scene so compression has
+    // something to bite into. Drawn locally; zero network requests.
+    var sampleBtn = drop.querySelector(".sample-chip");
+    if (sampleBtn) {
+      sampleBtn.addEventListener("click", function () {
+        track("sample", "photo");
+        var c = document.createElement("canvas");
+        c.width = 960; c.height = 640;
+        var ctx = c.getContext("2d");
+        if (!ctx) return;
+        ctx.scale(2, 2);
+        drawSampleScene(ctx, "photo");
+        c.toBlob(function (blob) {
+          if (!blob) return;
+          try {
+            process(new File([blob], "sample-photo.png", { type: "image/png" }));
+          } catch (err) {
+            blob.name = "sample-photo.png";
+            process(blob);
+          }
+        }, "image/png");
+      });
+    }
+
+    if (pickBtn && fileInput) pickBtn.addEventListener("click", function () { fileInput.click(); });
+    if (fileInput) fileInput.addEventListener("change", function () {
+      if (fileInput.files && fileInput.files[0]) process(fileInput.files[0]);
+    });
+    drop.addEventListener("click", function (e) {
+      if (e.target.closest("button")) return;
+      if (fileInput) fileInput.click();
+    });
+    ["dragenter", "dragover"].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.add("is-drag"); });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+      drop.addEventListener(ev, function (e) { e.preventDefault(); drop.classList.remove("is-drag"); });
+    });
+    drop.addEventListener("drop", function (e) {
+      var dt = e.dataTransfer;
+      if (dt && dt.files && dt.files[0]) process(dt.files[0]);
+    });
+    document.addEventListener("paste", function (e) {
+      var items = (e.clipboardData && e.clipboardData.items) || [];
+      for (var i = 0; i < items.length; i++) {
+        if (items[i].type && items[i].type.indexOf("image") === 0) {
+          process(items[i].getAsFile());
+          break;
+        }
+      }
+    });
+  }
+
+  // ====================================================================
+  // SIZE CALCULATOR  (base64-image-size-calculator page)
+  // Binary size -> Base64 chars -> data URI bytes, with an inline verdict.
+  // ====================================================================
+  function initCalculator() {
+    var input = $("#calc-input");
+    if (!input) return;
+
+    var unit = $("#calc-unit");
+    var fileInput = $("#calc-file");
+    var pickBtn = $("#calc-pick");
+    var out = $("#calc-out");
+    var vRaw = $("#cv-raw");
+    var vUri = $("#cv-uri");
+    var vPct = $("#cv-pct");
+    var vVerdict = $("#cv-verdict");
+    var barOrig = $("#cbar-orig");
+    var barB64 = $("#cbar-b64");
+
+    var PREFIX = "data:image/png;base64,".length; // 22 chars
+
+    function calc(n) {
+      if (!n || n <= 0) return null;
+      var rawChars = 4 * Math.ceil(n / 3);
+      var uriChars = rawChars + PREFIX;
+      return { raw: rawChars, uri: uriChars };
+    }
+
+    function show(n) {
+      var r = calc(n);
+      if (!r) return;
+      var pct = ((r.uri - n) / n) * 100;
+      if (vRaw) vRaw.textContent = r.raw.toLocaleString() + " chars (" + bytesToSize(r.raw) + ")";
+      if (vUri) vUri.textContent = r.uri.toLocaleString() + " chars (" + bytesToSize(r.uri) + ")";
+      if (vPct) vPct.textContent = "+" + pct.toFixed(1) + "%";
+      if (vVerdict) {
+        var verdict;
+        if (n <= 5 * 1024) {
+          verdict = '<span class="calc-ok">Good to inline.</span> Under 5 KB of source data — the saved HTTP request usually outweighs the extra text.';
+        } else if (n <= 50 * 1024) {
+          verdict = '<span class="calc-warn">Borderline.</span> Compress the image first — a smaller version may inline comfortably. Try the <a href="/compress-png-to-base64">PNG compressor + encoder</a>.';
+        } else {
+          verdict = '<span class="calc-bad">Too big to inline.</span> Serve it as a normal image file so the browser can cache it independently. You can still <a href="/compress-png-to-base64">compress it first</a>.';
+        }
+        vVerdict.innerHTML = verdict;
+      }
+      if (barOrig && barB64) {
+        var ratio = n / r.uri;
+        barOrig.style.width = Math.max(4, ratio * 100) + "%";
+        barB64.style.width = "100%";
+        barOrig.setAttribute("data-label", bytesToSize(n));
+        barB64.setAttribute("data-label", bytesToSize(r.uri));
+      }
+      out.hidden = false;
+      track("calc", "", sizeBucket(n));
+    }
+
+    function fromFields() {
+      var n = parseFloat(input.value);
+      if (!n || n <= 0) return;
+      var mult = unit && unit.value === "mb" ? 1024 * 1024 : unit && unit.value === "b" ? 1 : 1024;
+      show(Math.round(n * mult));
+    }
+
+    if (pickBtn && fileInput) pickBtn.addEventListener("click", function () { fileInput.click(); });
+    if (fileInput) fileInput.addEventListener("change", function () {
+      if (fileInput.files && fileInput.files[0]) {
+        show(fileInput.files[0].size);
+        input.value = (fileInput.files[0].size / 1024).toFixed(1);
+        if (unit) unit.value = "kb";
+      }
+    });
+    input.addEventListener("input", fromFields);
+    if (unit) unit.addEventListener("change", fromFields);
+  }
+
   // ---------- boot ----------
   document.addEventListener("DOMContentLoaded", function () {
     // Privacy-first page view: cookieless, no IP, stored on our own Worker.
     track("page_view", document.referrer);
     initEncoder();
     initDecoder();
+    initCompressEncoder();
+    initCalculator();
     wireCopyButtons(document);
   });
 })();

@@ -1,0 +1,312 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Base64 Image Size Calculator — Check Data URI Size Before Inlining</title>
+<meta name="description" content="Enter an image size (or drop the file) and see exactly how big its Base64 data URI will be, with an inline verdict: good to inline, compress first, or use a file." />
+<link rel="canonical" href="https://image2base64.com/base64-image-size-calculator" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Base64 Image Size Calculator — Check Data URI Size Before Inlining" />
+<meta property="og:description" content="How big will that Base64 string be? Enter a file size and get the exact data URI length, the 33% overhead, and an inline verdict." />
+<meta property="og:url" content="https://image2base64.com/base64-image-size-calculator" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How much bigger is Base64 than the original file?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "About 33% larger. Base64 packs every three bytes into four text characters (4/3 ratio), and the data URI prefix (data:image/png;base64,) adds 22 more characters. A 10 KB image becomes roughly a 13.7 KB data URI."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the formula for Base64 encoded size?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Raw Base64 characters = 4 × ceil(bytes / 3). A full data URI adds the MIME prefix, about 22 characters for images. Encoded ASCII characters are one byte each, so character count is effectively the encoded byte size."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How big is too big to inline as Base64?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "A common rule of thumb: source images under 5 KB inline comfortably, 5-50 KB is borderline and worth compressing first, and over 50 KB should usually stay a normal image file so the browser can cache it independently."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Gzip reduce the Base64 overhead?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only partially. Base64 text compresses better than random bytes, but on the wire a Base64-embedded image still costs more than serving the binary file directly, and the HTML or CSS file on disk stays 33% larger regardless of HTTP compression."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I reduce the size before encoding?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — that is the only real lever. Resize the image to its displayed dimensions and re-encode as WebP or JPG. The compressor on this site does both steps in one pass and reports the exact result."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Base64 Image Size Calculator",
+  "url": "https://image2base64.com/base64-image-size-calculator",
+  "description": "Free Base64 size calculator — enter an image size or drop the file to see the exact data URI length, the 33% overhead, and whether it is worth inlining.",
+  "operatingSystem": "Web",
+  "applicationCategory": "UtilitiesApplication",
+  "applicationSubCategory": "DeveloperApplication",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Exact Base64 character count",
+    "Data URI size including the MIME prefix",
+    "Overhead percentage",
+    "Inline vs. external file verdict",
+    "Optional real-file measurement — no upload"
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="#tool">Calculator</a>
+      <a href="#guide">How it works</a>
+      <a href="#tools">More tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Base64 Image Size Calculator</h1>
+      <p class="lede">
+        <strong>How big will that Base64 string be?</strong> Enter an image size — or drop the actual file —
+        and get the exact data URI length, the ~33% overhead, and a straight verdict: inline it, compress
+        it first, or keep it as a file.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Nothing is measured on a server.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div style="display:flex;flex-wrap:wrap;gap:14px 18px;align-items:center;justify-content:center;padding:10px 0 4px">
+          <span class="opt" style="display:flex;align-items:center;gap:8px;font-size:.95rem;color:var(--ink-soft)">
+            Image size
+            <input id="calc-input" type="number" min="0" step="any" inputmode="decimal"
+                   style="width:130px;padding:.5em .6em;border:1px solid var(--line);border-radius:10px;font-size:1rem;font-family:inherit"
+                   placeholder="e.g. 12" aria-label="Image file size" />
+            <select id="calc-unit" aria-label="Size unit"
+                    style="padding:.5em .5em;border:1px solid var(--line);border-radius:10px;font-size:.95rem;font-family:inherit;background:#fff">
+              <option value="kb" selected>KB</option>
+              <option value="mb">MB</option>
+              <option value="b">Bytes</option>
+            </select>
+          </span>
+          <span class="muted">— or measure a real file:</span>
+          <button id="calc-pick" class="btn btn-primary" type="button">Choose file</button>
+          <input id="calc-file" class="visually-hidden" type="file" accept="image/*" />
+        </div>
+
+        <div id="calc-out" class="results" hidden>
+          <dl class="meta" style="margin-bottom:18px">
+            <div><dt>Raw Base64 body</dt><dd id="cv-raw">—</dd></div>
+            <div><dt>Full data URI</dt><dd id="cv-uri">—</dd></div>
+            <div><dt>Overhead</dt><dd id="cv-pct">—</dd></div>
+          </dl>
+
+          <div class="size-bars">
+            <div class="size-bar">
+              <span class="lbl">Image</span>
+              <div class="track"><div id="cbar-orig" class="fill" style="width:76%"></div></div>
+            </div>
+            <div class="size-bar alt">
+              <span class="lbl">Data URI</span>
+              <div class="track"><div id="cbar-b64" class="fill" style="width:100%"></div></div>
+            </div>
+          </div>
+
+          <p id="cv-verdict" class="overhead-note"></p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>How the calculation works</h2>
+      <p>
+        Base64 rewrites binary data using 64 text characters. Every <strong>3 bytes of input become exactly
+        4 characters</strong>, so the raw encoded length is <code>4 × ceil(bytes / 3)</code>. A full data URI
+        adds the MIME prefix — <code>data:image/png;base64,</code> is 22 characters — and because every
+        character is one ASCII byte, the character count is effectively the encoded size in bytes.
+      </p>
+      <table class="cmp">
+        <caption>Worked examples (data URI including the 22-char prefix)</caption>
+        <thead>
+          <tr><th>Image size</th><th>Raw Base64</th><th>Data URI</th><th>Overhead</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>1 KB (1,024 B)</th><td>1,368 chars</td><td>1,390 chars ≈ 1.4 KB</td><td>+35.7%</td></tr>
+          <tr><th>5 KB (5,120 B)</th><td>6,828 chars</td><td>6,850 chars ≈ 6.7 KB</td><td>+33.8%</td></tr>
+          <tr><th>10 KB (10,240 B)</th><td>13,656 chars</td><td>13,678 chars ≈ 13.4 KB</td><td>+33.6%</td></tr>
+          <tr><th>50 KB (51,200 B)</th><td>68,268 chars</td><td>68,290 chars ≈ 66.7 KB</td><td>+33.4%</td></tr>
+          <tr><th>500 KB (512,000 B)</th><td>682,668 chars</td><td>682,690 chars ≈ 666.7 KB</td><td>+33.3%</td></tr>
+        </tbody>
+      </table>
+      <p class="cmp-note">The overhead percentage drifts down toward exactly +33.3% as files get larger; small files carry a slightly higher relative overhead because of the prefix.</p>
+
+      <h3>The verdict thresholds</h3>
+      <ul>
+        <li><strong>Under 5 KB — good to inline.</strong> The HTTP request you save usually outweighs the extra text, especially for icons and small logos.</li>
+        <li><strong>5-50 KB — borderline.</strong> Compress first: resizing to display dimensions and re-encoding as WebP often cuts the source by 70-90%, which changes the verdict entirely.</li>
+        <li><strong>Over 50 KB — use a file.</strong> The browser can cache a normal image independently, lazy-load it, and deliver it via CDN — none of which work for an inline string.</li>
+      </ul>
+
+      <h3>Why the numbers matter more than the rule</h3>
+      <p>
+        Rules of thumb are starting points. HTTP compression (gzip/brotli) claws back some of the Base64
+        overhead on the wire, but not all of it — and none of it on disk. Reusing the same data URI across
+        many pages repeats the bytes every time, where a hosted file downloads once. Measure, compare, then
+        decide; if the answer is "compress first", the <a href="/compress-png-to-base64">compress + encode tool</a>
+        does both steps in one pass.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/compress-png-to-base64"><strong>Compress PNG to Base64</strong><span>Shrink, then encode — in one pass.</span></a>
+        <a class="sib-card" href="/image-to-base64"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
+        <a class="sib-card" href="/png-to-base64"><strong>PNG to Base64</strong><span>Encode a PNG as-is.</span></a>
+        <a class="sib-card" href="/data-uri-generator"><strong>Data URI Generator</strong><span>Turn any image into a data URI for CSS or HTML.</span></a>
+        <a class="sib-card" href="/base64-favicon"><strong>Base64 Favicon</strong><span>Inline your favicon with a data URI link tag.</span></a>
+        <a class="sib-card" href="/jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
+        <a class="sib-card" href="/svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
+        <a class="sib-card" href="/base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>How much bigger is Base64 than the original file?</summary>
+        <p>About 33% larger: every three bytes become four text characters, plus the ~22-character data URI prefix. A 10 KB image becomes roughly a 13.7 KB data URI.</p>
+      </details>
+      <details>
+        <summary>What is the formula for Base64 encoded size?</summary>
+        <p>Raw Base64 characters = 4 × ceil(bytes / 3). A full data URI adds the MIME prefix (~22 characters for images). Characters are one ASCII byte each, so the count is the encoded byte size.</p>
+      </details>
+      <details>
+        <summary>How big is too big to inline as Base64?</summary>
+        <p>Under 5 KB inlines comfortably; 5-50 KB is worth compressing first; over 50 KB should usually stay a normal, cacheable image file.</p>
+      </details>
+      <details>
+        <summary>Does Gzip reduce the Base64 overhead?</summary>
+        <p>Partially, on the wire only. Base64 text compresses better than random bytes, but the file on disk stays 33% larger and the binary file served directly still wins on transfer size.</p>
+      </details>
+      <details>
+        <summary>Can I reduce the size before encoding?</summary>
+        <p>Yes — that is the only real lever. Resize to display dimensions and re-encode as WebP or JPG. The <a href="/compress-png-to-base64">compressor on this site</a> does both steps in one pass.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/image-to-base64">Image to Base64</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

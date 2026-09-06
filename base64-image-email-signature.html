@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Base64 Image in Email Signature — Generator & Client Guide</title>
+<meta name="description" content="Turn your logo into a Base64 data URI for an email signature, and see which email clients actually render it - Apple Mail yes, Gmail and Outlook no. Honest guide + free tool." />
+<link rel="canonical" href="https://image2base64.com/base64-image-email-signature" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Base64 Image in Email Signature — Generator & Client Guide" />
+<meta property="og:description" content="Encode your signature logo as a Base64 data URI — plus an honest compatibility guide for Gmail, Outlook and Apple Mail." />
+<meta property="og:url" content="https://image2base64.com/base64-image-email-signature" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can I put a Base64 image in an email signature?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Technically yes — the img tag accepts a data URI — but whether it displays depends on the email client. Apple Mail, iOS Mail and Thunderbird render Base64 images. Gmail, Outlook (desktop and web) and Yahoo Mail strip or block them, so a Base64 logo may show as blank for many recipients."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Gmail show Base64 images in email signatures?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Gmail strips data URI images from received messages, and its signature editor does not accept raw HTML anyway. For Gmail signatures, upload the image through Gmail's own signature editor instead."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the most compatible way to embed an image in an email signature?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "For sent email, an embedded attachment referenced by CID (Content-ID) survives in far more clients than a Base64 data URI. For signatures applied by Gmail, Outlook or another provider, use that platform's own image upload so it hosts the file for you."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When does a Base64 image make sense in email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In contexts you control end to end: Apple Mail signatures, email sent through systems you build where recipients are mostly on Apple devices, and self-contained HTML for testing. It is also useful to preview how a signature logo will look before uploading it anywhere."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How big should a signature logo be?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Keep it small: around 150-320 px wide and under 10 KB as a file. Base64 adds about 33%, so a 10 KB logo becomes roughly a 13.7 KB string inside every message."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is the Base64 conversion on this page private?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The image is encoded entirely in your browser with the FileReader API and never uploaded to any server."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="#tool">Encoder</a>
+      <a href="#guide">Compatibility guide</a>
+      <a href="#tools">More tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Base64 Image in an Email Signature</h1>
+      <p class="lede">
+        Encode your signature logo as a <strong>Base64 data URI</strong> — and know where it will actually
+        display. Apple Mail renders it; Gmail and Outlook strip it. The tool is below, the honest
+        client-by-client guide follows.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Your logo never leaves your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="drop" class="dropzone">
+          <div class="dz-icon" aria-hidden="true">✍️</div>
+          <h2>Drop your signature logo to encode it</h2>
+          <p>or paste from your clipboard · a small PNG around 150-320 px wide works best</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose logo</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/*" />
+        </div>
+
+        <p id="enc-error" class="error" hidden></p>
+
+        <div id="results" class="results" hidden>
+          <div class="result-head">
+            <div class="preview-box"><img id="preview" alt="Preview of the selected signature logo" width="120" height="120" hidden /></div>
+            <dl class="meta">
+              <div><dt>File</dt><dd id="m-name">—</dd></div>
+              <div><dt>Type</dt><dd id="m-type">—</dd></div>
+              <div><dt>Size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Base64 size</dt><dd id="m-b64size">—</dd></div>
+            </dl>
+          </div>
+
+          <p id="overhead-note" class="overhead-note" hidden></p>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-datauri">Data URI <span class="muted">(the Base64 image itself)</span></label>
+              <button class="copy" type="button" data-copy="#out-datauri">Copy</button>
+            </div>
+            <textarea id="out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-html">HTML <code>&lt;img&gt;</code> snippet</label>
+              <button class="copy" type="button" data-copy="#out-html">Copy</button>
+            </div>
+            <textarea id="out-html" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>Will a Base64 image actually show in your signature?</h2>
+      <p>
+        The idea is appealing: a logo embedded directly in the signature HTML cannot be blocked the way a
+        hosted image can, because there is no external request to block. That part is true. The catch is
+        that most major email clients <strong>strip data URIs from received mail</strong> anyway — so the
+        Base64 approach works in some clients and silently fails in others. Here is the honest picture.
+      </p>
+
+      <div class="cmp-scroll">
+        <table class="cmp">
+          <caption>Data URI images in email clients</caption>
+          <thead>
+            <tr><th>Client</th><th>Renders Base64 images?</th><th>Notes</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>Apple Mail (macOS)</th><td class="ok">Yes</td><td>The most reliable client for data URIs; macOS signatures support them natively.</td></tr>
+            <tr><th>iOS Mail (iPhone / iPad)</th><td class="ok">Yes</td><td>Generally renders data URIs like Apple Mail on the desktop.</td></tr>
+            <tr><th>Thunderbird</th><td class="ok">Yes</td><td>Desktop client, full support.</td></tr>
+            <tr><th>Gmail (web &amp; apps)</th><td class="warn">No</td><td>Strips data URIs from received messages; the signature editor does not accept raw HTML.</td></tr>
+            <tr><th>Outlook (Windows desktop)</th><td class="warn">No</td><td>Uses Word's rendering engine; data URIs are not supported.</td></tr>
+            <tr><th>Outlook.com / Microsoft 365 web</th><td class="warn">No</td><td>Data URIs are stripped on receipt.</td></tr>
+            <tr><th>Yahoo Mail</th><td class="warn">No</td><td>Data URIs are stripped on receipt.</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p class="cmp-note">Client behavior changes over time — always send a test to your own accounts in each client before relying on any embedding method.</p>
+
+      <h3>What actually works, client by client</h3>
+      <ul>
+        <li><strong>Gmail signature:</strong> use Gmail's own signature editor and upload the image there. Gmail hosts it for you, which is why Gmail-to-Gmail signature logos display even though Gmail strips your hand-made data URIs.</li>
+        <li><strong>Outlook signature:</strong> build the signature in Outlook's editor with an inserted picture; Outlook embeds it as an attachment referenced by CID on send.</li>
+        <li><strong>Apple Mail signature:</strong> data URIs genuinely work here — the encoder above plus the HTML snippet is a valid route.</li>
+        <li><strong>Email you generate yourself</strong> (transactional mail, newsletters): prefer a CID-embedded image for broad compatibility; keep a Base64 variant only where your audience measurement says Apple clients dominate.</li>
+      </ul>
+
+      <h3>Where the encoder above is useful</h3>
+      <ul>
+        <li><strong>Apple Mail and Thunderbird signatures</strong> — the clients that render data URIs.</li>
+        <li><strong>Testing and previews</strong> — paste the snippet into a test HTML email and see exactly how the logo renders before you upload it to a signature platform.</li>
+        <li><strong>Single-file assets</strong> — any context where the signature HTML must travel as one self-contained file.</li>
+      </ul>
+      <p>
+        Keep the source logo small — around 150-320 px wide and under 10 KB. Base64 adds about 33%, so a
+        10 KB logo becomes a ~13.7 KB string repeated inside every message you send. If the file is larger,
+        shrink it first with the <a href="/compress-png-to-base64">PNG compressor + encoder</a> and check the
+        final size with the <a href="/base64-image-size-calculator">Base64 size calculator</a>.
+      </p>
+
+      <h3>Base64 is not a workaround for image blocking</h3>
+      <p>
+        Email clients block hosted images for privacy reasons — hosted images leak open-tracking data. A
+        data URI avoids that leak, but the same clients strip it anyway, so Base64 is not a reliable way to
+        force images into everyone's inbox. Treat it as a compatibility feature for the clients that
+        support it, not a bypass.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/image-to-base64"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
+        <a class="sib-card" href="/compress-png-to-base64"><strong>Compress PNG to Base64</strong><span>Shrink the logo before encoding.</span></a>
+        <a class="sib-card" href="/base64-image-size-calculator"><strong>Base64 Size Calculator</strong><span>Check the string size before you embed.</span></a>
+        <a class="sib-card" href="/png-to-base64"><strong>PNG to Base64</strong><span>Encode a PNG as-is.</span></a>
+        <a class="sib-card" href="/jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
+        <a class="sib-card" href="/data-uri-generator"><strong>Data URI Generator</strong><span>Turn any image into a data URI for CSS or HTML.</span></a>
+        <a class="sib-card" href="/base64-favicon"><strong>Base64 Favicon</strong><span>Inline your favicon with a data URI link tag.</span></a>
+        <a class="sib-card" href="/base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>Can I put a Base64 image in an email signature?</summary>
+        <p>Technically yes — the img tag accepts a data URI — but whether it displays depends on the client. Apple Mail, iOS Mail and Thunderbird render it; Gmail, Outlook and Yahoo strip data URIs from received mail.</p>
+      </details>
+      <details>
+        <summary>Does Gmail show Base64 images in email signatures?</summary>
+        <p>No. Gmail strips data URIs from received messages and its signature editor does not accept raw HTML. Use Gmail's own image upload in the signature editor instead.</p>
+      </details>
+      <details>
+        <summary>What is the most compatible way to embed an image in an email signature?</summary>
+        <p>A CID-embedded attachment survives in more clients than a data URI, and for Gmail/Outlook signatures the platform's own image upload is the reliable path because it hosts the file for you.</p>
+      </details>
+      <details>
+        <summary>When does a Base64 image make sense in email?</summary>
+        <p>Apple Mail and Thunderbird signatures, self-generated email where recipients are mostly on Apple clients, and previews/testing before uploading a logo anywhere.</p>
+      </details>
+      <details>
+        <summary>How big should a signature logo be?</summary>
+        <p>Around 150-320 px wide and under 10 KB as a file. Base64 adds about 33%, so a 10 KB logo becomes roughly a 13.7 KB string inside every message.</p>
+      </details>
+      <details>
+        <summary>Is the Base64 conversion on this page private?</summary>
+        <p>Yes. The image is encoded entirely in your browser with the FileReader API and never uploaded to any server.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/image-to-base64">Image to Base64</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
