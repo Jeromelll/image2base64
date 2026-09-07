@@ -39,7 +39,8 @@ rsync -a --delete \
   --exclude '.git' --exclude 'dist' --exclude '.claude' --exclude '.wrangler' \
   --exclude 'worker.js' --exclude 'wrangler.toml' --exclude '.assetsignore' \
   --exclude 'check_seo_consistency.py' --exclude 'SEO_LOG.md' --exclude 'README.md' \
-  --exclude '_会话交接*' --exclude '.gitignore' --exclude '.DS_Store' --exclude 'LICENSE' \
+  --exclude '_会话交接*' --exclude '诊断_*' --exclude 'GSC提交引导_*' --exclude '*.md' \
+  --exclude '.gitignore' --exclude '.DS_Store' --exclude 'LICENSE' \
   ./ dist/
 npx wrangler deploy
 ```

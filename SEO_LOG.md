@@ -484,3 +484,10 @@ Last updated: 2026-09-02 CST
 - 部署 Version `3a4b39d7-7b77-4dc3-a2bd-a59681d7f826`；上线验证：base64-to-png 3×根相对链+新 desc+代码块、png title、svg 页根相对链、check_seo fail=0（2 jpg/jpeg warn 属预期）
 - 依据：哥飞 SEO Agent 两页体检（onpage_audit 75/98 分 + SERP 解密），报告存 ~/webcafe/marketing/onpage-audit-p0-pages-2026-09-05.md
 - 后续观察：1~2 周看 GSC 曝光，base64-to-png 平均位 19.5 → 15 位内 = 方向对；10/5 自动化复核
+
+## 2026-09-06 外链接续复核
+
+- SaaSHub：公开页 https://www.saashub.com/image-to-base64-converter HTTP 200，主按钮直链本站；修正旧台账 submitted。
+- Startup Fame：已创建并保存 Image to Base64 条目 image2base64.com-930；免费审核要求 DR>0，Ahrefs 实测 DR=0，未请求审核。测试徽章发现资格不符后已撤下。
+- PromoteProject：用户登录完成；要求5票积分才开放提交表单，未代投票。
+- AlternativeTo：找到7月10日官方站内消息通知，登录协助超时，审核结论待核。
