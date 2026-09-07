@@ -491,3 +491,14 @@ Last updated: 2026-09-02 CST
 - Startup Fame：已创建并保存 Image to Base64 条目 image2base64.com-930；免费审核要求 DR>0，Ahrefs 实测 DR=0，未请求审核。测试徽章发现资格不符后已撤下。
 - PromoteProject：用户登录完成；要求5票积分才开放提交表单，未代投票。
 - AlternativeTo：找到7月10日官方站内消息通知，登录协助超时，审核结论待核。
+
+## 2026-09-07 · 选词 3 新页上线（每日选词自动化驱动）
+
+- 上线 3 页（commit `3c469bd`，wrangler Version `43d44b6b`）：
+  - `/image-to-base64-for-api` — 选词来源：AI Vision payload 场景，SERP 仅 viewjson 博客在顶。标准编码器 + OpenAI `image_url` data URI 与 Cloud Vision `image.content` raw Base64 两种 payload 模板自动填充。
+  - `/extract-base64-image-from-css` — 选词来源：decode 方向场景长尾，SERP 第一名仍是 2013 年博客+bash 脚本。粘贴 CSS/HTML/JS/JSON 批量抽 `data:image/...;base64`，逐图预览/尺寸/去重/正确扩展名下载，截断 payload 标红并撤下下载钮。
+  - `/compress-jpg-to-base64` — 与 9/6 的 compress-png 成系列；复用 compress-then-encode 引擎，sample 以 JPEG 出图（app.js 新增 `data-sample-mime` 参数）。
+- app.js：新增 `i2b64:encoded` 自定义事件（encoder 完成后派发）、`initApiPayloads`、`initExtractor`；worker.js 事件白名单加 `extract`。
+- 内链：18 个工具页 footer 加 3 链接（Image to Base64 for APIs / Compress JPG to Base64 / Extract Images from CSS），首页卡片区加 3 张卡；sitemap 25→28 locs。
+- 验收：check_seo_consistency fail=0（30 页/28 locs，2 warn 为既有 jpg/jpeg 合并预期）；本地 + 线上 Playwright 各 14/14（含截断 payload、空输入负例、payload JSON 有效性断言）；三页线上 200 + canonical 自指已核。
+- GSC：待人工对 3 URL 请求索引（见 `GSC提交引导_3新页_20260907.md`）；10/5 闸门判据已追加 3 条。
