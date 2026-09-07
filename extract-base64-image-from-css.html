@@ -1,0 +1,315 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Extract Base64 Images from CSS &amp; HTML — Save Inline Data URIs as Files</title>
+<meta name="description" content="Paste CSS, HTML or JSON and pull every Base64 data URI image out of it - preview each one, check its size, and download the originals. 100% in your browser." />
+<link rel="canonical" href="https://image2base64.com/extract-base64-image-from-css" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Extract Base64 Images from CSS &amp; HTML" />
+<meta property="og:description" content="Paste any CSS, HTML, JS or JSON text and extract every inline Base64 image — preview, inspect and download, entirely in your browser." />
+<meta property="og:url" content="https://image2base64.com/extract-base64-image-from-css" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I extract an image from a CSS file?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Paste the CSS into the tool and press Extract. It scans the text for every data:image/...;base64 URI, renders a preview of each one, and gives you a download button with the correct file extension. Everything runs locally in your browser."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can it extract images from HTML and JSON too?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The extractor scans any text: CSS stylesheets, HTML source, inline JavaScript, raw email MIME, or JSON dumps from APIs and databases. Base64 is the same alphabet everywhere, so the surrounding format does not matter."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What about URL-encoded SVG data URIs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Percent-encoded SVGs (data:image/svg+xml,%3Csvg...) are not Base64 and are skipped. If you need one of those, decode the percent-encoding directly — or use the SVG to Base64 converter on this site to re-encode it first."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the extracted image keep its original quality?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Base64 is a lossless encoding, so downloading the decoded bytes gives you a byte-for-byte identical copy of the original image, including transparency and metadata."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why can't I preview one of the extracted images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The most common cause is a truncated Base64 string — a partial copy ends mid-payload and the bytes cannot form a valid image. The tool still shows the payload and its size so you can copy it for further debugging."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my CSS or HTML uploaded anywhere?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The extraction, preview and download all happen in your browser. The text is scanned with a local regular expression and nothing is sent to any server."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Extract Base64 Images from CSS",
+  "url": "https://image2base64.com/extract-base64-image-from-css",
+  "description": "Paste CSS, HTML, JS or JSON and extract every inline Base64 image — preview and download with the right extension. 100% client-side, no upload.",
+  "operatingSystem": "Web",
+  "applicationCategory": "UtilitiesApplication",
+  "applicationSubCategory": "ImageConverter",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Scan any text for data:image/...;base64 URIs",
+    "Duplicate detection",
+    "Per-image preview, size and dimensions",
+    "Download with the correct extension",
+    "100% client-side — no upload"
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="#tool">Tool</a>
+      <a href="#guide">Guide</a>
+      <a href="#tools">More tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Extract Base64 images from CSS &amp; HTML</h1>
+      <p class="lede">
+        <strong>Paste any CSS, HTML, JavaScript or JSON</strong> — the tool finds every inline
+        <code>data:image/...;base64</code> URI, previews each image, and lets you download the originals
+        with the right file extension.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Your text is scanned locally, never uploaded.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div class="field">
+          <div class="field-head">
+            <label for="x-input">CSS / HTML / JS / JSON source</label>
+            <span class="muted">duplicates are detected automatically</span>
+          </div>
+          <textarea id="x-input" class="out" style="min-height:180px" spellcheck="false" placeholder="background-image: url(&quot;data:image/png;base64,iVBORw0KGgo...&quot;);"></textarea>
+        </div>
+
+        <div class="opt-row" style="margin-top:14px">
+          <button id="x-run" class="btn btn-primary" type="button">Extract images</button>
+          <button class="sample-chip" type="button" data-x-sample="1">🧪 Load sample CSS</button>
+        </div>
+
+        <p id="x-error" class="error" hidden></p>
+
+        <div id="x-results" class="results" hidden>
+          <p id="x-count" class="overhead-note"></p>
+          <div id="x-grid" class="sib-grid"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>Where inline images hide — and how to get them back out</h2>
+      <p>
+        Encoding images as Base64 is half of the story. Build tools inline every asset into one CSS bundle,
+        single-file HTML exports carry their images inside the markup, email templates embed logos as data
+        URIs to survive image blocking, and APIs hand images back as Base64 strings inside JSON. The moment
+        you want the actual <em>file</em> back — to edit it, re-compress it, or drop it into a design tool —
+        you are stuck eyeballing a ten-thousand-character string.
+      </p>
+      <p>
+        This page is the reverse direction of the <a href="/image-to-base64">Base64 encoder</a>, built for
+        bulk: paste the whole stylesheet, page source, or JSON dump, and it pulls out every
+        <code>data:image/…;base64</code> payload at once.
+      </p>
+
+      <h3>How to use it</h3>
+      <ol>
+        <li><strong>Paste the source text.</strong> CSS, HTML, inline JS, raw email source, JSON — anything containing data URIs.</li>
+        <li><strong>Press Extract.</strong> Each found image appears as a card with a preview, its detected format, decoded size and pixel dimensions.</li>
+        <li><strong>Download what you need.</strong> Every card has a download button that saves the file with the correct extension — a PNG payload downloads as <code>.png</code>, a JPEG as <code>.jpg</code>, and so on.</li>
+      </ol>
+
+      <h3>How the extraction works</h3>
+      <p>
+        Base64 has a strict alphabet — <code>A-Z a-z 0-9 + / =</code> — so the scanner walks the text for
+        <code>data:</code> MIME declarations followed by a valid Base64 run and stops exactly where the
+        payload ends, even inside quotes or <code>url()</code> wrappers. Identical payloads are reported
+        once (duplicates are marked), so a stylesheet that reuses the same sprite four times gives you one
+        download, not four. Decoding is lossless: the downloaded bytes are a byte-for-byte copy of the
+        original image, transparency and metadata included.
+      </p>
+
+      <h3>Typical situations</h3>
+      <ul>
+        <li><strong>Recovering assets from a built site.</strong> The original PNGs are gone, but the bundle has them inline — extract and save them back.</li>
+        <li><strong>Inspecting what a page actually ships.</strong> A "tiny" stylesheet hiding 400 KB of inlined hero images is easy to spot once every payload's decoded size is listed.</li>
+        <li><strong>Pulling images out of API or database dumps.</strong> JSON records that store avatars as Base64 text become real files again.</li>
+        <li><strong>Email forensics.</strong> Raw MIME source with tracking pixels embedded as data URIs, made visible.</li>
+      </ul>
+
+      <h3>What it does not do</h3>
+      <p>
+        Percent-encoded SVGs (<code>data:image/svg+xml,%3Csvg…</code>) are not Base64 and are skipped —
+        those decode with plain URL unescaping instead. And an image whose payload was truncated in a copy
+        will fail to preview; the tool tells you which cards are broken rather than silently downloading
+        corrupt files.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/base64-to-image"><strong>Base64 to Image</strong><span>Decode a single string or data URI.</span></a>
+        <a class="sib-card" href="/image-to-base64"><strong>Image to Base64</strong><span>Encode any image into a data URI.</span></a>
+        <a class="sib-card" href="/compress-png-to-base64"><strong>Compress PNG to Base64</strong><span>Shrink PNGs, then encode them.</span></a>
+        <a class="sib-card" href="/compress-jpg-to-base64"><strong>Compress JPG to Base64</strong><span>Shrink photos, then encode them.</span></a>
+        <a class="sib-card" href="/svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
+        <a class="sib-card" href="/base64-image-size-calculator"><strong>Base64 Size Calculator</strong><span>Check data URI size before you inline.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>How do I extract an image from a CSS file?</summary>
+        <p>Paste the CSS and press Extract. The tool scans for every <code>data:image/...;base64</code> URI, previews each one and provides a download with the correct extension — all locally in your browser.</p>
+      </details>
+      <details>
+        <summary>Can it extract images from HTML and JSON too?</summary>
+        <p>Yes. Base64 uses the same alphabet everywhere, so the surrounding format — CSS, HTML, JS, email MIME, JSON — does not matter. If the text contains data URIs, they get found.</p>
+      </details>
+      <details>
+        <summary>What about URL-encoded SVG data URIs?</summary>
+        <p>Percent-encoded SVGs (<code>data:image/svg+xml,%3Csvg…</code>) are not Base64 and are skipped. Re-encode the SVG with the <a href="/svg-to-base64">SVG to Base64 converter</a> if you need it in this form.</p>
+      </details>
+      <details>
+        <summary>Does the extracted image keep its original quality?</summary>
+        <p>Yes — Base64 is lossless, so the downloaded file is byte-for-byte identical to the original image, transparency and metadata included.</p>
+      </details>
+      <details>
+        <summary>Why can't I preview one of the extracted images?</summary>
+        <p>Almost always a truncated payload from a partial copy. The card is marked so you know the download would be corrupt, and the payload is still there for debugging.</p>
+      </details>
+      <details>
+        <summary>Is my CSS or HTML uploaded anywhere?</summary>
+        <p>No. Extraction, preview and download all run in your browser with a local scan. Nothing is sent to any server.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/image-to-base64">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

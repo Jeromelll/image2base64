@@ -81,6 +81,21 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://image2base64.com/compress-jpg-to-base64</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/image-to-base64-for-api</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/extract-base64-image-from-css</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+  </url>
+  <url>
     <loc>https://image2base64.com/base64-image-size-calculator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.7</priority>

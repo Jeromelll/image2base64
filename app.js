@@ -224,6 +224,8 @@
 
         if (results) results.hidden = false;
         results.scrollIntoView({ behavior: "smooth", block: "nearest" });
+        // Per-page extras (e.g. API payload templates on /image-to-base64-for-api)
+        document.dispatchEvent(new CustomEvent("i2b64:encoded", { detail: { dataUri: dataUri, mime: file.type || "" } }));
         track("convert", file.type || "image", sizeBucket(file.size));
       };
       reader.onerror = function () { showError("Sorry — the file could not be read. Try another image."); };
@@ -715,10 +717,13 @@
 
     // Sample: a deliberately detailed 960×640 scene so compression has
     // something to bite into. Drawn locally; zero network requests.
+    // Mime/ext come from the page's data-sample-mime (jpg page ships JPGs).
     var sampleBtn = drop.querySelector(".sample-chip");
     if (sampleBtn) {
       sampleBtn.addEventListener("click", function () {
         track("sample", "photo");
+        var sampleMime = drop.getAttribute("data-sample-mime") || "image/png";
+        var sampleExt = sampleMime.split("/")[1] === "jpeg" ? "jpg" : (sampleMime.split("/")[1] || "png");
         var c = document.createElement("canvas");
         c.width = 960; c.height = 640;
         var ctx = c.getContext("2d");
@@ -728,12 +733,12 @@
         c.toBlob(function (blob) {
           if (!blob) return;
           try {
-            process(new File([blob], "sample-photo.png", { type: "image/png" }));
+            process(new File([blob], "sample-photo." + sampleExt, { type: sampleMime }));
           } catch (err) {
-            blob.name = "sample-photo.png";
+            blob.name = "sample-photo." + sampleExt;
             process(blob);
           }
-        }, "image/png");
+        }, sampleMime);
       });
     }
 
@@ -842,6 +847,239 @@
     if (unit) unit.addEventListener("change", fromFields);
   }
 
+  // ====================================================================
+  // API PAYLOAD TEMPLATES  (image-to-base64-for-api page)
+  // Fills OpenAI / Google Cloud Vision JSON payload textareas whenever
+  // the shared encoder produces a data URI. Nothing leaves the browser.
+  // ====================================================================
+  function initApiPayloads() {
+    var outOpenAI = $("#out-openai");
+    if (!outOpenAI) return;
+    var outGcv = $("#out-gcv");
+
+    document.addEventListener("i2b64:encoded", function (e) {
+      var uri = e.detail && e.detail.dataUri;
+      if (!uri) return;
+      var comma = uri.indexOf(",");
+      var raw = comma >= 0 ? uri.slice(comma + 1) : uri;
+
+      outOpenAI.value = JSON.stringify({
+        model: "gpt-4o",
+        messages: [{
+          role: "user",
+          content: [
+            { type: "text", text: "Describe this image" },
+            { type: "image_url", image_url: { url: uri } }
+          ]
+        }]
+      }, null, 2);
+
+      if (outGcv) {
+        outGcv.value = JSON.stringify({
+          requests: [{
+            image: { content: raw },
+            features: [{ type: "TEXT_DETECTION" }]
+          }]
+        }, null, 2);
+      }
+    });
+  }
+
+  // ====================================================================
+  // DATA URI EXTRACTOR  (extract-base64-image-from-css page)
+  // Scans pasted CSS/HTML/JS/JSON for data:image/...;base64 payloads,
+  // previews each image and offers a download with the right extension.
+  // ====================================================================
+  function initExtractor() {
+    var input = $("#x-input");
+    if (!input) return;
+
+    var runBtn = $("#x-run");
+    var results = $("#x-results");
+    var grid = $("#x-grid");
+    var countNote = $("#x-count");
+    var errBox = $("#x-error");
+    var objectUrls = [];
+
+    function showError(msg) {
+      if (!errBox) return;
+      errBox.textContent = msg;
+      errBox.hidden = !msg;
+      if (msg) track("error", "extract", msg.slice(0, 60));
+    }
+
+    function revokeUrls() {
+      objectUrls.forEach(function (u) { URL.revokeObjectURL(u); });
+      objectUrls = [];
+    }
+    window.addEventListener("beforeunload", revokeUrls);
+
+    function fmtLabel(mime) {
+      var labels = {
+        "image/png": "PNG", "image/jpeg": "JPG", "image/gif": "GIF",
+        "image/webp": "WebP", "image/svg+xml": "SVG", "image/bmp": "BMP",
+        "image/x-icon": "ICO", "image/tiff": "TIFF", "image/avif": "AVIF"
+      };
+      return labels[mime] || (mime ? mime.replace("image/", "").toUpperCase() : "IMAGE");
+    }
+
+    function extFor(mime) {
+      var exts = {
+        "image/png": "png", "image/jpeg": "jpg", "image/gif": "gif",
+        "image/webp": "webp", "image/svg+xml": "svg", "image/bmp": "bmp",
+        "image/x-icon": "ico", "image/tiff": "tiff", "image/avif": "avif"
+      };
+      return exts[mime] || "img";
+    }
+
+    function run() {
+      showError("");
+      revokeUrls();
+      grid.innerHTML = "";
+      results.hidden = true;
+
+      var text = input.value || "";
+      if (!text.trim()) {
+        showError("Paste CSS, HTML, JS or JSON containing data URIs first.");
+        return;
+      }
+
+      var re = /data:([^;,\"'\)\s]+)?(?:;charset=[^;,\"'\)\s]+)?;base64,([A-Za-z0-9+\/=]+)/g;
+      var seen = {};
+      var items = [];
+      var m;
+      while ((m = re.exec(text)) !== null) {
+        var payload = m[2];
+        if (payload.length < 8) continue;
+        var key = payload.slice(0, 80) + ":" + payload.length;
+        if (seen[key]) {
+          for (var k = 0; k < items.length; k++) {
+            if (items[k].key === key) { items[k].dups++; break; }
+          }
+          continue;
+        }
+        seen[key] = true;
+        items.push({ key: key, declared: (m[1] || "").toLowerCase(), payload: payload, dups: 0 });
+        if (items.length >= 50) break;
+      }
+
+      if (!items.length) {
+        showError("No Base64 data URIs found. Note: percent-encoded SVGs (data:image/svg+xml,%3C...) are not Base64 and are skipped.");
+        return;
+      }
+
+      var totalBytes = 0;
+      items.forEach(function (item, idx) {
+        var mime = item.declared || "image/png";
+        var dataUri = "data:" + mime + ";base64," + item.payload;
+        var decoded = Math.floor(item.payload.length * 3 / 4);
+        totalBytes += decoded;
+
+        var card = document.createElement("div");
+        card.className = "sib-card x-card";
+
+        var img = document.createElement("img");
+        img.alt = "Extracted image " + (idx + 1);
+        img.style.maxWidth = "100%";
+        img.style.maxHeight = "72px";
+        img.style.objectFit = "contain";
+        img.src = dataUri;
+        img.onerror = function () {
+          var warn = document.createElement("span");
+          warn.textContent = "Preview failed — payload may be truncated.";
+          warn.style.color = "#c0392b";
+          card.insertBefore(warn, info);
+          img.remove();
+          var dl = row.querySelector("a[download]");
+          if (dl) dl.remove();
+        };
+        card.appendChild(img);
+
+        var strong = document.createElement("strong");
+        strong.textContent = "#" + (idx + 1) + " · " + fmtLabel(item.declared);
+        card.appendChild(strong);
+
+        var info = document.createElement("span");
+        info.textContent = "≈" + bytesToSize(decoded) + " decoded · " +
+          item.payload.length.toLocaleString() + " chars" +
+          (item.dups ? " · ×" + (item.dups + 1) + " occurrences" : "");
+        card.appendChild(info);
+        img.addEventListener("load", function () {
+          info.textContent += " · " + img.naturalWidth + "×" + img.naturalHeight + " px";
+        });
+
+        var row = document.createElement("div");
+        row.style.cssText = "display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;";
+
+        var cp = document.createElement("button");
+        cp.className = "copy";
+        cp.type = "button";
+        cp.textContent = "Copy Base64";
+        cp.addEventListener("click", function () {
+          track("copy", "extract");
+          copyText(item.payload, cp);
+        });
+        row.appendChild(cp);
+
+        try {
+          var bin = atob(item.payload);
+          var bytes = new Uint8Array(bin.length);
+          for (var i = 0; i < bin.length; i++) bytes[i] = bin.charCodeAt(i);
+          var url = URL.createObjectURL(new Blob([bytes], { type: mime }));
+          objectUrls.push(url);
+          var dl = document.createElement("a");
+          dl.className = "btn btn-primary";
+          dl.textContent = "Download";
+          dl.href = url;
+          dl.setAttribute("download", "extracted-" + (idx + 1) + "." + extFor(item.declared));
+          dl.addEventListener("click", function () { track("download", dl.getAttribute("download") || ""); });
+          row.appendChild(dl);
+        } catch (e) { /* invalid padding: no download button */ }
+
+        card.appendChild(row);
+        grid.appendChild(card);
+      });
+
+      countNote.innerHTML = "Found <strong>" + items.length + "</strong> unique image" +
+        (items.length > 1 ? "s" : "") + " · ≈" + bytesToSize(totalBytes) +
+        " decoded in total" + (items.length >= 50 ? " (showing the first 50)" : "") + ".";
+      results.hidden = false;
+      track("extract", "", String(items.length));
+    }
+
+    // Sample: build a small stylesheet containing two locally-drawn images.
+    function toUri(w, h, kind, cb) {
+      var c = document.createElement("canvas");
+      c.width = w; c.height = h;
+      var ctx = c.getContext("2d");
+      if (!ctx) return cb("");
+      drawSampleScene(ctx, kind);
+      c.toBlob(function (b) {
+        if (!b) return cb("");
+        var r = new FileReader();
+        r.onload = function () { cb(String(r.result || "")); };
+        r.onerror = function () { cb(""); };
+        r.readAsDataURL(b);
+      }, "image/png");
+    }
+
+    var sampleBtn = document.querySelector("[data-x-sample]");
+    if (sampleBtn) {
+      sampleBtn.addEventListener("click", function () {
+        track("sample", "photo");
+        toUri(16, 16, "avatar", function (u1) {
+          toUri(160, 100, "photo", function (u2) {
+            var raw1 = u1 ? u1.split(",")[1] : "";
+            input.value = '.toolbar {\n  background-image: url("data:image/png;base64,' + raw1 + '");\n  background-repeat: repeat;\n}\n\n.hero {\n  background-image: url("' + u2 + '");\n  background-size: cover;\n}\n';
+            run();
+          });
+        });
+      });
+    }
+
+    if (runBtn) runBtn.addEventListener("click", run);
+  }
+
   // ---------- boot ----------
   document.addEventListener("DOMContentLoaded", function () {
     // Privacy-first page view: cookieless, no IP, stored on our own Worker.
@@ -850,6 +1088,8 @@
     initDecoder();
     initCompressEncoder();
     initCalculator();
+    initApiPayloads();
+    initExtractor();
     wireCopyButtons(document);
   });
 })();

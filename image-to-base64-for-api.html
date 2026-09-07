@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Image to Base64 for API Calls — OpenAI &amp; Cloud Vision JSON Payloads</title>
+<meta name="description" content="Convert an image to Base64 and paste it straight into an OpenAI or Google Cloud Vision JSON payload. Exact payload templates, no upload, 100% client-side." />
+<link rel="canonical" href="https://image2base64.com/image-to-base64-for-api" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Image to Base64 for API Calls — OpenAI &amp; Cloud Vision Payloads" />
+<meta property="og:description" content="Encode an image and get a ready-to-paste JSON payload for OpenAI vision models or Google Cloud Vision — entirely in your browser." />
+<meta property="og:url" content="https://image2base64.com/image-to-base64-for-api" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I send an image to the OpenAI API as Base64?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use an image_url content part whose URL is the full data URI: data:image/png;base64,YOUR_STRING. Vision models such as GPT-4o and GPT-4.1 accept data URIs in the image_url field, so no file upload or hosting is needed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I send an image to Google Cloud Vision as Base64?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Put the raw Base64 string (without the data: prefix) in the image.content field of the annotate request. Cloud Vision expects pure Base64, not a data URI — this tool outputs both forms so you can paste whichever the API needs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Base64 work for every AI vision API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most accept it in one of two shapes: a full data URI (OpenAI, Anthropic source.data) or raw Base64 without the prefix (Google Cloud Vision, many self-hosted model servers). The rule of thumb: OpenAI wants the whole data URI, Google wants only the payload. This page generates both."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How large can a Base64 image be in an API request?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Request bodies are typically capped between 4 MB and 20 MB depending on the API, and Base64 inflates the image by about 33%. Resize the image to the resolution the model actually uses (often 1024-2048 px is plenty) before encoding — the compressor on this site does that in one step."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is it safe to convert sensitive images to Base64 here?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The image is read and encoded entirely in your browser with the FileReader API. Nothing is uploaded to any server, so proprietary screenshots, internal documents and medical images never leave your device."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my Base64 image show up broken in the API response?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The three usual causes are a truncated copy, a missing or doubled data: prefix, and JSON escaping problems when the string is assembled by hand. Pasting the payload straight from this tool avoids all three."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Image to Base64 for API",
+  "url": "https://image2base64.com/image-to-base64-for-api",
+  "description": "Convert an image to Base64 and get ready-to-paste JSON payloads for OpenAI vision models and Google Cloud Vision. 100% client-side, no upload.",
+  "operatingSystem": "Web",
+  "applicationCategory": "DeveloperApplication",
+  "applicationSubCategory": "ImageConverter",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "OpenAI vision payload template (image_url data URI)",
+    "Google Cloud Vision payload template (raw Base64)",
+    "Raw Base64 and data URI outputs",
+    "100% client-side — no upload"
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="#tool">Tool</a>
+      <a href="#guide">Guide</a>
+      <a href="#tools">More tools</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Image to Base64 for API calls</h1>
+      <p class="lede">
+        <strong>Convert an image to Base64 and paste it straight into your API request.</strong>
+        This page outputs the exact payload shapes that OpenAI vision models and Google Cloud Vision
+        expect — no guesswork about prefixes, no hosting, no upload.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Sensitive images never leave your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="drop" class="dropzone">
+          <div class="dz-icon" aria-hidden="true">🔌</div>
+          <h2>Drop an image to build your API payload</h2>
+          <p>or paste from your clipboard · everything stays in your browser</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose image</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/*" />
+
+          <div class="dz-samples">
+            <span class="dz-samples-label">No image handy? Try a sample:</span>
+            <button class="sample-chip" type="button" data-sample="photo">🏞️ Sample photo</button>
+          </div>
+        </div>
+
+        <p id="enc-error" class="error" hidden></p>
+
+        <div id="results" class="results" hidden>
+          <div class="result-head">
+            <div class="preview-box"><img id="preview" alt="Preview of the image before Base64 encoding" width="120" height="120" hidden /></div>
+            <dl class="meta">
+              <div><dt>Type</dt><dd id="m-type">—</dd></div>
+              <div><dt>File size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Dimensions</dt><dd id="m-dims">—</dd></div>
+              <div><dt>Data URI size</dt><dd id="m-b64size">—</dd></div>
+            </dl>
+          </div>
+
+          <p id="overhead-note" class="overhead-note" hidden></p>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-openai">OpenAI vision payload <span class="muted">(GPT-4o / GPT-4.1 — paste into <code>messages</code>)</span></label>
+              <button class="copy" type="button" data-copy="#out-openai">Copy</button>
+            </div>
+            <textarea id="out-openai" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-gcv">Google Cloud Vision payload <span class="muted">(paste into <code>requests</code>)</span></label>
+              <button class="copy" type="button" data-copy="#out-gcv">Copy</button>
+            </div>
+            <textarea id="out-gcv" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-datauri">Full data URI <span class="muted">(for any other API)</span></label>
+              <button class="copy" type="button" data-copy="#out-datauri">Copy</button>
+            </div>
+            <textarea id="out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-raw">Raw Base64 only <span class="muted">(no <code>data:</code> prefix)</span></label>
+              <button class="copy" type="button" data-copy="#out-raw">Copy</button>
+            </div>
+            <textarea id="out-raw" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>The two payload shapes every vision API uses</h2>
+      <p>
+        Multimodal APIs accept images in one of two shapes, and mixing them up is the most common reason a
+        Base64 image comes back broken. <strong>OpenAI</strong> (GPT-4o, GPT-4.1 and the other vision-capable
+        models) wants a <em>content part</em> with <code>type: "image_url"</code> whose <code>image_url.url</code>
+        is the <strong>full data URI</strong> — prefix and all:
+      </p>
+      <pre><code>{
+  "model": "gpt-4o",
+  "messages": [{
+    "role": "user",
+    "content": [
+      { "type": "text", "text": "Describe this image" },
+      { "type": "image_url",
+        "image_url": { "url": "data:image/png;base64,iVBORw0KGgo..." } }
+    ]
+  }]
+}</code></pre>
+      <p>
+        <strong>Google Cloud Vision</strong> is the opposite: the <code>image.content</code> field takes the
+        <strong>raw Base64 payload only</strong> — a <code>data:</code> prefix there causes an encoding error:
+      </p>
+      <pre><code>{
+  "requests": [{
+    "image": { "content": "iVBORw0KGgo..." },
+    "features": [{ "type": "TEXT_DETECTION" }]
+  }]
+}</code></pre>
+      <p>
+        This page reads your image once and fills both templates for you, with the correct MIME type detected
+        from the actual file — PNG, JPEG, WebP, GIF and SVG all get their proper <code>data:image/…</code>
+        prefix automatically.
+      </p>
+
+      <h3>Step by step</h3>
+      <ol>
+        <li><strong>Add the image.</strong> Drag it in, pick it, or paste from the clipboard.</li>
+        <li><strong>Copy the payload for your API.</strong> OpenAI and Cloud Vision templates are filled in automatically; the full data URI and raw Base64 outputs cover every other API.</li>
+        <li><strong>Send it.</strong> The payload is valid JSON with the image already escaped — no manual string assembly, no truncation.</li>
+      </ol>
+
+      <h3>Mind the request size</h3>
+      <p>
+        Base64 inflates bytes by about 33%, and vision APIs cap request bodies (typically 4-20 MB). A phone
+        photo at 4 MB becomes a 5.3 MB string before you have added a single prompt token. Models rarely
+        benefit from more than 1024-2048 px of input, so
+        <a href="/compress-jpg-to-base64">compress the image first</a> — resize to the resolution the model
+        actually sees and the payload shrinks by an order of magnitude.
+      </p>
+
+      <h3>Why in-browser conversion matters for API work</h3>
+      <p>
+        Vision pipelines often handle images that cannot be pasted into a random web tool: internal
+        screenshots, unreleased product photos, medical scans, documents under NDA. Upload-based converters
+        put those bytes on someone else's server. This page encodes with the browser's
+        <code>FileReader</code> API instead — there is no upload step at all, which you can verify in the
+        Network tab: converting fires zero requests.
+      </p>
+
+      <h3>Debugging payloads that come back the other way</h3>
+      <p>
+        Many APIs also <em>return</em> images as Base64 inside JSON. When one does, the
+        <a href="/base64-to-image">Base64 to image decoder</a> previews and saves it, and the
+        <a href="/extract-base64-image-from-css">data URI extractor</a> pulls every embedded image out of a
+        bulk JSON or CSS dump in one pass.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/image-to-base64"><strong>Image to Base64</strong><span>Plain encoder for any format.</span></a>
+        <a class="sib-card" href="/base64-to-image"><strong>Base64 to Image</strong><span>Decode API responses back to files.</span></a>
+        <a class="sib-card" href="/extract-base64-image-from-css"><strong>Extract Images from CSS</strong><span>Pull every data URI out of a text dump.</span></a>
+        <a class="sib-card" href="/compress-jpg-to-base64"><strong>Compress JPG to Base64</strong><span>Shrink photos before encoding.</span></a>
+        <a class="sib-card" href="/base64-image-size-calculator"><strong>Base64 Size Calculator</strong><span>Check payload size before you send.</span></a>
+        <a class="sib-card" href="/png-to-base64"><strong>PNG to Base64</strong><span>Encode PNGs with transparency.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>How do I send an image to the OpenAI API as Base64?</summary>
+        <p>Use an <code>image_url</code> content part whose URL is the full data URI — <code>data:image/png;base64,YOUR_STRING</code>. Vision models such as GPT-4o and GPT-4.1 accept data URIs directly, so no hosting or multipart upload is needed.</p>
+      </details>
+      <details>
+        <summary>How do I send an image to Google Cloud Vision as Base64?</summary>
+        <p>Put the raw Base64 string (no <code>data:</code> prefix) in the <code>image.content</code> field of the annotate request. This page outputs both forms so you can paste whichever the API expects.</p>
+      </details>
+      <details>
+        <summary>How large can a Base64 image be in an API request?</summary>
+        <p>Request bodies are typically capped between 4 MB and 20 MB depending on the API, and Base64 adds about 33%. Resize to what the model actually sees — the <a href="/compress-jpg-to-base64">compressor</a> handles it in one step.</p>
+      </details>
+      <details>
+        <summary>Is it safe to convert sensitive images here?</summary>
+        <p>Yes. The image is read and encoded entirely in your browser with the FileReader API. Nothing is uploaded, so NDA'd screenshots and internal documents never leave your device.</p>
+      </details>
+      <details>
+        <summary>Why does my Base64 image show up broken in the API response?</summary>
+        <p>Usually a truncated copy, a missing or doubled <code>data:</code> prefix, or hand-rolled JSON escaping. Pasting the payload straight from this tool avoids all three.</p>
+      </details>
+      <details>
+        <summary>Which other APIs accept Base64 images?</summary>
+        <p>Most do, in one of the two shapes above: full data URI (OpenAI, Anthropic's source.data) or raw payload (Cloud Vision, most self-hosted model servers). When in doubt, the API's error message will name the field it rejected.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/image-to-base64">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>
