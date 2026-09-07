@@ -1,5 +1,17 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-07 — remove.bg 关停事件流量：2 个内容页上线（alternatives / shutting-down）
+
+- 来源：Jerome 转来社群消息（remove.bg 将于 12 月 1 日关停），经官方主页 banner + FAQ 页核实——**2026-12-01 09:00 CET 独立站停止服务，功能迁入 Canva**（Canva 2021 年收购 Kaleido AI）。窗口 85 天。决策（Jerome 拍板）：放本站、只做内容页先手（工具页暂缓，浏览器 WASM 路线备查）。
+- 机会量化：remove.bg 月搜索流量 ~43M（Ahrefs 2026/8）、DR 84、品类份额 80.7%（12 个月 907M 访问）；垄断 "remove bg" 5.8M/月、"background remover" 2.5M、"remove background" 1.5M 等词 #1。关停后品牌替代词（remove.bg alternative）与免费长尾（free / no sign up / full resolution）SERP 将重排；pixlrun/bigimg/zawa 等 2025-26 新站已在抢 alternatives 词。
+- 新页 1：`/remove-bg-shutting-down` 新闻时效页——关停时间线、官方数据引用（1.5 亿张/月、3200 万 MAU）、用户 5 项行动清单（积分/订阅/文件/替代测试/API 迁移）、5 问 FAQ schema。目标词：remove.bg shutting down / moving to canva / closing。
+- 新页 2：`/remove-bg-alternatives` 对比页——10 个替代品对比表（免费档/全分辨率/注册/起步价/适用人群：Adobe Express、Pixlr、Photoroom、Pixelcut、Canva、Erase.bg、Removal.AI、Slazzer、Cutout.pro、rembg 开源）+ 按场景选型 + 隐私角度（hosted 上传 vs 本地模型）+ fairness 段（无 affiliate、链接官方 nofollow）+ 5 问 FAQ schema。目标词：remove.bg alternative(s) / free remove.bg alternative。
+- 写作纪律：定价数据各源矛盾（Pixelcut 免费档 3 张/天 vs unlimited 两说），一律给定性判断 + 标注"2026 年 9 月初核实，以官网当前定价为准"；不替竞品断言内部行为；首段 40-60 词直接答案块。
+- 接入：sitemap +2（alternatives 0.7 weekly、shutting-down 0.6 weekly）；全站 30 旧页 footer Guides 栏幂等插入 2 链接（两新页自带）；两页互链 + 页尾软链到 / 工具（透明 PNG → Base64 嵌入的自然转化路径）。
+- 验证：`check_seo_consistency` pages=32 sitemap_locs=30 ok=92 warn=2 fail=0（2 warn 已知 jpg/jpeg 合并）；`wrangler deploy` Version `a0936ca3`；线上 curl -L 两页 200 + canonical 自指 + sitemap 2 条 + 旧页 footer 2 链接全核。
+- 预期：10 月起吃新闻时效词曝光，12/1 当周承接品牌替代词峰值；成功指标 = GSC 两词 impressions/clicks 0→>0。若 11 月中数据起量，再评估是否上浏览器 WASM 工具页（@imgly/background-removal，~44MB 模型，与现有客户端架构一致）。
+- 后续排期：11 月下旬更新两页（倒计时口径 + 关停当天状态）；12/1 当周每日监控 GSC；竞品免费档变动时刷新对比表。
+
 ## 2026-09-06 — 每日选词落地：3 个场景长尾新页上线（compress / size-calculator / email-signature）
 
 - 来源：WorkBuddy 每日选词自动化（i2b64_keywords.json）首次产出 + 人工拍板。免费信号验证结论：大词 `base64 image converter online` 被 base64-image.de/base64.sh 等专门站垄断，机会在「SERP 只有博客文章在顶」的场景限定长尾。
