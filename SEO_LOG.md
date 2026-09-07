@@ -1,5 +1,15 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-07（晚）— GSC 三类筛词落地：tiff-to-base64 + 多语言代码教程页上线
+
+- 来源：WorkBuddy 28d GSC 复盘（8/10–9/6 vs 前 28d，q/qp/page 三维度）。三类筛词结论：① 高曝光低点击全是已有页的核心词（位 60-99，CTR 0 = 新站权重问题非 on-page）；② 排名 8-20 区间 0 个非品牌 query；③ 有曝光无对应页 = 唯一结构性缺口——tiff 簇 5 imp（跨 8/25 + 9/7 两周期持续）+ 语言教程簇 16 imp（js 7 / php 4 / py 2 / java 1 / linux 1 / n8n 1）。Jerome 拍板「按你建议来」。
+- 新页 1：`/tiff-to-base64` 工具页——复用 jpg 模板（data-accept="tiff"），但**砍掉 sample chips 与预览图**（canvas 不能产 TIFF、Chrome/Firefox 不渲染 TIFF 预览），Meta 表去掉 Dimensions 行；指南区写清 33% 膨胀 + 浏览器渲染限制 + "web 用先转 PNG/JPG"。目标词：tiff to base64 / tiff to base64 converter。
+- 新页 2：`/how-to-convert-image-to-base64` 教程页（guide 模板）——JS(FileReader+canvas)/Node/Python/PHP/Java/Linux CLI/n8n(Code node getBinaryDataBuffer→toString('base64')) 七路代码 + 各路 gotcha（rb 二进制模式、-w0 防换行、Java 8+ java.util.Base64、n8n binary 属性名），9 节 8 代码块 12 锚点 5 FAQ。单页吃 16 imp 词簇，n8n 候选并入本节不建独立页。
+- 接入：sitemap 30→32（tiff 0.8 / 教程 0.6 monthly）；全站 23 工具页 footer Converters +TIFF 链接、32 个 Guides-nav 页 +教程链接（perl 幂等插入）；首页 +2 sib-card + 指南区文字链接。
+- 验证：`check_seo_consistency` pages=34 sitemap_locs=32 ok=98 fail=0；JSON-LD 全有效；无断链；wrangler deploy Version `5d027cb9`；线上 curl 两页 200 + canonical + 单 H1 + sitemap 2 条 + 首页/jpg 页 footer 链接全核；Playwright 线上实测——真实 TIFF 文件（7.5KB sips 生成）上传→data:image/tiff;base64,TU0AKg... 输出全对（Meta/overhead/HTML/CSS）；教程页 9 节/8 代码块/锚点全有效。
+- 坑（复用价值）：① **macOS BSD grep 的 `\|` BRE 交替不可靠**——线上核验时单模式逐个 grep，否则出现"内容其实已生效但 grep 说没有"的假阴性（本轮 sitemap/首页两次误报均此因）。② **Playwright MCP `browser_file_upload` 的 allowed roots 仅含 playwright-mcp-output 目录与当前工作区**（且路径大小写敏感）——测试文件先 cp 进 `~/.workbuddy/browser-profiles/playwright-mcp-output/`。③ FAQ 事实错误被真实文件抓包：big-endian TIFF 的 Base64 签名是 `TU0AKg`（MM\0*）非 `TUxAK`——写完"格式签名"类 FAQ 必须用真实文件验证（已修 f2dcf36）。④ 复合命令链被 SIGTERM 中断后，恢复顺序 = git log 核提交 → dist diff 核同步 → 单模式 grep 核线上，缺一都可能漏部署。
+- 预期：tiff 簇与语言教程簇 2 周内出现这 2 个 URL 的 GSC 曝光/排名；若仍无起色 = 权重瓶颈，继续外链建设，不改页面。
+
 ## 2026-09-07 — remove.bg 关停事件流量：2 个内容页上线（alternatives / shutting-down）
 
 - 来源：Jerome 转来社群消息（remove.bg 将于 12 月 1 日关停），经官方主页 banner + FAQ 页核实——**2026-12-01 09:00 CET 独立站停止服务，功能迁入 Canva**（Canva 2021 年收购 Kaleido AI）。窗口 85 天。决策（Jerome 拍板）：放本站、只做内容页先手（工具页暂缓，浏览器 WASM 路线备查）。
