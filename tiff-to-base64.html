@@ -38,7 +38,7 @@
       "name": "What does a TIFF Base64 string look like?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A TIFF data URI starts with data:image/tiff;base64, followed by the encoded body, which typically begins with SUkq — the Base64 form of the II*\\* (little-endian) TIFF file header. Files from some cameras use MM\\*0 (big-endian) instead, which begins with TUxAK in Base64."
+        "text": "A TIFF data URI starts with data:image/tiff;base64, followed by the encoded body, which typically begins with SUkq — the Base64 form of the II*\\0 (little-endian) TIFF file header. Files from some cameras use MM\\0* (big-endian) instead, which begins with TU0AKg in Base64."
       }
     },
     {
@@ -252,7 +252,7 @@
       <h2>Frequently asked questions</h2>
       <details>
         <summary>What does a TIFF Base64 string look like?</summary>
-        <p>A TIFF data URI starts with <code>data:image/tiff;base64,</code> and the body typically begins with <code>SUkq</code> — the Base64 form of the little-endian <code>II*\0</code> TIFF header. Big-endian files (<code>MM\0*</code>) start with <code>TUxAK</code> instead.</p>
+        <p>A TIFF data URI starts with <code>data:image/tiff;base64,</code> and the body typically begins with <code>SUkq</code> — the Base64 form of the little-endian <code>II*\0</code> TIFF header. Big-endian files (<code>MM\0*</code>) start with <code>TU0AKg</code> instead.</p>
       </details>
       <details>
         <summary>Can browsers display a Base64 TIFF inline?</summary>
