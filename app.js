@@ -323,7 +323,6 @@
       });
     }
 
-    wireCopyButtons(drop.closest("section") || document);
   }
 
   // ====================================================================
@@ -599,7 +598,6 @@
       track("download", dlBtn.getAttribute("download") || "");
     });
     window.addEventListener("beforeunload", revokeActiveUrl);
-    wireCopyButtons(input.closest("section") || document);
   }
 
   // ====================================================================

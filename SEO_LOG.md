@@ -162,7 +162,7 @@
 
 # Image2Base64 SEO Log
 
-Last updated: 2026-09-02 CST
+Last updated: 2026-09-07 CST
 
 ## 2026-08-29 — backlink verification cadence (Wang Yan post)
 
@@ -502,3 +502,11 @@ Last updated: 2026-09-02 CST
 - 内链：18 个工具页 footer 加 3 链接（Image to Base64 for APIs / Compress JPG to Base64 / Extract Images from CSS），首页卡片区加 3 张卡；sitemap 25→28 locs。
 - 验收：check_seo_consistency fail=0（30 页/28 locs，2 warn 为既有 jpg/jpeg 合并预期）；本地 + 线上 Playwright 各 14/14（含截断 payload、空输入负例、payload JSON 有效性断言）；三页线上 200 + canonical 自指已核。
 - GSC：待人工对 3 URL 请求索引（见 `GSC提交引导_3新页_20260907.md`）；10/5 闸门判据已追加 3 条。
+
+## 2026-09-07 · D1 统计去噪与重复 copy 修复
+
+- 远程 D1 回读发现近 3 天 `page_view` 4,481 条，但高频 path 包含 `/.env`、`/wp-login.php`、`/wordpress/` 等扫描请求；根因是 `worker.js` 在静态资产判定前对任意无扩展名 GET 记 `page_view`。
+- 删除服务端 GET 记页览，只保留 `app.js` 在真实页面 DOM 启动后上报的 `page_view`；历史污染数据不删除，后续分析按 canonical path 过滤。
+- 同次 `copy` 出现完全相同的双行；根因是 encoder/decoder 初始化和全局 boot 都调用 `wireCopyButtons`。删除两个局部调用，统一由 boot 绑定一次。
+- 部署 Worker Version `c4d6de27-673b-4987-88b6-b1e3fa128ae7`。线上验证：`/.env` 返回 404，主动请求前后该 path 的 D1 `page_view` 计数均为 27；线上 `app.js` 仅余全局一次 `wireCopyButtons(document)`。
+- 6 个新入口当前每页仅 1–3 个 page view；3 个 9/7 新页的行为与上线验收时点/国家一致，尚不足以认定真实用户采用，不据此扩页。

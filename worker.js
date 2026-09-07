@@ -3,8 +3,7 @@
  * Pages _redirects is not applied here — keep redirects in this file.
  *
  * Privacy-first analytics via D1 (DB binding):
- *  - Server-side page views for HTML pages (path, country, device, referrer).
- *  - POST /api/evt accepts small same-origin interaction events from app.js.
+ *  - POST /api/evt accepts small same-origin page-view and interaction events from app.js.
  *  No cookies, no IP storage, no PII, no file contents.
  */
 const REDIRECTS = new Map([
@@ -22,8 +21,6 @@ const BLOCKED_EXACT = new Set([
   "/package.json",
   "/package-lock.json",
 ]);
-
-const ASSET_EXTS = /\.(css|js|mjs|map|png|jpe?g|gif|svg|webp|avif|ico|txt|xml|json|webmanifest|woff2?)$/i;
 
 // Only these client event names are accepted.
 const EVENT_NAMES = new Set(["page_view", "convert", "copy", "decode", "download", "error", "sample", "compress", "calc", "credit", "extract"]);
@@ -81,20 +78,6 @@ export default {
         );
       }
       return new Response(null, { status: 204 });
-    }
-
-    // Server-side page views for HTML pages only (skip assets).
-    if (request.method === "GET" && !ASSET_EXTS.test(path)) {
-      await logEvent(
-        env,
-        "page_view",
-        path || "/",
-        "",
-        "",
-        request.cf && request.cf.country,
-        deviceType(request.headers.get("user-agent")),
-        request.headers.get("referer")
-      );
     }
 
     const dest = REDIRECTS.get(path);
