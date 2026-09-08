@@ -214,6 +214,21 @@
       <p>
         The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server.
       </p>
+
+      <h3>Example: a real WebP, converted</h3>
+      <p>
+        Below is a 236-byte WebP icon (96×96, lossless). Converted with this tool it becomes a
+        <strong>316-character</strong> Base64 string — about <strong>34% larger</strong> than the original file,
+        exactly the Base64 overhead in action. The image on the left is rendered from nothing but that data URI:
+      </p>
+      <div class="example-result">
+        <img src="data:image/webp;base64,UklGRuQAAABXRUJQVlA4TNgAAAAvX8AXEBcgEEii3d9gDYFAEuT+Ks///Af8BRzVtu00LIZIwc8lRQIqMME8vTyZlPfOLyuZRvTfkdtGjsTJu8cK/kPzJw5zj9bz8ZljskDnPuHDQq3zDT8vsd75B/5hBv+YiC7NhejTfAgrw5C2TtKXGSQhoxZPl/uUCG18Y+PWM3bemj3+P1JMO9/IuPfM5bw35zLsqTQ5vr9fNXXJ3w/5+433Le5zPhd8jvjc4Tnlc433QIa9Uf++qmav5t/n+fOC5w7OKZ5rPAd5buKc5bmMczwh93/q0QA=" alt="96 by 96 blue rounded square icon rendered from its own Base64 data URI" width="96" height="96" />
+        <pre><code>&lt;img src="data:image/webp;base64,UklGRuQAAABXRUJQVlA4TNgAAAAvX8AXEBcgEEii3d9gDYFAEuT+Ks///Af8BRzVtu00LIZIwc8lRQIqMME8vTyZlPfOLyuZRvTfkdtGjsTJu8cK/kPzJw5zj9bz8ZljskDnPuHDQq3zDT8vsd75B/5hBv+YiC7NhejTfAgrw5C2TtKXGSQhoxZPl/uUCG18Y+PWM3bemj3+P1JMO9/IuPfM5bw35zLsqTQ5vr9fNXXJ3w/5+433Le5zPhd8jvjc4Tnlc433QIa9Uf++qmav5t/n+fOC5w7OKZ5rPAd5buKc5bmMczwh93/q0QA=" width="96" height="96" alt="icon" /&gt;</code></pre>
+      </div>
+      <p>
+        Paste that <code>&lt;img&gt;</code> tag into any HTML file and the icon renders — no file, no request, no
+        server round-trip. That is the whole point of inlining: the image <em>is</em> the code.
+      </p>
     </div>
   </section>
 

@@ -120,6 +120,11 @@ section{padding:48px 0}
 .prose pre{background:var(--code-bg);color:var(--code-ink);font-family:var(--mono);font-size:.84rem;padding:14px 16px;border-radius:10px;overflow:auto;border:1px solid #232a44}
 .prose pre code{background:none;color:inherit;padding:0}
 
+/* Example result block (guide section) */
+.example-result{display:flex;gap:18px;align-items:flex-start;margin:16px 0;flex-wrap:wrap}
+.example-result img{width:96px;height:96px;border-radius:12px;border:1px solid var(--line,#2a3252);background:repeating-conic-gradient(#1a2140 0% 25%, #141a33 0% 50%) 50%/16px 16px;flex:none}
+.example-result pre{flex:1 1 340px;min-width:260px;margin:0}
+
 /* Sibling links */
 .siblings{background:var(--panel)}
 .sib-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin-top:18px}

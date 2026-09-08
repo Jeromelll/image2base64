@@ -1,5 +1,14 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-08 — webp-to-base64 补「示例结果」层（哥飞三层结构裁决落地）
+
+- 来源：哥飞.ai 两轮问答（outreach §八）——新页必须「格式说明 + 工具 + 示例结果」三层结构；webp 页 6/28 上线时只有前两层，缺第三层。
+- 改动：`/webp-to-base64` guide 区新增 h3「Example: a real WebP, converted」——真实 236B WebP 图标（PIL 生成、base64 往返校验一致）→ 316 字符 Base64（+34%，与页内"33%"口径印证），左侧 img 直接由 data URI 渲染（所见即所得）+ 右侧可抄 `<img>` 代码块 + 「the image is the code」收口段。styles.css +`.example-result`（flex 对照布局、棋盘格底显示透明区）。
+- 核对清单附带发现：① 首页格式内链区块 **35/35 canonical 页全覆盖**（jpeg-to-base64 / base64-to-jpeg 变体页 canonical 合并到主页、不进 sitemap、不链首页 = 有意为之，检查零误报）；② GSC URL 检查 API 实查 webp 页**已收录**（crawl 9/6），非新页缺收录——今日 GSC 日报「站内无 webp 对应页」判断有误（把 GSC 有曝光页列表误当站内页面清单），实际差距在「已收录但曝光未起」，已产出重抓引导文档。
+- 验证：headless Chrome 本地截图核对渲染（图标/代码块/布局正常）→ `check_seo_consistency` pages=36 ok=104 fail=0（2 warn 已知 jpeg 合并）→ dist 同步 → `wrangler deploy` Version `72fd4016`（注意：本地 HTTP_PROXY 会导致 wrangler fetch failed，部署需 env -u 清代理）→ 线上 curl 200 + 新标题串命中（cf-cache MISS 后刷新）。
+- 引导：`GSC提交引导_webp示例层重抓_20260908.md`（已收录页请求重抓 = 同一按钮）。
+- 闸门：9/15 GSC 复核 webp to base64 词曝光 0→起步、排名 62-70 是否前移；jpg 页 CTR 4.8% 待曝光过百再定 title 改不改（苗头期不反复改页）。
+
 ## 2026-09-07（晚）— GSC 三类筛词落地：tiff-to-base64 + 多语言代码教程页上线
 
 - 来源：WorkBuddy 28d GSC 复盘（8/10–9/6 vs 前 28d，q/qp/page 三维度）。三类筛词结论：① 高曝光低点击全是已有页的核心词（位 60-99，CTR 0 = 新站权重问题非 on-page）；② 排名 8-20 区间 0 个非品牌 query；③ 有曝光无对应页 = 唯一结构性缺口——tiff 簇 5 imp（跨 8/25 + 9/7 两周期持续）+ 语言教程簇 16 imp（js 7 / php 4 / py 2 / java 1 / linux 1 / n8n 1）。Jerome 拍板「按你建议来」。
