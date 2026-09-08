@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Base64 Image Not Showing in Outlook — Why &amp; Fixes | Image2Base64</title>
+<meta name="description" content="Outlook strips Base64 data URI images — on desktop (Word rendering engine) and on the web. Why your Base64 image breaks in Outlook, how to diagnose it, and the fixes that work: CID embedding and hosted HTTPS URLs." />
+<link rel="canonical" href="https://image2base64.com/base64-image-not-showing-in-outlook" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Base64 Image Not Showing in Outlook — Why &amp; Fixes" />
+<meta property="og:description" content="Outlook does not render Base64 data URI images. Here is the client-by-client diagnosis and the two fixes that actually work." />
+<meta property="og:url" content="https://image2base64.com/base64-image-not-showing-in-outlook" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why is my Base64 image not showing in Outlook?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Outlook does not render Base64 data URI images. Outlook on Windows uses the Word rendering engine, which has no support for data URIs, and Outlook on the web (Outlook.com and Microsoft 365) strips them during HTML sanitization. The image is not broken — the client simply refuses to display it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Outlook support data URI images at all?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Neither Outlook for Windows, Outlook for Mac, Outlook on the web nor Outlook mobile reliably render data:image/...;base64 images in received mail. The supported way to embed an image in Outlook mail is a CID-attached image, which Outlook converts into a proper MIME part."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does the same Base64 HTML show in Gmail compose or Apple Mail but not in Outlook?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Because rendering happens on the receiving client. Apple Mail and Thunderbird render data URIs; Outlook does not. A test that only looks at your own Apple Mail or a Gmail draft window will pass while real Outlook recipients still see a blank or broken image."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I embed an image in an email so it shows in Outlook?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Attach the image as an inline MIME part and reference it with a Content-ID (CID): attach image.png, then use <img src=\"cid:image.png\"> in the HTML body. PHPMailer, Nodemailer and Python's email library all support inline attachments. Alternatively, host the image at a public HTTPS URL and use a normal img src."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "My Base64 images in Outlook showed fine for a while, then stopped. Why?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Outlook for Windows has a known rendering bug where it progressively fails to render Base64 img tags — showing a black square — until the client is restarted. Even when it works, it is unreliable: do not depend on data URI rendering in Outlook; switch to CID or hosted images."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do Base64 images increase the spam risk of my email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "They can. Large blocks of encoded text make messages bigger (Base64 adds about 33%) and some antivirus and antispam filters treat heavy Base64 content as suspicious. Keeping embedded images small — a few KB — and using CID attachments instead of data URIs reduces both problems."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/base64-image-email-signature">Signature guide</a>
+      <a href="/about">About</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Base64 Image Not Showing in Outlook? Why It Happens &amp; the Fixes</h1>
+    <p>You embedded a logo or icon in your HTML email as a Base64 data URI — <code>&lt;img src="data:image/png;base64,..."&gt;</code> — and it looks perfect in Apple Mail or your Gmail draft. Then an Outlook recipient reports a blank box, a broken-image icon, or nothing at all. That is not a bug in your code. <strong>Outlook does not render Base64 data URI images, in any of its current flavors.</strong> Here is exactly why, how to confirm that is really your problem, and the two fixes that work.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#short-answer">The short answer</a></li>
+        <li><a href="#clients">How each Outlook flavor handles Base64</a></li>
+        <li><a href="#diagnose">Quick diagnosis checklist</a></li>
+        <li><a href="#fix-cid">Fix 1: CID-embedded image (recommended)</a></li>
+        <li><a href="#fix-hosted">Fix 2: Hosted HTTPS image URL</a></li>
+        <li><a href="#fix-signature">Signatures: use the editor's insert-picture</a></li>
+        <li><a href="#when-base64-works">When Base64 in email does work</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="short-answer">The short answer</h2>
+    <p>Outlook never supported <code>data:</code> URIs in received mail, and there is no setting that turns support on:</p>
+    <ul>
+      <li><strong>Outlook for Windows</strong> renders email HTML with the <strong>Word rendering engine</strong>, which predates data URIs and has no support for them. Your Base64 <code>&lt;img&gt;</code> simply produces a broken image placeholder.</li>
+      <li><strong>Outlook on the web</strong> (Outlook.com and Microsoft 365) runs received HTML through a sanitizer that <strong>removes or replaces data URIs</strong> — a known behavior where embedded images are swapped for a 1×1 transparent placeholder.</li>
+      <li><strong>Outlook for Mac and Outlook mobile</strong> are inconsistent at best. Do not rely on them rendering data URIs.</li>
+    </ul>
+    <p>The supported way to embed an image in Outlook mail is a <strong>CID attachment</strong> (Fix 1 below), or a <strong>hosted HTTPS image</strong> (Fix 2). Base64 data URIs are a browser feature, not an email feature.</p>
+
+    <h2 id="clients">How each Outlook flavor handles Base64</h2>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption>Data URI images across email clients</caption>
+        <thead>
+          <tr><th>Client</th><th>Renders Base64 images?</th><th>What actually happens</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>Outlook (Windows desktop)</th><td class="warn">No</td><td>Word rendering engine — data URIs are unsupported, images show broken.</td></tr>
+          <tr><th>Outlook.com / Microsoft 365 web</th><td class="warn">No</td><td>Sanitizer strips data URIs or replaces them with a 1×1 transparent GIF.</td></tr>
+          <tr><th>Outlook for Mac</th><td class="warn">No</td><td>Data URIs are not reliably rendered.</td></tr>
+          <tr><th>Outlook mobile (iOS / Android)</th><td class="warn">No</td><td>Not reliably rendered — treat as unsupported.</td></tr>
+          <tr><th>Apple Mail (macOS)</th><td class="ok">Yes</td><td>The most reliable client for data URIs.</td></tr>
+          <tr><th>iOS Mail</th><td class="ok">Yes</td><td>Generally renders data URIs like Apple Mail on the desktop.</td></tr>
+          <tr><th>Thunderbird</th><td class="ok">Yes</td><td>Full support on desktop.</td></tr>
+          <tr><th>Gmail (web &amp; apps)</th><td class="warn">No</td><td>Strips data URIs from received messages — Outlook is not alone.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cmp-note">Client behavior changes over time — always send a test to real accounts in each client before shipping an email template.</p>
+
+    <h2 id="diagnose">Quick diagnosis checklist</h2>
+    <p>Before you rework the template, confirm Base64 is really the failure point:</p>
+    <ol>
+      <li><strong>Open the same HTML in Apple Mail or Thunderbird.</strong> If the image shows there but not in Outlook, you are looking at the data URI limitation — nothing is wrong with your encoding.</li>
+      <li><strong>Check the raw message source.</strong> Look for <code>src="data:image/...</code>. If the attribute is intact in the source but the image is broken in Outlook, the client is refusing to render it.</li>
+      <li><strong>Check the message size.</strong> Outlook on the web truncates very large messages, and a few large Base64 images can push a normal email past those limits. If <em>everything</em> below a certain point disappears, it is truncation, not the data URI.</li>
+      <li><strong>Desktop Outlook only: did it stop rendering over time?</strong> Outlook for Windows has a known bug where it progressively fails to render Base64 <code>&lt;img&gt;</code> tags (black square) until the client is restarted. That is a client bug — another reason not to depend on data URIs in Outlook.</li>
+      <li><strong>Rule out security software.</strong> Corporate antispam (e.g. Sophos) can quarantine or strip messages containing heavy Base64 content.</li>
+    </ol>
+
+    <h2 id="fix-cid">Fix 1: Embed the image as a CID attachment (recommended)</h2>
+    <p>A CID (Content-ID) image travels as a real MIME attachment and the HTML references it with <code>cid:</code>. This is what Outlook itself does when you insert a picture, and it survives in Outlook desktop, Outlook.com, Gmail, Apple Mail and most other clients.</p>
+
+    <h3>PHPMailer (PHP)</h3>
+    <pre><code>$mail-&gt;addEmbeddedImage('logo.png', 'logo-cid', 'logo.png');
+// in the HTML body:
+// &lt;img src="cid:logo-cid" width="200"&gt;</code></pre>
+
+    <h3>Nodemailer (Node.js)</h3>
+    <pre><code>await transporter.sendMail({
+  from: 'you@example.com',
+  to: 'recipient@example.com',
+  subject: 'Invoice',
+  html: '&lt;img src="cid:logo-cid" width="200"&gt;',
+  attachments: [{
+    filename: 'logo.png',
+    path: './logo.png',
+    cid: 'logo-cid'
+  }]
+});</code></pre>
+
+    <h3>Python (stdlib email)</h3>
+    <pre><code>from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
+from email.mime.image import MIMEImage
+
+msg = MIMEMultipart('related')
+html = MIMEText('&lt;img src="cid:logo-cid" width="200"&gt;', 'html')
+msg.attach(html)
+
+with open('logo.png', 'rb') as f:
+    img = MIMEImage(f.read())
+img.add_header('Content-ID', '&lt;logo-cid&gt;')
+img.add_header('Content-Disposition', 'inline', filename='logo.png')
+msg.attach(img)</code></pre>
+
+    <p><strong>Gotchas:</strong></p>
+    <ul>
+      <li>The <code>cid:</code> value in the HTML must match the Content-ID exactly (case-sensitive, and without the angle brackets).</li>
+      <li>CID images still count toward message size — keep the source file small. If it is a PNG logo, shrink it first with the <a href="/compress-png-to-base64">PNG compressor</a> and verify the final weight with the <a href="/base64-image-size-calculator">Base64 size calculator</a> before wiring it into the template.</li>
+      <li>CID attachments can render inconsistently in some webmail clients — for mass campaigns, hosted URLs (Fix 2) remain the most predictable choice.</li>
+    </ul>
+
+    <h2 id="fix-hosted">Fix 2: Host the image at an HTTPS URL</h2>
+    <p>For newsletters and marketing email, the standard is still a normal <code>&lt;img src="https://cdn.example.com/logo.png"&gt;</code>:</p>
+    <ul>
+      <li><strong>Use HTTPS and a stable domain.</strong> Expired links, private cloud-drive shares and hotlink-protected CDNs are the top reasons hosted images break.</li>
+      <li><strong>Expect image blocking by default.</strong> Outlook, Gmail and Apple Mail may not download remote images until the recipient clicks "show images". That is a privacy feature (remote images leak open-tracking data), not a bug — keep key information in text, and set meaningful <code>alt</code> attributes.</li>
+      <li><strong>Keep the file small</strong> — a 10-50 KB logo loads even on slow connections, and big images are the usual cause of slow-rendering or truncated email.</li>
+    </ul>
+
+    <h2 id="fix-signature">Signatures: use the editor's insert-picture, not raw HTML</h2>
+    <p>If the broken image is in your <strong>Outlook signature</strong>, do not paste HTML with a data URI. Build the signature in Outlook's own signature editor and insert the picture there — on send, Outlook converts it into a proper inline (CID) attachment that recipients' clients render. The same logic applies to Gmail signatures; see the <a href="/base64-image-email-signature">Base64 image in email signature guide</a> and the Gmail-specific page on <a href="/base64-image-in-gmail-signature-not-working">Gmail signature images not working</a>.</p>
+
+    <h2 id="when-base64-works">When Base64 in email does work</h2>
+    <p>Data URIs are not useless in mail — they are just scoped to the clients that support them:</p>
+    <ul>
+      <li><strong>Apple Mail and Thunderbird signatures</strong> render data URIs natively — a valid route if your audience is Apple-heavy. The encoder on the <a href="/base64-image-email-signature">email signature page</a> produces a ready-to-paste snippet.</li>
+      <li><strong>Email you generate and control end to end</strong> where you know the client mix — transactional mail to a user base you have measured.</li>
+      <li><strong>Previews and testing</strong> — a Base64 snippet is the fastest way to see how a logo will look before it is uploaded to any signature platform or ESP.</li>
+    </ul>
+    <p>For everything Outlook-related, treat CID or hosted URLs as the only dependable options.</p>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Why is my Base64 image not showing in Outlook?</summary>
+        <p>Outlook does not render data URI images: Windows desktop uses the Word rendering engine with no data URI support, and Outlook on the web strips them during sanitization. Use a CID attachment or a hosted HTTPS image instead.</p>
+      </details>
+      <details>
+        <summary>Does Outlook support data URI images at all?</summary>
+        <p>No — not in desktop, web, or mobile builds. The supported embedding mechanism is an inline attachment referenced by Content-ID (CID).</p>
+      </details>
+      <details>
+        <summary>Why does the same HTML show in Apple Mail but not in Outlook?</summary>
+        <p>Rendering happens on the receiving client. Apple Mail and Thunderbird render data URIs; Outlook does not. Test on real Outlook accounts before shipping.</p>
+      </details>
+      <details>
+        <summary>My Base64 images showed in Outlook for a while, then stopped. Why?</summary>
+        <p>Outlook for Windows has a known bug where Base64 <code>&lt;img&gt;</code> rendering progressively fails (black square) until the client restarts. It is one more reason to switch to CID or hosted images.</p>
+      </details>
+      <details>
+        <summary>How do I embed an image in Outlook without hosting it anywhere?</summary>
+        <p>Attach it as an inline MIME part and reference it with <code>cid:</code> — PHPMailer, Nodemailer and Python's email library all support this. Outlook's signature editor does the same conversion automatically when you insert a picture.</p>
+      </details>
+      <details>
+        <summary>Do Base64 images increase spam risk?</summary>
+        <p>They can: Base64 adds ~33% size, and some filters treat heavy encoded blocks as suspicious. Keep embedded images small and prefer CID attachments over data URIs.</p>
+      </details>
+    </section>
+
+    <p>Need a properly sized Base64 string for the clients that do support it (Apple Mail, Thunderbird)? Encode it in the browser with the <a href="/">Image to Base64 converter</a> — nothing is uploaded — and check its final size with the <a href="/base64-image-size-calculator">size calculator</a>.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>

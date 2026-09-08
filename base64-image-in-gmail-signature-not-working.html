@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Base64 Image in Gmail Signature Not Working — Fixes | Image2Base64</title>
+<meta name="description" content="Gmail strips Base64 data URI images from signatures and truncates signatures over 10,000 characters. Why your Base64 logo breaks in Gmail, and the two fixes that work: Gmail's own image upload or a hosted HTTPS URL." />
+<link rel="canonical" href="https://image2base64.com/base64-image-in-gmail-signature-not-working" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Base64 Image in Gmail Signature Not Working — Fixes" />
+<meta property="og:description" content="Gmail does not render Base64 data URI images in signatures. Why it breaks, the 10,000-character trap, and the two fixes that actually work." />
+<meta property="og:url" content="https://image2base64.com/base64-image-in-gmail-signature-not-working" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why is my Base64 image not working in my Gmail signature?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Gmail strips data URI images (data:image/...;base64) from email, and the Gmail signature editor does not accept raw HTML at all. A Base64 logo pasted into the signature box shows in your editor preview but disappears in sent mail. Upload the image through Gmail's own signature editor instead — Gmail then hosts it for you."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can Gmail signatures contain Base64 images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not reliably. Gmail sanitizes received HTML and removes data URIs, so even if a Base64 signature survives locally, recipients see a broken or blank image. Use the signature editor's image upload or a hosted HTTPS URL."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my signature image show in the compose window but not in the sent email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The compose preview renders HTML the sent message will not. Gmail's sanitizer removes unsupported markup — including data URIs — when the message is actually sent. Also check that plain-text mode is off: it strips all HTML, including the signature."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the Gmail signature character limit?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Gmail signatures are capped at about 10,000 characters, including every tag, inline style and Base64 string. A single Base64-encoded logo can easily consume 8,000+ characters, which is why Base64 signatures get silently truncated or fail to save. Replace the Base64 string with a hosted image URL — one img tag is ~80 characters."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the most reliable way to add an image to a Gmail signature?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use Gmail's signature editor: Settings > See all settings > General > Signature, click the image icon and upload the file from your computer. Gmail re-hosts it on Google's servers, which is why Gmail-to-Gmail signature logos display even though Gmail strips hand-made data URIs."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use a hosted image URL in a Gmail signature instead?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, if the URL is public, stable and HTTPS. Private Google Drive links, expiring URLs and hotlink-protected servers are the usual reasons hosted signature images fail. Test by opening the URL in an incognito window — if it loads there, Gmail can load it."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/base64-image-email-signature">Signature guide</a>
+      <a href="/about">About</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Base64 Image in Gmail Signature Not Working? Why &amp; the Fixes</h1>
+    <p>You built a signature with an embedded logo — <code>&lt;img src="data:image/png;base64,..."&gt;</code> — and it looked right when you pasted it into Gmail's signature box. Then you sent a test email and the logo was gone: blank space, a broken-image icon, or nothing at all. This is expected Gmail behavior, not a glitch. <strong>Gmail does not render Base64 data URI images in signatures (or in received mail generally)</strong>, and its signature editor was never built to accept raw HTML. Here is what is happening and the two fixes that work.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#why">Why Base64 fails in Gmail signatures</a></li>
+        <li><a href="#char-limit">The 10,000-character trap</a></li>
+        <li><a href="#fix-upload">Fix 1: Upload the logo in Gmail's signature editor</a></li>
+        <li><a href="#fix-hosted">Fix 2: Use a hosted HTTPS image URL</a></li>
+        <li><a href="#diagnose">Diagnosis checklist</a></li>
+        <li><a href="#compatibility">Client compatibility at a glance</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="why">Why Base64 fails in Gmail signatures</h2>
+    <p>Three separate mechanisms work against a Base64 signature logo in Gmail:</p>
+    <ul>
+      <li><strong>Gmail strips data URIs from email.</strong> Any <code>data:image/...;base64</code> source is removed during Gmail's HTML sanitization — both for mail you send and mail you receive. The signature HTML can even survive locally while every recipient sees a blank.</li>
+      <li><strong>The signature editor does not accept raw HTML.</strong> Pasting markup into the signature box stores it as text-like content; Gmail re-serializes what it understands and drops the rest. The compose-window preview renders it, the sent message does not — which is exactly why the failure feels random.</li>
+      <li><strong>The 10,000-character signature cap.</strong> Gmail signatures are capped at roughly 10,000 characters including all HTML. Base64 strings blow through that budget instantly (next section).</li>
+    </ul>
+    <p>None of these can be turned off with a setting. The fix is to stop shipping Base64 in the signature — not to shrink it and hope.</p>
+
+    <h2 id="char-limit">The 10,000-character trap</h2>
+    <p>Gmail caps signatures at about <strong>10,000 characters — tags, inline styles, URLs and Base64 strings all count</strong>. The math is unforgiving:</p>
+    <ul>
+      <li>Base64 encoding adds ~33% to a file's size as text: a 6 KB logo becomes an ~8,200-character string.</li>
+      <li>Signature generators routinely emit 15,000-25,000 characters once a Base64 logo, social icons and inline styles are included.</li>
+      <li>When the cap is exceeded, Gmail <strong>silently truncates or drops</strong> the signature — the save succeeds, the sent mail is missing whatever did not fit (often the logo, or everything after it).</li>
+    </ul>
+    <p>How to check: open <strong>Settings → See all settings → General → Signature</strong>, click into the signature box, select all, and paste into any character counter. Over 10,000 = that is your problem. The fix: replace the Base64 string with a hosted image URL — one <code>&lt;img&gt;</code> line is ~80 characters instead of 8,000+ — and keep lean signatures under ~5,000 characters.</p>
+
+    <h2 id="fix-upload">Fix 1: Upload the logo in Gmail's signature editor (recommended)</h2>
+    <ol>
+      <li>Open <strong>Settings → See all settings → General → Signature</strong> (or the quick settings panel).</li>
+      <li>Create or edit your signature, click the <strong>image icon</strong> in the editor toolbar, and choose <strong>Upload from computer</strong>.</li>
+      <li>Size it with the Small / Medium / Large options, save changes at the bottom, and <strong>send a test to another inbox</strong> to confirm it renders.</li>
+    </ol>
+    <p>Why this works: Gmail re-hosts the uploaded file on Google's own servers and rewrites the signature to reference that copy. That is why Gmail-to-Gmail signature logos display reliably even though Gmail strips your hand-made data URIs — the hosted copy is a normal image URL by the time the mail is sent.</p>
+    <p><strong>Gotcha:</strong> if you upload "from URL" instead of your computer, Gmail depends on the original source staying reachable. If that source later 404s, the signature breaks for new sends (old sent copies may still show it, masking the regression). Always upload the file itself.</p>
+
+    <h2 id="fix-hosted">Fix 2: Use a hosted HTTPS image URL</h2>
+    <p>For teams that manage signature HTML through Workspace tooling or a mail-merge system, hosting the logo yourself is the standard:</p>
+    <ul>
+      <li><strong>Public, stable, HTTPS.</strong> The URL must load without login, headers or hotlink protection. Test in an incognito window — if it loads there, Gmail can load it.</li>
+      <li><strong>Private Google Drive links do not work.</strong> They require authentication; the same file shared "anyone with the link" can work but is fragile — a stable CDN or your own domain is better.</li>
+      <li><strong>Expect default image blocking.</strong> Some recipients' clients do not auto-load remote images (that is how open-tracking pixels get blocked). Keep text alongside the image so the signature is not literally empty when images are blocked.</li>
+      <li><strong>Optimize the file first.</strong> A signature logo should be roughly 150-320 px wide and under ~10 KB as a file. Encode-and-shrink it in one step with <a href="/compress-png-to-base64">Compress PNG to Base64</a> (the compression works even if you then host the original file), and verify dimensions with the <a href="/base64-image-size-calculator">Base64 size calculator</a>.</li>
+    </ul>
+
+    <h2 id="diagnose">Diagnosis checklist</h2>
+    <ol>
+      <li><strong>Shows in the editor, gone in sent mail?</strong> Classic data-URI stripping (or raw-HTML serialization). Apply Fix 1.</li>
+      <li><strong>Signature completely missing, not just the image?</strong> Plain-text mode strips all HTML — check the three-dot menu in the compose window. Also check that you are editing the signature for the right <strong>send-as alias</strong>: each alias has its own signature slot, and "Signature defaults" must be set per address.</li>
+      <li><strong>Over 10,000 characters?</strong> Truncation. Replace Base64 with a hosted URL (Fix 2) and re-count.</li>
+      <li><strong>Hosted URL broken for recipients only?</strong> The URL requires auth, expired, or is hotlink-protected. Test in an incognito window, then re-upload from the computer (Fix 1).</li>
+      <li><strong>Works for you, not for a coworker on Outlook?</strong> Different client, different rules — see <a href="/base64-image-not-showing-in-outlook">Base64 images not showing in Outlook</a>.</li>
+    </ol>
+
+    <h2 id="compatibility">Client compatibility at a glance</h2>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption>Base64 (data URI) images in signatures and email</caption>
+        <thead>
+          <tr><th>Client</th><th>Renders Base64 images?</th><th>Reliable alternative</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>Gmail (web &amp; apps)</th><td class="warn">No</td><td>Signature editor upload (Gmail hosts it)</td></tr>
+          <tr><th>Outlook (all builds)</th><td class="warn">No</td><td>CID attachment via editor / mail library</td></tr>
+          <tr><th>Yahoo Mail</th><td class="warn">No</td><td>Hosted HTTPS image</td></tr>
+          <tr><th>Apple Mail (macOS)</th><td class="ok">Yes</td><td>Data URI genuinely works</td></tr>
+          <tr><th>iOS Mail</th><td class="ok">Yes</td><td>Data URI generally works</td></tr>
+          <tr><th>Thunderbird</th><td class="ok">Yes</td><td>Data URI works</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cmp-note">Full client-by-client table and the encoder for the clients that do support data URIs: <a href="/base64-image-email-signature">Base64 image in email signature — generator &amp; guide</a>.</p>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Why is my Base64 image not working in my Gmail signature?</summary>
+        <p>Gmail strips data URI images during sanitization and the signature editor does not accept raw HTML. The logo shows in the editor preview but disappears in sent mail. Upload the image via the signature editor instead.</p>
+      </details>
+      <details>
+        <summary>Can Gmail signatures contain Base64 images?</summary>
+        <p>Not reliably. Gmail re-serializes signature HTML and drops data URIs. Use the editor's image upload or a hosted HTTPS URL.</p>
+      </details>
+      <details>
+        <summary>Why does the signature image show in compose but not in the sent email?</summary>
+        <p>The compose preview renders HTML that the sanitizer will remove on send. Also make sure plain-text mode is off, and that the signature is assigned to the right send-as alias.</p>
+      </details>
+      <details>
+        <summary>What is the Gmail signature character limit?</summary>
+        <p>About 10,000 characters, counting all HTML — and a single Base64 logo can be 8,000+ characters. Exceeding it causes silent truncation. Swap Base64 for a hosted URL and stay under ~5,000 characters.</p>
+      </details>
+      <details>
+        <summary>What is the most reliable way to add an image to a Gmail signature?</summary>
+        <p>Settings → Signature → image icon → upload from your computer. Gmail re-hosts the file, which is why Gmail-to-Gmail signature logos work even though Gmail strips data URIs.</p>
+      </details>
+      <details>
+        <summary>Can I use a hosted image URL instead?</summary>
+        <p>Yes — public, stable, HTTPS, and tested in an incognito window. Private Drive links and hotlink-protected servers are the usual failure modes.</p>
+      </details>
+    </section>
+
+    <p>Still want a Base64 data URI for the clients that support it (Apple Mail, Thunderbird) or for previewing the logo before upload? The <a href="/base64-image-email-signature">email signature encoder</a> produces a ready-to-paste snippet locally — nothing is uploaded.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>

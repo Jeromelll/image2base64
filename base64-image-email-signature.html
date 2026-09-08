@@ -190,8 +190,8 @@
 
       <h3>What actually works, client by client</h3>
       <ul>
-        <li><strong>Gmail signature:</strong> use Gmail's own signature editor and upload the image there. Gmail hosts it for you, which is why Gmail-to-Gmail signature logos display even though Gmail strips your hand-made data URIs.</li>
-        <li><strong>Outlook signature:</strong> build the signature in Outlook's editor with an inserted picture; Outlook embeds it as an attachment referenced by CID on send.</li>
+        <li><strong>Gmail signature:</strong> use Gmail's own signature editor and upload the image there. Gmail hosts it for you, which is why Gmail-to-Gmail signature logos display even though Gmail strips your hand-made data URIs. Logo still missing? See <a href="/base64-image-in-gmail-signature-not-working">Base64 image in Gmail signature not working</a>.</li>
+        <li><strong>Outlook signature:</strong> build the signature in Outlook's editor with an inserted picture; Outlook embeds it as an attachment referenced by CID on send. Outlook never renders data URIs at all — see <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>.</li>
         <li><strong>Apple Mail signature:</strong> data URIs genuinely work here — the encoder above plus the HTML snippet is a valid route.</li>
         <li><strong>Email you generate yourself</strong> (transactional mail, newsletters): prefer a CID-embedded image for broad compatibility; keep a Base64 variant only where your audience measurement says Apple clients dominate.</li>
       </ul>
@@ -312,6 +312,8 @@
         <a href="/image-to-base64-alternatives">Alternatives compared</a>
         <a href="/base64-image-size-calculator">Base64 size calculator</a>
         <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
       </nav>
