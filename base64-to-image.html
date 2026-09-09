@@ -51,6 +51,14 @@
     },
     {
       "@type": "Question",
+      "name": "Why do I see 'The input contains characters that are not valid Base64'?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The decoder only accepts a raw Base64 body or a full data:image/...;base64, URI. Spaces, line breaks, and URL-safe -/_ characters are handled automatically, but surrounding quotes, an HTML tag like <img src=\"...\">, a plain URL, or a percent-encoded string will trigger this error. Paste just the Base64 payload (or the complete data URI) and try again."
+      }
+    },
+    {
+      "@type": "Question",
       "name": "Is the Base64 to image decoder private?",
       "acceptedAnswer": {
         "@type": "Answer",
@@ -216,6 +224,10 @@
       <details>
         <summary>Do I need the <code>data:image</code> prefix?</summary>
         <p>No. A full data URI like <code>data:image/png;base64,iVBOR...</code> includes a format label, but a raw Base64 body also works because the decoder checks the decoded file signature.</p>
+      </details>
+      <details>
+        <summary>Why do I see “The input contains characters that are not valid Base64”?</summary>
+        <p>The decoder only accepts a raw Base64 body or a full <code>data:image/...;base64,</code> URI. Spaces, line breaks, and URL-safe <code>-</code>/<code>_</code> characters are handled automatically, but surrounding quotes, an HTML tag like <code>&lt;img src="..."&gt;</code>, a plain URL, or an encoded <code>%2F</code>-style string will trigger this error. Paste just the Base64 payload (or the complete data URI) and try again.</p>
       </details>
       <details>
         <summary>Is the decoder private?</summary>
