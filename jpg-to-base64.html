@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>JPG to Base64 Converter — Free Online JPEG Encoder</title>
-<meta name="description" content="Free online JPG to Base64 converter. Drag &amp; drop a JPEG photo and instantly copy its Base64 string or data URI for HTML, CSS or JSON. 100% in-browser, no upload, no sign-up." />
+<title>JPG to Base64 Converter — Free &amp; Private, No Upload</title>
+<meta name="description" content="Convert JPG or JPEG to Base64 free — no upload, no sign-up, no file size limit. Instantly copy the data URI ready for HTML, CSS, JSON or JavaScript. Runs 100% in your browser." />
 <link rel="canonical" href="https://image2base64.com/jpg-to-base64" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -16,8 +16,8 @@
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Image to Base64 Converter" />
-<meta property="og:title" content="JPG to Base64 Converter — Free Online JPEG Encoder" />
-<meta property="og:description" content="Drag &amp; drop a JPEG and copy its Base64 data URI. Runs 100% in your browser." />
+<meta property="og:title" content="JPG to Base64 Converter — Free &amp; Private, No Upload" />
+<meta property="og:description" content="Convert JPG or JPEG to Base64 free — no upload, instantly copy the data URI. Runs 100% in your browser." />
 <meta property="og:url" content="https://image2base64.com/jpg-to-base64" />
 <meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
 <meta property="og:image:width" content="1200" />
@@ -55,6 +55,22 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Yes. Everything happens in your browser with the FileReader API. The JPEG is never uploaded to any server."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I put a JPG Base64 string into JSON?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Include the full data URI as a normal JSON string value — it requires no escaping. If you send only the raw Base64 payload, strip all whitespace and line breaks first."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "My JPG Base64 string won't decode — what now?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The most common causes are a missing data URI prefix, whitespace or line breaks inside the payload, URL-safe characters, a truncated string, or a wrong MIME type. Each has a one-line fix — see the site's invalid Base64 data troubleshooting guide."
       }
     }
   ]
@@ -207,6 +223,26 @@
 
 .banner { background-image: url(data:image/jpeg;base64,/9j/4AAQSkZJRg...); }</code></pre>
 
+      <h3>What a JPG Base64 result looks like</h3>
+      <p>Every JPEG encodes to the same shape — a typed prefix, then the payload:</p>
+      <pre><code>data:image/jpeg;base64,/9j/4AAQSkZJRgABAQEBLAEsAAD/2wBDAAgGBgcG...</code></pre>
+      <p>Two quick sanity checks: the prefix is always <code>data:image/jpeg;base64,</code>, and the payload always starts with <code>/9j/</code> — the Base64 signature of the JPEG file header. If your string starts differently, it is either not a JPEG or it got truncated during copying. If it fails to render entirely, work through the fixes on our <a href="/fix-invalid-base64-image-data">invalid Base64 data troubleshooting guide</a>.</p>
+
+      <h3>JPG vs JPEG — same converter, one page</h3>
+      <p>
+        <strong>.jpg and .jpeg are the same format</strong> — the double extension is a leftover from old
+        Windows filename limits. This page converts both identically, and the output is always typed
+        <code>image/jpeg</code>. If you have a <code>.jpeg</code> file, drop it straight in.
+      </p>
+
+      <h3>Using the string in JSON</h3>
+      <p>
+        Base64 is the standard way to move an image inside a JSON payload — for example a chat message with an
+        attachment or an API request body. The data URI is JSON-safe as-is (no escaping needed); if you send only
+        the raw payload, make sure it carries no whitespace or line breaks. For other transports, see
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>.
+      </p>
+
       <h3>Keep an eye on size</h3>
       <p>
         Base64 inflates data by about <strong>33%</strong>, and an inlined photo can't be cached on its own. For a
@@ -258,6 +294,14 @@
         <summary>Is the conversion private?</summary>
         <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The JPEG is never uploaded to any server.</p>
       </details>
+      <details>
+        <summary>How do I put a JPG Base64 string into JSON?</summary>
+        <p>Include the full data URI as a normal string field — it needs no escaping in JSON. If you send only the raw payload, strip whitespace and line breaks first. For request/response patterns see the <a href="/image-to-base64-for-api">API guide</a>.</p>
+      </details>
+      <details>
+        <summary>My JPG Base64 string won't decode — what now?</summary>
+        <p>Check the prefix, whitespace, URL-safe characters, truncation and MIME type — the five most common causes, each with a fix, are in the <a href="/fix-invalid-base64-image-data">invalid Base64 troubleshooting guide</a>.</p>
+      </details>
     </div>
   </section>
 </main>
@@ -304,6 +348,8 @@
       <nav class="footer-nav" aria-label="Guides">
         <span class="head">Guides</span>
         <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
         <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
         <a href="/image-to-base64-alternatives">Alternatives compared</a>
         <a href="/base64-image-size-calculator">Base64 size calculator</a>

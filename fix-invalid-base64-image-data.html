@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Fix Invalid Base64 Image Data — 6 Common Causes &amp; Quick Checks | Image2Base64</title>
+<meta name="description" content="Base64 image won't decode? The 6 most common causes of invalid base64 image data — missing prefixes, whitespace, URL-safe characters, truncation, double encoding, wrong MIME — with copy-paste fixes for each." />
+<link rel="canonical" href="https://image2base64.com/fix-invalid-base64-image-data" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Fix Invalid Base64 Image Data — 6 Common Causes &amp; Quick Checks" />
+<meta property="og:description" content="Your base64 image string refuses to decode? The six causes we see most often, and a quick fix for each." />
+<meta property="og:url" content="https://image2base64.com/fix-invalid-base64-image-data" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why does my Base64 image fail to decode?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Almost always the string itself, not the decoder. The six most common causes are: a missing or malformed data URI prefix, whitespace or line breaks inside the payload, URL-safe base64 characters (- and _), a truncated string, double encoding, or a MIME type in the prefix that does not match the actual bytes."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I know if a Base64 string is a JPEG or a PNG?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Check the first characters of the payload: /9j/ means JPEG, iVBOR means PNG, UklGR means WebP, PHN2Zy means SVG, and R0lGOD means GIF. Align the data URI prefix with what the bytes actually are."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are URL-safe Base64 characters?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "JWTs and some APIs use a URL-safe alphabet that replaces + with - and / with _. Standard decoders like atob() expect the standard alphabet and fail on these strings. Convert back with replace(/-/g, '+').replace(/_/g, '/') and pad the length to a multiple of 4 before decoding."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I check if a Base64 string is truncated?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "After removing whitespace the string length must be a multiple of 4. Also verify the leading magic bytes: PNG payloads start with iVBOR, JPEG with /9j/. If the first characters do not match the declared type, the string is truncated or mislabeled."
+      }
+    }
+  ]
+}
+</script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav">
+      <a href="/#tool">Converter</a>
+      <a href="#causes">Causes</a>
+      <a href="#checklist">Checklist</a>
+      <a href="#faq">FAQ</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Fix Invalid Base64 Image Data: 6 Common Causes and How to Fix Each One</h1>
+    <p>Your base64 image string refuses to decode — you get a broken image, a console error like <code>InvalidCharacterError</code>, or an API returns <code>invalid_base64</code>. The string itself is almost always the problem, not your decoder. Here are the six causes we see most often, and a quick fix for each.</p>
+    <p>Before debugging anything, paste your string into our <a href="/base64-to-image">base64-to-image decoder</a>. It tells you immediately whether the payload is decodable, so you know which side of the pipeline is broken.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#prefix">1. Missing or malformed data URI prefix</a></li>
+        <li><a href="#whitespace">2. Whitespace and line breaks</a></li>
+        <li><a href="#urlsafe">3. URL-safe characters (- and _)</a></li>
+        <li><a href="#truncated">4. Truncated string</a></li>
+        <li><a href="#double">5. Double encoding</a></li>
+        <li><a href="#mime">6. Wrong MIME type in the prefix</a></li>
+        <li><a href="#checklist">Quick checklist</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="prefix">1. Missing or malformed data URI prefix</h2>
+    <p>A data URI must look exactly like this:</p>
+    <pre><code>data:image/png;base64,iVBORw0KGgoAAAANS...</code></pre>
+    <p>Common mistakes: missing the <code>data:</code> scheme, missing the <code>;base64,</code> separator, or a wrong MIME type (e.g. <code>image/jpg</code> instead of <code>image/jpeg</code>). If you store only the raw payload, do not add a prefix when decoding raw bytes — the prefix and the raw string are two different formats.</p>
+    <p><strong>Fix:</strong> if the consumer expects a data URI, prepend the correct prefix for the actual format: <code>data:image/jpeg;base64,</code> for JPEG, <code>data:image/png;base64,</code> for PNG. Match the prefix to the real bytes, not the original file extension.</p>
+
+    <h2 id="whitespace">2. Whitespace and line breaks inside the payload</h2>
+    <p>Many encoders (and email clients, and code formatters) wrap base64 at 76 characters. Most browser decoders tolerate newlines; many JSON parsers and API validators do not.</p>
+    <p><strong>Fix:</strong> strip all whitespace before sending or storing the string:</p>
+    <pre><code>const clean = raw.replace(/\s+/g, "");</code></pre>
+
+    <h2 id="urlsafe">3. URL-safe base64 characters (<code>-</code> and <code>_</code>)</h2>
+    <p>JWTs and some APIs use URL-safe base64, which replaces <code>+</code> with <code>-</code> and <code>/</code> with <code>_</code>. The standard <code>atob()</code> and most image decoders expect the standard alphabet, so these strings fail with an invalid-character error.</p>
+    <p><strong>Fix:</strong> convert back before decoding:</p>
+    <pre><code>const standard = urlSafe.replace(/-/g, "+").replace(/_/g, "/");
+// pad to a multiple of 4 if needed:
+const padded = standard + "=".repeat((4 - (standard.length % 4)) % 4);</code></pre>
+
+    <h2 id="truncated">4. Truncated string</h2>
+    <p>Copying a 500 KB base64 string from a log viewer or JSON pretty-printer often silently truncates it. A truncated payload decodes to garbage bytes, so the image never renders even though "the base64 looks fine."</p>
+    <p><strong>Fix:</strong> check that the string length is a multiple of 4 (after removing whitespace) and that it ends with <code>=</code> or <code>==</code> padding only when expected. For images, also verify the leading magic bytes: PNG payloads start with <code>iVBOR</code>, JPEG with <code>/9j/</code>. If your string starts differently than its declared MIME type, it's truncated or mislabeled.</p>
+
+    <h2 id="double">5. Double encoding</h2>
+    <p>If someone base64-encoded an already-encoded string, you'll decode once and get… base64 again. This is one of the most reported debugging headaches.</p>
+    <p><strong>Fix:</strong> decode once and inspect the result. If it still looks like base64 (only A–Z, a–z, 0–9, +, /, =), decode again. Our <a href="/base64-to-image">base64-to-image tool</a> shows the decoded result instantly, so double encoding is obvious in one paste.</p>
+
+    <h2 id="mime">6. Wrong MIME type in the prefix</h2>
+    <p>A <code>data:image/png;base64,</code> prefix wrapping JPEG bytes fails in strict renderers even though the payload is valid. The prefix is a promise to the decoder.</p>
+    <p><strong>Fix:</strong> check the first characters of the payload — <code>/9j/</code> = JPEG, <code>iVBOR</code> = PNG, <code>UklGR</code> = WebP, <code>PHN2Zy</code> = SVG, <code>R0lGOD</code> = GIF — and align the prefix. If you're converting between formats first, make sure the conversion actually happened before encoding.</p>
+
+    <h2 id="checklist">Quick checklist</h2>
+    <ol>
+      <li>Does it start with <code>data:image/&lt;type&gt;;base64,</code> (if a data URI is expected)?</li>
+      <li>Any whitespace or newlines left inside?</li>
+      <li>Any <code>-</code> or <code>_</code> characters (URL-safe alphabet)?</li>
+      <li>Is the length a multiple of 4?</li>
+      <li>Do the first payload characters match the declared MIME type?</li>
+      <li>Decode once — is the result still base64? (double encoding)</li>
+    </ol>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Why does my Base64 image fail to decode?</summary>
+        <p>Almost always the string itself, not the decoder: missing prefix, whitespace inside, URL-safe characters, truncation, double encoding, or a mismatched MIME prefix. Work through the checklist above.</p>
+      </details>
+      <details>
+        <summary>How do I know if a Base64 string is a JPEG or a PNG?</summary>
+        <p>Look at the first payload characters: <code>/9j/</code> = JPEG, <code>iVBOR</code> = PNG, <code>UklGR</code> = WebP, <code>PHN2Zy</code> = SVG, <code>R0lGOD</code> = GIF. Align the data URI prefix with the actual bytes.</p>
+      </details>
+      <details>
+        <summary>What are URL-safe Base64 characters?</summary>
+        <p>A variant alphabet used in JWTs and some APIs: <code>-</code> instead of <code>+</code>, <code>_</code> instead of <code>/</code>. Convert back to the standard alphabet and pad to a multiple of 4 before decoding.</p>
+      </details>
+      <details>
+        <summary>How do I check if a Base64 string is truncated?</summary>
+        <p>Length (after whitespace removal) must be a multiple of 4, and the leading magic bytes must match the declared type. A string that starts differently than it claims is truncated or mislabeled.</p>
+      </details>
+    </section>
+
+    <p>Related tools: decode and preview a string with <a href="/base64-to-image">base64 to image</a> · encode the right way with <a href="/image-to-base64">image to base64</a> · format-specific encoders: <a href="/jpg-to-base64">JPG to base64</a> and <a href="/png-to-base64">PNG to base64</a> · more answers in the <a href="/faq">FAQ</a>.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>

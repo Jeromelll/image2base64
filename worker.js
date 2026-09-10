@@ -25,6 +25,32 @@ const BLOCKED_EXACT = new Set([
 // Only these client event names are accepted.
 const EVENT_NAMES = new Set(["page_view", "convert", "copy", "decode", "download", "error", "sample", "compress", "calc", "credit", "extract"]);
 
+// Scanner/bot filters (2026-09-10): headless vulnerability scanners execute app.js
+// and flood page_view events with dictionary paths (.env, wp-*, php...), which
+// polluted 95%+ of raw page_view counts. Drop anything matching these patterns
+// at ingest. Path patterns are deny-based (not a route allowlist) so new pages
+// don't require worker changes.
+const SCANNER_PAGE_RE = new RegExp(
+  "(^/\\." +
+  "|\\.(php|asp|aspx|jsp|cgi|env|git|ini|ya?ml|xml|sql|bak|old|log|conf|config|zip|gz|7z|rar|dll|exe|sh|py)$" +
+  "|/wp-(admin|content|includes|login)" +
+  "|^/wp/" +
+  "|/phpmyadmin" +
+  "|/xmlrpc\\.php" +
+  "|/cgi-bin/" +
+  "|/vendor/" +
+  "|^/v\\d(/|$)" +
+  "|^/admin(/|$))",
+  "i"
+);
+const BOT_UA_RE = /(bot|crawler|spider|slurp|scan|headless|phantom|puppeteer|playwright|python-requests|python-urllib|curl\/|wget|go-http-client|okhttp|libwww)/i;
+
+function isScannerEvent(page, ua) {
+  if (page && SCANNER_PAGE_RE.test(page)) return true;
+  if (ua && BOT_UA_RE.test(ua)) return true;
+  return false;
+}
+
 function deviceType(ua) {
   if (!ua) return "unknown";
   if (/iPad|Tablet/i.test(ua)) return "tablet";
@@ -66,16 +92,20 @@ export default {
       } catch (e) {}
       const name = clip(d.e, 24);
       if (EVENT_NAMES.has(name)) {
-        await logEvent(
-          env,
-          name,
-          clip(d.p, 120),
-          clip(d.x1, 60),
-          clip(d.x2, 60),
-          request.cf && request.cf.country,
-          deviceType(request.headers.get("user-agent")),
-          request.headers.get("referer")
-        );
+        const page = clip(d.p, 120);
+        const ua = request.headers.get("user-agent");
+        if (!isScannerEvent(page, ua)) {
+          await logEvent(
+            env,
+            name,
+            page,
+            clip(d.x1, 60),
+            clip(d.x2, 60),
+            request.cf && request.cf.country,
+            deviceType(ua),
+            request.headers.get("referer")
+          );
+        }
       }
       return new Response(null, { status: 204 });
     }
