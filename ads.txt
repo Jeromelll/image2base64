@@ -1,2 +1,2 @@
-# image2base64.com — no ad network authorized yet.
-# When ads go live, publisher lines will be listed below.
+# image2base64.com — AdSense (ca-pub-4027819746718681)
+google.com, pub-4027819746718681, DIRECT, f08c47fec0942fa0
