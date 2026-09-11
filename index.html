@@ -87,7 +87,7 @@
       "name": "How do I use a Base64 image in HTML or CSS?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Use the full data URI. In HTML, set it as the image source: <img src=\"data:image/png;base64,iVBORw0K...\" alt=\"Example embedded PNG\" width=\"32\" height=\"32\">. In CSS, use it as a background: background-image: url(data:image/png;base64,iVBORw0K...). This converter gives you ready-to-paste HTML and CSS snippets."
+        "text": "Use the full data URI from the converter. In HTML, set it as the image source. In CSS, use it as a background-image. This converter gives you ready-to-paste HTML and CSS snippets."
       }
     },
     {
@@ -95,7 +95,7 @@
       "name": "What image formats can I convert to Base64?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Any image your browser can read: PNG, JPG/JPEG, GIF, WebP, SVG, BMP and ICO. The output data URI automatically carries the correct MIME type for the file you choose."
+        "text": "Any image your browser can read. Dedicated format pages cover the common types; the output data URI automatically carries the correct MIME type for the file you choose."
       }
     },
     {
@@ -128,6 +128,30 @@
       "acceptedAnswer": {
         "@type": "Answer",
         "text": "Yes. Click the dropzone or press Ctrl+V / Cmd+V on any Image2Base64 tool page to paste an image straight from your clipboard. The conversion still runs entirely in your browser — nothing is uploaded."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is 'base64 encode image' the same as 'image to Base64'?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — they describe the same operation. 'Image to Base64', 'base64 encode image', 'image base64' and 'encode image to base64' are different ways of saying: take an image file and produce its Base64 representation."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between image to Base64 and Base64 to image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "They are opposite directions. Image to Base64 encodes an image file into a text string (so you can embed it). Base64 to image decodes a Base64 string back into a downloadable image file."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When should I use image to Base64 instead of a normal image file?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Use it for small, frequently-used assets (icons, logos, spinners), single-file deliverables (email templates, self-contained HTML reports, CMS fields that reject uploads), and quick prototypes. Keep large photos and hero images as normal files so they can be cached, resized by a CDN, and delivered efficiently."
       }
     }
   ]
@@ -179,13 +203,13 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>Image to Base64 Converter</h1>
+      <h1>Free Image to Base64 Converter</h1>
       <p class="lede">
-        Drag in a PNG, JPG, GIF, WebP or SVG and instantly get its <strong>Base64 string</strong>
+        Drag in an image and instantly get its <strong>Base64 string</strong>
         and <strong>data URI</strong> — ready to paste into your HTML, CSS or JavaScript. One click to copy.
       </p>
       <p class="trust"><strong>100% client-side.</strong> Your image never leaves your device.</p>
-      <p class="trust">Working with PNG only? Use the dedicated <a href="/png-to-base64">PNG to Base64 converter</a>.</p>
+      <p class="trust">Need a specific format? Use the <a href="#tools">format converters</a> below, or decode a string with <a href="/base64-to-image">Base64 to Image</a>.</p>
     </div>
   </section>
 
@@ -272,10 +296,32 @@
       <p>
         A computer image is binary data. <strong>Base64</strong> re-expresses that binary as plain text using
         64 safe characters (A–Z, a–z, 0–9, <code>+</code> and <code>/</code>). When you prepend a small header
-        like <code>data:image/png;base64,</code> you get a <strong>data URI</strong> — a self-contained string
+        like <code>data:image/…;base64,</code> you get a <strong>data URI</strong> — a self-contained string
         that a browser treats exactly like a normal image URL, except the picture is baked right into the text.
-        If you only need PNG files, the focused <a href="/png-to-base64">PNG to Base64 converter</a> keeps the
-        same private workflow while matching that search directly.
+        People search for the same operation under several names:
+        <em>image to Base64</em>, <em>base64 encode image</em>, <em>image base64</em>,
+        <em>encode image to Base64</em>, and <em>convert image to Base64 online</em> all mean the same
+        forward step — a file goes in, a string comes out.
+      </p>
+      <p>
+        Need only the data URI for CSS or HTML? Use the <a href="/data-uri-generator">data URI generator</a>.
+      </p>
+
+      <h3>Image to Base64 vs Base64 to image</h3>
+      <p>
+        These are opposite directions and are easy to mix up. <strong>Image to Base64</strong> (this page) encodes a file
+        into text so you can embed it. <strong>Base64 to image</strong> decodes a string back into a downloadable file.
+        If you have a string and need a file, open the <a href="/base64-to-image">Base64 to Image decoder</a>; if you have a
+        file and need a string, stay here.
+      </p>
+
+      <h3>What the output looks like</h3>
+      <p>
+        A <strong>raw Base64 string</strong> contains only encoded image data — it often begins with a format
+        signature such as <code>iVBORw0KGgo</code>. A <strong>data URI</strong> adds the MIME-type prefix
+        <code>data:image/…;base64,</code> before that string. Browsers need the prefix when the result is placed
+        directly in an image source or CSS rule; APIs and databases sometimes want only the raw body. Use the format the
+        destination requires rather than stripping the prefix by guesswork.
       </p>
 
       <h3>When embedding an image as Base64 is worth it</h3>
@@ -283,21 +329,30 @@
         <li><strong>Tiny, frequently-used assets</strong> — icons, logos, spinners. Inlining them removes an extra HTTP request.</li>
         <li><strong>Single-file deliverables</strong> — an email template, a self-contained HTML report, or a snippet you paste into a CMS where you can't upload files.</li>
         <li><strong>Quick prototyping</strong> — you need an image in a CodePen, a JSON mock, or a test fixture without hosting it anywhere.</li>
+        <li><strong>Text-only storage</strong> — a system that accepts strings but cannot receive a separate binary upload.</li>
       </ul>
+
+      <h3>When a normal image file is better</h3>
+      <p>
+        Keep large screenshots, photos and hero graphics as regular files. An inline image cannot be cached
+        independently from the HTML or CSS that contains it, and reusing the same long data URI across several
+        pages repeats bytes that a separately hosted file could download once. Normal files are usually better
+        for responsive images, lazy loading, CDN resizing and content that changes often.
+      </p>
 
       <h3>Example: using the data URI</h3>
       <pre><code>&lt;!-- HTML --&gt;
 &lt;img src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUg..." alt="logo" /&gt;
 
 /* CSS */
-.logo { background-image: url(data:image/png;base64,iVBORw0KGgoAAAANSUhEUg...); }</code></pre>
+.logo { background-image: url(PASTE_DATA_URI_HERE); }</code></pre>
 
       <h3>A note on size</h3>
       <p>
         Base64 makes data roughly <strong>33% larger</strong> than the original file (4 text characters per 3 bytes).
-        That trade is fine for small images, but for big photos or hero images you're usually better off keeping a
-        normal <code>.jpg</code>/<code>.png</code> file and letting the browser cache it. Use Base64 where the
-        convenience of "everything in one string" outweighs the extra bytes.
+        HTTP compression may shrink the transfer difference when the string is embedded in a compressed HTML or CSS
+        file, but it does not restore independent caching. Use Base64 where the convenience of "everything in one
+        string" outweighs the extra bytes.
       </p>
 
       <h3>Privacy</h3>
@@ -305,6 +360,14 @@
         This tool encodes images locally with the browser's <code>FileReader</code> API. There is no upload step and
         no server — you can confirm it in your browser's Network tab. That makes it safe for screenshots, internal
         diagrams, or anything you'd rather not send to a third-party site.
+      </p>
+
+      <h3>Security note for Base64 images</h3>
+      <p>
+        Base64 is an encoding, not encryption. Anyone who receives the string can decode the original image. Treat the output
+        with the same care as the source file, and do not use encoding as a way to hide confidential content. If you accept
+        Base64 from other users in an application, validate the declared MIME type, decoded size and file signature before
+        storing or displaying it.
       </p>
       <p>
         Converting from code instead of the browser? See <a href="/how-to-convert-image-to-base64">how to convert
@@ -387,11 +450,11 @@
       </details>
       <details>
         <summary>How do I use a Base64 image in HTML or CSS?</summary>
-        <p>Use the full data URI. In HTML: <code>&lt;img src="data:image/png;base64,iVBORw0K..."&gt;</code>. In CSS: <code>background-image: url(data:image/png;base64,iVBORw0K...)</code>. This page gives you ready-to-paste HTML and CSS snippets.</p>
+        <p>Use the full data URI from the converter. In HTML, set it as the <code>&lt;img src&gt;</code>. In CSS, use it as <code>background-image: url(…)</code>. This page gives you ready-to-paste HTML and CSS snippets.</p>
       </details>
       <details>
         <summary>What image formats can I convert?</summary>
-        <p>Any image your browser can read: PNG, JPG/JPEG, GIF, WebP, SVG, BMP and ICO. The data URI automatically carries the correct MIME type for the file you choose.</p>
+        <p>Any image your browser can read. Dedicated pages cover the common formats — start from the <a href="#tools">format converters</a> if you already know which one you have. The data URI automatically carries the correct MIME type for the file you choose.</p>
       </details>
       <details>
         <summary>Does Base64 make my image larger?</summary>
@@ -409,6 +472,18 @@
         <summary>Can I paste an image from clipboard?</summary>
         <p>Yes. Click the dropzone or press <code>Ctrl+V</code> / <code>Cmd+V</code> on any tool page to paste an image straight from your clipboard. The conversion still runs entirely in your browser — nothing is uploaded.</p>
       </details>
+      <details>
+        <summary>Is "base64 encode image" the same as "image to Base64"?</summary>
+        <p>Yes. "Image to Base64", "base64 encode image", "image base64" and "encode image to Base64" all describe the same forward operation: an image file goes in, a Base64 string comes out.</p>
+      </details>
+      <details>
+        <summary>What is the difference between image to Base64 and Base64 to image?</summary>
+        <p>They are opposite directions. Image to Base64 encodes a file into text (to embed it); Base64 to image decodes a string back into a file. If you have a string and need a file, use the <a href="/base64-to-image">Base64 to Image decoder</a>.</p>
+      </details>
+      <details>
+        <summary>When should I use image to Base64 instead of a normal image file?</summary>
+        <p>Use it for small, frequently-used assets (icons, logos), single-file deliverables (email templates, self-contained reports), and quick prototypes. Keep large photos and hero images as normal files so they can be cached and delivered efficiently.</p>
+      </details>
     </div>
   </section>
 </main>
@@ -422,7 +497,7 @@
       </div>
       <nav class="footer-nav" aria-label="Converters">
         <span class="head">Converters</span>
-        <a href="/image-to-base64">Image to Base64</a>
+        <a href="/">Image to Base64</a>
         <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
         <a href="/data-uri-generator">Data URI Generator</a>
         <a href="/base64-favicon">Base64 Favicon</a>

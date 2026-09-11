@@ -148,7 +148,7 @@ const dataUri = await resizeImageToBase64(fileInput.files[0], 256, 256);</code><
     <p>Note the two independent levers: <strong>dimensions</strong> (the scale factor) and <strong>quality</strong> (the JPEG/WebP quality value). For photos, dropping quality from 100% to 80–85% typically halves the size with no visible difference; for PNG graphics with sharp edges, keep PNG and resize dimensions instead.</p>
 
     <h2 id="no-code">No-code alternative</h2>
-    <p>Paste or drop your image into the <a href="/image-to-base64">image to base64 converter</a> — resize and compress options included, the encoded string updates live, and you can copy the data URI, HTML tag, or CSS declaration directly. For image-heavy workflows where base64 is the wrong tool, compare approaches in <a href="/online-vs-local-base64-converter">online vs local base64 conversion</a>.</p>
+    <p>Paste or drop your image into the <a href="/">image to base64 converter</a> — resize and compress options included, the encoded string updates live, and you can copy the data URI, HTML tag, or CSS declaration directly. For image-heavy workflows where base64 is the wrong tool, compare approaches in <a href="/online-vs-local-base64-converter">online vs local base64 conversion</a>.</p>
 
     <h2 id="when-not">When not to resize — when to skip base64 entirely</h2>
     <p>If the source image is over ~30 KB even after resizing, a regular file with HTTP caching almost always outperforms an inline string: the browser caches it, lazy-loads it, and keeps your HTML readable. Base64 is the right call when the constraint is <em>self-containment</em> — single-file HTML, email signatures, offline documents — not raw performance. For already-compressed sources, see our guides on <a href="/compress-jpg-to-base64">compressing JPG to base64</a> and <a href="/compress-png-to-base64">compressing PNG to base64</a>.</p>
@@ -173,7 +173,7 @@ const dataUri = await resizeImageToBase64(fileInput.files[0], 256, 256);</code><
       </details>
     </section>
 
-    <p>Related: <a href="/base64-image-size-calculator">Base64 size calculator</a> · <a href="/image-to-base64">image to base64 converter</a> · <a href="/compress-jpg-to-base64">compress JPG to base64</a> · <a href="/compress-png-to-base64">compress PNG to base64</a>.</p>
+    <p>Related: <a href="/base64-image-size-calculator">Base64 size calculator</a> · <a href="/">image to base64 converter</a> · <a href="/compress-jpg-to-base64">compress JPG to base64</a> · <a href="/compress-png-to-base64">compress PNG to base64</a>.</p>
   </article>
 </main>
 

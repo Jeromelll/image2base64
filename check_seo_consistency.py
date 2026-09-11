@@ -7,6 +7,8 @@ Checks (coach-style: script, not prompt):
      (self-canonical OK; cross-canonical to another on-site page = consolidate WARN)
   3. sitemap.xml ↔ disk: every sitemap loc has a file; every self-canonical
      page is in the sitemap (cross-canonical pages may omit — intentional)
+  4. Cross-page 8-gram containment > 25% (WARN). Skips a pair if one page
+     already canonicals to the other (intentional merge).
 
 Usage:
   python3 check_seo_consistency.py
@@ -42,6 +44,7 @@ class HeadParser(HTMLParser):
         self.canonical: str | None = None
         self.title: str | None = None
         self.description: str | None = None
+        self.robots: str = ""
         self._in_title = False
         self._title_buf = ""
 
@@ -53,6 +56,8 @@ class HeadParser(HTMLParser):
             self.canonical = d.get("href") or None
         elif tag == "meta" and d.get("name", "").lower() == "description":
             self.description = d.get("content") or ""
+        elif tag == "meta" and d.get("name", "").lower() == "robots":
+            self.robots = (d.get("content") or "").lower()
         elif tag == "title":
             self._in_title = True
             self._title_buf = ""
@@ -107,6 +112,24 @@ def norm_url(u: str) -> str:
     if u == ORIGIN:
         return ORIGIN + "/"
     return u
+
+
+def strip_html_text(html: str) -> str:
+    """Visible copy. Prefer <main>; drop chrome so shared header/footer don't fire."""
+    m = re.search(r"(?is)<main\b[^>]*>.*?</main>", html)
+    html = m.group(0) if m else html
+    html = re.sub(r"(?is)<script[^>]*>.*?</script>", " ", html)
+    html = re.sub(r"(?is)<style[^>]*>.*?</style>", " ", html)
+    html = re.sub(r"(?s)<!--.*?-->", " ", html)
+    html = re.sub(r"<[^>]+>", " ", html)
+    return re.sub(r"\s+", " ", html).strip()
+
+
+def shingles(text: str, n: int = 8) -> set[tuple]:
+    w = re.findall(r"[a-z0-9]+", text.lower())
+    if len(w) < n:
+        return set()
+    return {tuple(w[i : i + n]) for i in range(len(w) - n + 1)}
 
 
 def main() -> int:
@@ -233,6 +256,19 @@ def main() -> int:
                     }
                 )
             continue
+        noindex = "noindex" in (parser.robots or "")
+        if noindex:
+            # kept for users, not for Google — may omit from sitemap
+            if url in locs:
+                warns.append(
+                    {
+                        "check": "sitemap_lists_noindex",
+                        "file": path.name,
+                        "url": url,
+                        "detail": "noindex page is still listed in sitemap",
+                    }
+                )
+            continue
         if url not in locs:
             fails.append(
                 {
@@ -242,6 +278,36 @@ def main() -> int:
                     "detail": "self-canonical page on disk but not in sitemap.xml",
                 }
             )
+
+    # Cross-page duplication: 8-gram shingle containment > 25%
+    sh = {}
+    for url, path in page_urls.items():
+        sh[url] = shingles(strip_html_text(path.read_text(encoding="utf-8")))
+    # Cross-page duplication vs homepage (the cannibalization class in P0-1).
+    # Sibling format templates share a converter chrome by design — not flagged.
+    home = ORIGIN + "/"
+    home_sh = sh.get(home, set())
+    if home_sh:
+        for url, s in sh.items():
+            if url == home or not s:
+                continue
+            can = parsed[url].canonical
+            if can and norm_url(can) == home:
+                continue
+            containment = len(home_sh & s) / min(len(home_sh), len(s))
+            if containment > 0.25:
+                smaller, larger = (url, home) if len(s) <= len(home_sh) else (home, url)
+                warns.append(
+                    {
+                        "check": "duplication",
+                        "file": page_urls[smaller].name,
+                        "url": smaller,
+                        "detail": (
+                            f"{page_urls[larger].name} ⊃ {page_urls[smaller].name} "
+                            f"正文包含率 {containment:.1%}"
+                        ),
+                    }
+                )
 
     report = {
         "site": ORIGIN,

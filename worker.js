@@ -11,6 +11,8 @@ const REDIRECTS = new Map([
   ["/jpeg-to-base64/", "/jpg-to-base64"],
   ["/base64-to-jpeg", "/base64-to-jpg"],
   ["/base64-to-jpeg/", "/base64-to-jpg"],
+  ["/image-to-base64", "/"],
+  ["/image-to-base64/", "/"],
 ]);
 
 const BLOCKED_PREFIXES = ["/.git", "/.claude", "/.wrangler", "/node_modules"];

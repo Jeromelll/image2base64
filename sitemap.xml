@@ -6,11 +6,6 @@
     <priority>1.0</priority>
   </url>
   <url>
-    <loc>https://image2base64.com/image-to-base64</loc>
-    <changefreq>monthly</changefreq>
-    <priority>0.9</priority>
-  </url>
-  <url>
     <loc>https://image2base64.com/data-uri-generator</loc>
     <changefreq>monthly</changefreq>
     <priority>0.9</priority>
@@ -138,16 +133,6 @@
   <url>
     <loc>https://image2base64.com/image-to-base64-alternatives</loc>
     <changefreq>monthly</changefreq>
-    <priority>0.6</priority>
-  </url>
-  <url>
-    <loc>https://image2base64.com/remove-bg-alternatives</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.7</priority>
-  </url>
-  <url>
-    <loc>https://image2base64.com/remove-bg-shutting-down</loc>
-    <changefreq>weekly</changefreq>
     <priority>0.6</priority>
   </url>
   <url>
