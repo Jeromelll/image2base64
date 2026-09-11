@@ -1,2 +1,4 @@
 /base64-to-jpeg /base64-to-jpg 301
 /jpeg-to-base64 /jpg-to-base64 301
+/image-to-base64 / 301
+/image-to-base64/ / 301
