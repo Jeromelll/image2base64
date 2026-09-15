@@ -43,7 +43,9 @@ code{font-family:var(--mono);font-size:.88em;background:#eef0f6;padding:.12em .4
 .hero h1{font-size:clamp(2rem,5vw,3rem);margin:0 0 16px;word-break:break-word;overflow-wrap:anywhere}
 
 @media(max-width:640px){
-  .nav{display:none}
+  .header-inner{height:auto;min-height:60px;padding:8px 0;gap:10px;flex-wrap:wrap}
+  .nav{display:flex;flex-wrap:wrap;gap:.65rem 1rem;justify-content:flex-end}
+  .nav a{font-size:.82rem}
   .hero{padding-top:42px}
   .hero h1{font-size:1.32rem;line-height:1.2;white-space:normal !important}
   .eyebrow{font-size:.72rem;padding:.25em .7em}

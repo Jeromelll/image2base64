@@ -96,11 +96,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
-    <nav class="nav">
-      <a href="#tool">Decoder</a>
-      <a href="#guide">Guide</a>
-      <a href="#tools">More tools</a>
-      <a href="#faq">FAQ</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
     </nav>
   </div>
 </header>
@@ -168,6 +168,14 @@
         <li><strong>A full data URI</strong> — <code>data:image/svg+xml;base64,PHN2Zy...</code>. Names the exact format, most reliable.</li>
         <li><strong>A bare Base64 body</strong> — verified as SVG before it is previewed or downloaded.</li>
       </ul>
+
+
+      <h3>Raster Base64 cannot become a real SVG</h3>
+      <p>
+        This page only accepts <code>image/svg+xml</code> data. A PNG or JPEG string is rejected — there is no
+        vectorization step. The download is the original SVG markup, not a canvas snapshot, so you can open it
+        in a text editor. To inspect mixed unknown strings, use <a href="/base64-to-image">Base64 to image</a>.
+      </p>
 
       <h3>Private by design</h3>
       <p>

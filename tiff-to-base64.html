@@ -101,11 +101,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
-    <nav class="nav">
-      <a href="#tool">Converter</a>
-      <a href="#guide">Guide</a>
-      <a href="#tools">More tools</a>
-      <a href="#faq">FAQ</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
     </nav>
   </div>
 </header>
@@ -216,6 +216,15 @@
         web page, also note that <strong>Chrome, Firefox and Edge cannot render TIFF images at all</strong> — only
         Safari can. For web use, convert to <a href="/png-to-base64">PNG</a> or <a href="/jpg-to-base64">JPG</a>
         first, then encode. Reserve TIFF Base64 for APIs, fixtures and document pipelines.
+      </p>
+
+
+      <h3>Endian signatures</h3>
+      <p>
+        TIFF files are either big-endian or little-endian. The Base64 body starts with <code>TU0AKg</code>
+        (<code>MM\0*</code>) for Motorola/big-endian or <code>SUkq</code> (<code>II*</code>) for Intel/little-endian.
+        Multi-page TIFFs encode the whole file, but browsers that can preview TIFF (Safari only) typically show
+        the first page.
       </p>
 
       <h3>Private by design</h3>

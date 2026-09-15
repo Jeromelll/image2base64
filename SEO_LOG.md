@@ -1,5 +1,29 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-15 — AdSense 审核窗口：隐私现在时 + 信任页顶栏 + 薄格式页差异
+
+- 来源：AdSense「帐户已提交审核」邮件 + 官方帮助（Cookie 披露、About/Contact、近重复页扩写或合并）。
+- Privacy / Contact / Editorial 去掉「尚未投放广告」；Privacy 改为现在时披露 AdSense cookie / partner-sites / ads.txt / EEA 同意提示。
+- About、Contact 加厚（运营者、纠错格式、不点自己的广告）；全站 header 统一 Converter / About / Contact / Privacy；移动端不再 `display:none` 顶栏。
+- 9 个薄格式页补真实差异（canvas 再编码 vs 原始字节、GIF 动画、SVG 非栅格化、TIFF 端序、WebP 质量 0.9）。不改 ads.txt、不改 AdSense 代码。remove-bg 两页保持 noindex、不进 sitemap。
+- 验证：`check_seo_consistency` fail=0 warn=3（jpeg/image-to-base64 合并，已知）。
+
+## 2026-09-11 — P0 首页 cannibalization：合并 `/image-to-base64` + 首页格式词减配
+
+- 来源：`04_修复指引.md`（GSC 28 天：首页独吞 99.5% 曝光、专页目标词 0 曝光）。
+- P0-1：`worker.js` 301 `/image-to-base64` → `/`；该页 canonical 改首页 + `noindex`；sitemap 删除该条；独有段落（别名检索、正反向、输出形态、安全说明、3 条 FAQ）并进首页；全站 `href="/image-to-base64"` 改 `/`（不碰 `-for-api` / `-alternatives`）。
+- P0-2：首页 H1 → `Free Image to Base64 Converter`；解释性正文格式词减到 png 1 次、其余 0（枢纽卡 + footer 锚文本保留）。
+- P0-3：`/remove-bg-alternatives`、`/remove-bg-shutting-down` 移出 sitemap 并 `noindex`（页保留给用户）。contact / editorial-policy 本来就是 0.3，未改。
+- P1：`check_seo_consistency.py` 补首页 8-gram 包含率、noindex 可缺 sitemap。
+- 验证：`fail=0` `warn=3`；线上 `/image-to-base64` → 301 `/`（`_redirects` 才是资产路径生效通道，Worker Map 同步加了）；sitemap 已无该条与两个 remove-bg。Worker Version `9692df1c`。P2 外链未做。
+
+## 2026-09-09 — base64-to-image 补「invalid Base64」排障 FAQ（D1 行为周报驱动）
+
+- 来源：D1 事件库（9/3 10:08 UTC 起记录）error 事件 14 条中 11 条为同一文案 `The input contains characters that are not valid Base64.`（x1=decode），集中在 /base64-to-image（9/3×6）与 /base64-to-gif（9/7×5+1 条 unsupported image）。
+- 改动：`/base64-to-image` FAQ 区新增 details「Why do I see 'The input contains characters that are not valid Base64'?」——说明自动容忍空格/换行/url-safe 字符，触发原因是外裹引号/HTML 标签/纯 URL/百分号编码，给出贴净载荷的操作指引；JSON-LD FAQPage 同步加同题 Question。
+- 验证：JSON-LD parse 通过 → `check_seo_consistency` fail=0 → rsync dist → `wrangler deploy` Version `f55e866c` → 线上 curl 200 + 新 FAQ 文案命中 → commit `6e2eed0` push main。
+- 附带发现（行为周报 9/9）：9/5-9/6 事件表被漏洞扫描器洪水污染（9/6 单日 3291 事件、FR 桌面 2558、全打 /.env /wp- /v1 等字典路径）；事件分析必须按站点路由白名单过滤后计数，真实路由 PV 9/3-9/9 仅约 244。
+
 ## 2026-09-08 — webp-to-base64 补「示例结果」层（哥飞三层结构裁决落地）
 
 - 来源：哥飞.ai 两轮问答（outreach §八）——新页必须「格式说明 + 工具 + 示例结果」三层结构；webp 页 6/28 上线时只有前两层，缺第三层。
@@ -541,3 +565,10 @@ Last updated: 2026-09-07 CST
 - 同次 `copy` 出现完全相同的双行；根因是 encoder/decoder 初始化和全局 boot 都调用 `wireCopyButtons`。删除两个局部调用，统一由 boot 绑定一次。
 - 部署 Worker Version `c4d6de27-673b-4987-88b6-b1e3fa128ae7`。线上验证：`/.env` 返回 404，主动请求前后该 path 的 D1 `page_view` 计数均为 27；线上 `app.js` 仅余全局一次 `wireCopyButtons(document)`。
 - 6 个新入口当前每页仅 1–3 个 page view；3 个 9/7 新页的行为与上线验收时点/国家一致，尚不足以认定真实用户采用，不据此扩页。
+
+## 2026-09-10 · 哥飞AI触发 On Page 审计（无可改项，未施工）
+
+- 触发：Jerome 在 seo.web.cafe 追问哥飞AI「I2B64 没非品牌流量还能做吗」，其引用页级数据经 GSC API page 维度核验属实：base64-to-X 反向簇位 6.3–22.3（jpg 6.3/jpeg 8.3/webp 9.2/gif 9.7/svg 10.5/png 19.5），jpg-to-base64 位 11.0 已有 7 次非品牌点击。
+- 审计范围：TDK（11 页唯一且词前置）✓ / H1 ✓ / FAQPage+SoftwareApplication+FAQ JSON-LD 全页 ✓ / index「More Base64 converters」hub 链全簇 ✓ / footer 簇内互链 ✓ / jpeg→jpg canonical 已合并（双向）✓ / sitemap 齐（jpeg 页不在=正确）✓ / 正文 3.5k–9.5k 可见字符 ✓。
+- 结论：**无可改项**。不施工、不部署、不改标题（churn 风险>收益，避「动首页」坑）。
+- 处置：validation_log I2B64 kill→观察期（免工时）；预注册 60 天判据至 2026-11-09（滴答卡 6aa28987e4b06381a5ef1df6）：非品牌点击 ≥5/天 → 保留并走 AdSense 门槛；未达 → 永久封存。

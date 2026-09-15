@@ -93,11 +93,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
-    <nav class="nav">
-      <a href="#tool">Converter</a>
-      <a href="#guide">Guide</a>
-      <a href="#tools">More tools</a>
-      <a href="#faq">FAQ</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
     </nav>
   </div>
 </header>
@@ -211,6 +211,20 @@
         <li>CSS backgrounds where you'd rather not ship a separate request.</li>
         <li>Self-contained components, emails or design tokens.</li>
       </ul>
+
+
+      <h3>Why Base64 SVG instead of a raw svg+xml URL</h3>
+      <p>
+        You can also inline SVG as <code>data:image/svg+xml,...</code> with percent-encoding. That form breaks
+        if the markup contains unescaped <code>#</code>, quotes, or newlines. Base64 avoids those CSS
+        <code>url()</code> pitfalls. The MIME is <code>image/svg+xml</code>; the body usually starts with
+        <code>PHN2Zy</code> (<code>&lt;svg</code> in Base64).
+      </p>
+      <h3>Encoding is not sanitizing</h3>
+      <p>
+        Scripts, external font URLs, and <code>xlink:href</code> to other files still behave as in the original
+        SVG. If you accept user-supplied SVG, strip scripts before encoding. This tool does not rewrite markup.
+      </p>
 
       <h3>Private by design</h3>
       <p>

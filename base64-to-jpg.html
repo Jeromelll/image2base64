@@ -96,11 +96,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
-    <nav class="nav">
-      <a href="#tool">Decoder</a>
-      <a href="#guide">Guide</a>
-      <a href="#tools">More tools</a>
-      <a href="#faq">FAQ</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
     </nav>
   </div>
 </header>
@@ -168,6 +168,15 @@
         <li><strong>A full data URI</strong> — for example, <code>data:image/png;base64,iVBOR...</code> or <code>data:image/jpeg;base64,/9j/...</code>.</li>
         <li><strong>A bare Base64 body</strong> — the source format is detected automatically before conversion.</li>
       </ul>
+
+
+      <h3>Transparency is flattened</h3>
+      <p>
+        JPEG has no alpha channel. This page draws the decoded image onto a <strong>white</strong> canvas, then
+        exports JPEG at quality 0.92. Transparent PNGs therefore get a white background, and even a JPEG source
+        is re-compressed (not the original bytes). Use <a href="/base64-to-image">Base64 to image</a> when you
+        want the original file untouched.
+      </p>
 
       <h3>Private by design</h3>
       <p>

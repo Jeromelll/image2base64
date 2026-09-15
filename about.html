@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>About Image2Base64 — Free Client-Side Converter</title>
-<meta name="description" content="About Image2Base64: a free, private image to Base64 converter that runs in your browser with no upload." />
+<meta name="description" content="About Image2Base64: who runs it, why conversions stay in the browser, and how to reach the operator." />
 <link rel="canonical" href="https://image2base64.com/about" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -17,10 +17,10 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
-    <nav class="nav" aria-label="Primary">
+        <nav class="nav" aria-label="Primary">
       <a href="/">Converter</a>
-      <a href="/png-to-base64">PNG</a>
       <a href="/about">About</a>
+      <a href="/contact">Contact</a>
       <a href="/privacy">Privacy</a>
     </nav>
   </div>
@@ -28,16 +28,28 @@
 
 <main class="wrap" style="padding:48px 0 72px;max-width:720px">
   <h1>About Image2Base64</h1>
-  <p><strong>Image2Base64</strong> (also shown as Base64Img) is a free developer utility for encoding images to Base64 / data URIs and decoding Base64 back to images.</p>
-  <p>Everything runs in the browser. There is no account, no upload pipeline, and no server-side processing of your files.</p>
+  <p><strong>Image2Base64</strong> (also shown as Base64Img) is a free developer utility for encoding images to Base64 / data URIs and decoding those strings back into files. It is an independent site, not a product of Google or of any image-hosting company.</p>
+
+  <h2>Who runs it</h2>
+  <p>The site is built and operated by Jerome (GitHub <a href="https://github.com/Jeromelll" rel="noopener">@Jeromelll</a>). There is no separate company page and no user accounts. Corrections, tool bugs, and advertising questions go to <a href="mailto:jeromell@be-winner.com">jeromell@be-winner.com</a> — see the <a href="/contact">contact page</a>.</p>
+  <p>Source and issue tracker: <a href="https://github.com/Jeromelll/image2base64" rel="noopener">github.com/Jeromelll/image2base64</a>.</p>
+
+  <h2>What the tools do</h2>
+  <p>Every converter runs in your browser with the FileReader / canvas APIs. Images and Base64 strings are not uploaded to our servers. You can confirm that in the browser Network tab: choosing a file does not create an upload request.</p>
   <ul>
-    <li>Encode: PNG, JPG/JPEG, SVG, WebP, GIF</li>
-    <li>Decode: Base64 / data URI → preview and download</li>
+    <li>Encode: PNG, JPG/JPEG, SVG, WebP, GIF, TIFF</li>
+    <li>Decode: Base64 / data URI → preview and download (original bytes, or a canvas export when you pick a target format)</li>
     <li>Copy helpers: raw Base64, data URI, HTML <code>&lt;img&gt;</code>, CSS</li>
   </ul>
-  <p>Source / issues: <a href="https://github.com/Jeromelll/image2base64" rel="noopener">github.com/Jeromelll/image2base64</a></p>
-  <p>Contact: <a href="/contact">Contact page</a> · <a href="mailto:jeromell@be-winner.com">jeromell@be-winner.com</a></p>
-  <p><a href="/privacy">Privacy</a> · <a href="/editorial-policy">Editorial policy</a></p>
+  <p>Guides on the site cover format-specific pitfalls (transparency, animation, MIME prefixes, email clients) rather than repeating the same “what is Base64” paragraph on every URL.</p>
+
+  <h2>Why a dedicated site</h2>
+  <p>Most “image to Base64” results are either upload-to-a-server tools or one-page toys with no format notes. This site exists so a PNG with alpha, an animated GIF, a TIFF scan, or an SVG icon each has a page that states what the browser actually does — including when a conversion is <em>not</em> lossless.</p>
+
+  <h2>Advertising</h2>
+  <p>The site uses Google AdSense to keep the tools free. Ads are not part of the converter UI. We do not ask anyone to click ads. Cookie and vendor details are on the <a href="/privacy">privacy policy</a>. Authorized sellers are listed in <a href="/ads.txt"><code>ads.txt</code></a>.</p>
+
+  <p><a href="/privacy">Privacy</a> · <a href="/editorial-policy">Editorial policy</a> · <a href="/contact">Contact</a></p>
 </main>
 
 <footer class="site-footer">

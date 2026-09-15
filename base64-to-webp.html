@@ -96,11 +96,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
-    <nav class="nav">
-      <a href="#tool">Decoder</a>
-      <a href="#guide">Guide</a>
-      <a href="#tools">More tools</a>
-      <a href="#faq">FAQ</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
     </nav>
   </div>
 </header>
@@ -168,6 +168,15 @@
         <li><strong>A full data URI</strong> — for example, <code>data:image/png;base64,iVBOR...</code> or <code>data:image/webp;base64,UklGR...</code>.</li>
         <li><strong>A bare Base64 body</strong> — the source format is detected automatically before conversion.</li>
       </ul>
+
+
+      <h3>This page re-encodes through canvas</h3>
+      <p>
+        Unlike the generic <a href="/base64-to-image">Base64 to image</a> decoder, this page exports
+        <code>image/webp</code> at quality 0.9 via <code>canvas.toBlob</code>. A JPEG or PNG source becomes a
+        new WebP; it is not a lossless round-trip. Animated GIF or WebP input is flattened to the first frame
+        the browser paints. Alpha from PNG is kept. If you only need the original bytes, use the generic decoder.
+      </p>
 
       <h3>Private by design</h3>
       <p>

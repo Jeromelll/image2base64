@@ -93,11 +93,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
-    <nav class="nav">
-      <a href="#tool">Converter</a>
-      <a href="#guide">Guide</a>
-      <a href="#tools">More tools</a>
-      <a href="#faq">FAQ</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
     </nav>
   </div>
 </header>
@@ -210,6 +210,15 @@
         Base64 still adds about <strong>33%</strong> over the raw file and inlined images can't be cached on their
         own. WebP's strong compression softens the hit, but for large images a normal cached <code>.webp</code> file
         is usually faster. Reserve inlining for small icons, thumbnails and single-file deliverables.
+      </p>
+
+
+      <h3>Lossy, lossless, and animated WebP</h3>
+      <p>
+        WebP has three common flavors: lossy (VP8), lossless (VP8L), and animated. This tool encodes the file
+        bytes as they are, so animation and alpha survive. The data URI always uses
+        <code>data:image/webp;base64,</code> and the body starts with <code>UklGR</code> (RIFF). Inlining a long
+        animated WebP is usually worse than a cached file — keep inlining for small static assets.
       </p>
 
       <h3>Private by design</h3>

@@ -101,11 +101,11 @@
 <header class="site-header">
   <div class="wrap header-inner">
     <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
-    <nav class="nav">
-      <a href="#tool">Decoder</a>
-      <a href="#guide">Guide</a>
-      <a href="#tools">More tools</a>
-      <a href="#faq">FAQ</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
     </nav>
   </div>
 </header>
@@ -185,6 +185,15 @@
         <li>Recover an image that was stored as a Base64 string in a database or config file.</li>
         <li>Sanity-check the output of an encoder before shipping it.</li>
       </ul>
+
+
+      <h3>Original bytes vs format converters</h3>
+      <p>
+        This decoder writes the original decoded bytes. Pages such as <a href="/base64-to-jpg">Base64 to JPG</a>
+        and <a href="/base64-to-webp">Base64 to WebP</a> re-encode through canvas and may change quality, flatten
+        animation, or fill transparency. Use this page to recover a file; use a format page only when you want a
+        different output type.
+      </p>
 
       <h3>Private by design</h3>
       <p>
