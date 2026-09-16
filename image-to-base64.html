@@ -283,7 +283,9 @@
         Keep large screenshots, photos and hero graphics as regular files. Base64 adds roughly one third to the binary size,
         and an inline image cannot be cached independently from the HTML or CSS that contains it. Reusing the same long data
         URI across several pages repeats bytes that a separately hosted image could download once. Normal files are usually
-        better for responsive images, lazy loading, CDN resizing and content that changes often.
+        better for responsive images, lazy loading, CDN resizing and content that changes often. Still weighing an online
+        converter against running things locally? Our <a href="/online-vs-local-base64-converter">online vs. local converter
+        comparison</a> breaks down the trade-offs.
       </p>
 
       <h3>Why Base64 output is larger</h3>

@@ -1,5 +1,13 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-16 — llms.txt 上线 + /online-vs-local 上下文内链 ×2
+
+- 来源：9/15 AI 可见度月检 B 类项（llms.txt 缺失）+ 9/16 D1 行为周报实证 chatgpt.com 为第 2 大真实引荐来源（28 PV，8 次落 /base64-to-gif）。Jerome 当轮批准执行。
+- 新建 `/llms.txt`（llmstxt.org 结构：H1 + blockquote 简介 + Encode/Decode/Specialized/Guides/Troubleshooting/Optional 分组，33 条链接全部指向 sitemap 内真实页，脚本校验零死链）。
+- 上下文内链补强 /online-vs-local-base64-converter（此前仅全站 footer 导航一条）：首页「When a normal image file is better」节 + /jpg-to-base64「Keep an eye on size」节各加 1 条正文内链。注：image-to-base64.html 已 301 合并到首页（9/11 P0），内链落在合并目标 index.html 上。
+- 部署：wrangler Version b86edbf3（llms.txt）→ e4b9bde6（首页内链修正）；线上 200 实测：/llms.txt 3695B 内容命中、首页内链 3 处、/jpg-to-base64 2 处。
+- 验证：`check_seo_consistency` fail=0 warn=3（3 组 canonical 合并，已知）；llms.txt 链接校验 NONE bad。
+
 ## 2026-09-15 — AdSense 审核窗口：隐私现在时 + 信任页顶栏 + 薄格式页差异
 
 - 来源：AdSense「帐户已提交审核」邮件 + 官方帮助（Cookie 披露、About/Contact、近重复页扩写或合并）。

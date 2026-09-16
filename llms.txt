@@ -1,0 +1,56 @@
+# Image2Base64 — Free Image ↔ Base64 Data URI Converter
+
+> image2base64.com is a free, browser-based image to Base64 converter. Files are converted entirely on the user's device with the FileReader API — no upload, no sign-up, no server-side processing. It encodes any image (PNG, JPG/JPEG, WebP, SVG, GIF, TIFF, BMP, ICO) to a typed `data:image/...;base64,...` URI with ready-to-paste HTML, CSS, and JSON output, and decodes Base64 strings back into downloadable image files.
+
+Core user value: turn an image into a self-contained text string for inline embedding in HTML, CSS, email signatures, JSON API payloads, or single-file deliverables — and turn Base64 strings back into files.
+
+## Encode: image to Base64
+
+- [Image to Base64](/): Universal converter for any image format — PNG, JPG, GIF, WebP, SVG.
+- [PNG to Base64](/png-to-base64): Encode PNGs with transparency preserved.
+- [JPG to Base64](/jpg-to-base64): Encode JPEG photos; .jpg and .jpeg supported identically.
+- [WebP to Base64](/webp-to-base64): Encode modern WebP images.
+- [SVG to Base64](/svg-to-base64): Encode vector SVGs for CSS and HTML embedding.
+- [GIF to Base64](/gif-to-base64): Encode GIF animations into a data URI.
+- [TIFF to Base64](/tiff-to-base64): Encode TIFF files, a legacy/scanning format.
+
+## Decode: Base64 to image
+
+- [Base64 to Image](/base64-to-image): Decode a Base64 string back into a downloadable file.
+- [Base64 to PNG](/base64-to-png): Decode and save as PNG.
+- [Base64 to JPG](/base64-to-jpg): Decode and save as JPEG.
+- [Base64 to WebP](/base64-to-webp): Decode and save as WebP.
+- [Base64 to SVG](/base64-to-svg): Decode vector SVG markup.
+- [Base64 to GIF](/base64-to-gif): Decode and save as a GIF.
+
+## Specialized tools
+
+- [Compress PNG to Base64](/compress-png-to-base64): Compress, then encode PNGs.
+- [Compress JPG to Base64](/compress-jpg-to-base64): Compress, then encode JPEGs.
+- [Data URI Generator](/data-uri-generator): Turn any image into a data URI for CSS or HTML.
+- [Base64 Favicon](/base64-favicon): Inline a favicon with a data URI link tag.
+- [Image to Base64 for API](/image-to-base64-for-api): Build Base64 payloads for OpenAI/Cloud Vision-style JSON APIs.
+- [Extract Base64 Image from CSS](/extract-base64-image-from-css): Pull embedded images out of CSS/HTML source.
+- [Base64 Image Size Calculator](/base64-image-size-calculator): Estimate encoded size and the ~33% overhead.
+- [Base64 Image Email Signature](/base64-image-email-signature): Build signature images that survive email clients.
+
+## Guides and comparisons
+
+- [How to Convert an Image to Base64](/how-to-convert-image-to-base64): Code walkthroughs in JavaScript, Node.js, Python, PHP, Java, and Linux shell.
+- [Resize Image to Base64](/resize-image-to-base64): Scale down, then encode.
+- [Online vs. Local Converters](/online-vs-local-base64-converter): When browser-based conversion beats installed tools.
+- [Image to Base64 Alternatives](/image-to-base64-alternatives): Comparison of converter options.
+
+## Troubleshooting
+
+- [Fix Invalid Base64 Image Data](/fix-invalid-base64-image-data): Diagnose broken or truncated data URIs.
+- [Base64 Image Not Showing in Outlook](/base64-image-not-showing-in-outlook): Why Outlook desktop blocks inline Base64.
+- [Gmail Signature Base64 Not Working](/base64-image-in-gmail-signature-not-working): Gmail's inline image restrictions explained.
+
+## Optional
+
+- [About](/about): Who runs this site.
+- [FAQ](/faq): Frequently asked questions about Base64 image conversion.
+- [Privacy](/privacy): Privacy policy — conversions never leave the device.
+- [Editorial Policy](/editorial-policy): Content standards.
+- [Contact](/contact): Feedback and inquiries.
