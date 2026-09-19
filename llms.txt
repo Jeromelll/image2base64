@@ -46,6 +46,8 @@ Core user value: turn an image into a self-contained text string for inline embe
 - [Fix Invalid Base64 Image Data](/fix-invalid-base64-image-data): Diagnose broken or truncated data URIs.
 - [Base64 Image Not Showing in Outlook](/base64-image-not-showing-in-outlook): Why Outlook desktop blocks inline Base64.
 - [Gmail Signature Base64 Not Working](/base64-image-in-gmail-signature-not-working): Gmail's inline image restrictions explained.
+- [Embed Base64 Image in Markdown](/embed-base64-image-in-markdown): Which renderers allow data URIs — GitHub, Notion and WordPress restrictions explained.
+- [Power Automate Base64 Image in Email](/power-automate-base64-image-in-email): The working Compose + base64() pattern for inline images, and why they still don't render.
 - [Send Base64 Image via Telegram Bot](/telegram-bot-send-base64-image): sendPhoto rejects data URIs — decode the payload and upload as multipart.
 
 ## Optional

@@ -580,3 +580,23 @@ Last updated: 2026-09-07 CST
 - 审计范围：TDK（11 页唯一且词前置）✓ / H1 ✓ / FAQPage+SoftwareApplication+FAQ JSON-LD 全页 ✓ / index「More Base64 converters」hub 链全簇 ✓ / footer 簇内互链 ✓ / jpeg→jpg canonical 已合并（双向）✓ / sitemap 齐（jpeg 页不在=正确）✓ / 正文 3.5k–9.5k 可见字符 ✓。
 - 结论：**无可改项**。不施工、不部署、不改标题（churn 风险>收益，避「动首页」坑）。
 - 处置：validation_log I2B64 kill→观察期（免工时）；预注册 60 天判据至 2026-11-09（滴答卡 6aa28987e4b06381a5ef1df6）：非品牌点击 ≥5/天 → 保留并走 AdSense 门槛；未达 → 永久封存。
+
+## 2026-09-19 · Telegram Bot Base64 指南页上线（选词雷达 action_log 首单落地）
+
+- 触发：ffc17c37 选词雷达改版后首个拍板动作，Jerome 从 0919 action_log 圈选「telegram bot send base64 image（API 族第三页）」。
+- 事实底座（0919 WebSearch 验证）：sendPhoto 仅收 file_id/公网 URL/multipart 上传，拒收 Base64/data URI（400）；data URI 入 URL 触发 HTTP 414；photo 解码后 ≤10MB；sendPhoto 会重编码→保真用 sendDocument；GIF 动图走 sendAnimation。
+- 页面 /telegram-bot-send-base64-image：剥前缀→解码→multipart 三段代码（node-telegram-bot-api/raw fetch/Python requests/curl）+ 限制与替代（URL/file_id）+ FAQPage JSON-LD 6 问；导流 /image-to-base64-for-api、/compress-jpg-to-base64、/fix-invalid-base64-image-data、/。
+- 内链铺设：38 页 footer Guides + llms.txt Troubleshooting 段 + sitemap（33→34 locs）+ api 页正文上下文内链；check_seo_consistency fail=0（仅剩 3 个已知 canonical 合并 WARN）。
+- 部署：commit f888a91 push main，wrangler Version 759d4ba7；线上 200/canonical/H1/sitemap/footer/llms/JSON-LD 全核通过。
+- 顺带清理：工作区遗留的 remove-bg 两页 sitemap 行（与 noindex 矛盾，checker WARN）未提交未部署，已从工作区移除并在此留痕。
+- 待办：GSC UI 人工请求索引（仅 Jerome 可做）；GSC 线上 sitemap 刷新随下次抓取。
+
+## 2026-09-20 · Markdown 平台兼容排障页上线（选词雷达 action_log 首选落地）
+
+- 触发：Jerome 从 0919 action_log 圈选首选「平台兼容排障页」；与统一闭环会话并发施工同仓库（见下）。
+- 事实底座（0919 WebSearch 验证）：GFM 明确禁用 data: URI（README/issue/discussion 结构性不渲染，spec 级）；Notion API 仅收外部 HTTPS URL（2025 File Upload API 亦不收 inline data URI）；WordPress 三处剥离（wp_kses 对无 unfiltered_html 用户/编辑器往返/SMTP 邮件插件）。
+- 页面 /embed-base64-image-in-markdown：9 行渲染器兼容矩阵（GitHub/Notion/WordPress/Typora/Obsidian/VS Code#76080/Pandoc）+ 三平台分节修复（相对路径/githubusercontent 上传/decode-host-link/wp_kses_allowed_protocols 片段）+ 通用四坑（image/jpg MIME、76 字符换行、BOM、拿本地渲染器当目标）+ FAQPage JSON-LD 6 问。
+- 内链铺设：40 页 footer Guides + llms.txt Troubleshooting 段 + sitemap + outlook 页与 fix-invalid 页正文上下文内链各 1 处。
+- 并发碰撞处置：统一闭环会话同窗口建 telegram/power-automate 两页，其 batch commit f888a91（00:59）把本页与施工中 power-automate 一并扫入；本会话静默等待至 01:10 确认对方停笔，补 power-automate 缺失的 sitemap+llms 两条目（check_seo 由 FAIL=1 归零），合并提交。
+- 部署：wrangler 一次 deploy；线上验证新页 200/canonical/H1/JSON-LD、outlook 与 fix-invalid 上下文内链、sitemap 36 locs、llms.txt 三新页齐。
+- 待办：GSC UI 人工请求索引（新页 3 个，仅 Jerome 可做）。

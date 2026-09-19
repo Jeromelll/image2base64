@@ -214,6 +214,8 @@ msg.attach(img)</code></pre>
       <li><strong>Previews and testing</strong> — a Base64 snippet is the fastest way to see how a logo will look before it is uploaded to any signature platform or ESP.</li>
     </ul>
     <p>For everything Outlook-related, treat CID or hosted URLs as the only dependable options.</p>
+    <p>If the image is being sent by an automated flow rather than a mail client, the flow-side wiring is covered in the <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a> guide.</p>
+    <p>The same "renders locally, stripped in production" pattern exists outside email: if you embed Base64 images in markdown files, the <a href="/embed-base64-image-in-markdown">markdown compatibility guide for GitHub, Notion and WordPress</a> maps out which renderers strip them and why.</p>
 
     <h2 id="faq">Frequently asked questions</h2>
     <section class="faq-section">
@@ -273,7 +275,9 @@ msg.attach(img)</code></pre>
         <a href="/base64-image-email-signature">Base64 image in email signature</a>
         <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
         <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
 <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
       </nav>
