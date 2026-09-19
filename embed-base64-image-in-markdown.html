@@ -1,0 +1,263 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Embed Base64 Image in Markdown — Where It Works &amp; Fixes for GitHub, Notion, WordPress | Image2Base64</title>
+<meta name="description" content="Which markdown renderers actually display Base64 data URI images: GitHub and Notion reject them structurally, WordPress strips them on save, Typora and Obsidian render them fine. A renderer compatibility matrix plus per-platform fixes." />
+<link rel="canonical" href="https://image2base64.com/embed-base64-image-in-markdown" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Embed Base64 Image in Markdown — Where It Works &amp; Where It Breaks" />
+<meta property="og:description" content="GitHub bans data: URIs, Notion's API won't accept them, WordPress strips them on save. A renderer-by-renderer compatibility matrix and the fixes that work." />
+<meta property="og:url" content="https://image2base64.com/embed-base64-image-in-markdown" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why is my Base64 image not showing in GitHub markdown?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "GitHub Flavored Markdown explicitly disallows data: URIs in image sources. Base64 images are structurally blocked on github.com — in READMEs, issues and discussions — no matter how correct your syntax is. Commit the image to the repo and use a relative path, or upload it in the GitHub editor to get a hosted githubusercontent.com URL."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Notion support Base64 or data URI images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not through the API. Notion image blocks only accept external HTTPS URLs, and the File Upload API does not take inline data URIs either. Automations must decode the Base64, upload the file to an external host, then pass the URL. Pasting or uploading the image inside the Notion app works, because Notion re-hosts it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my WordPress post lose its Base64 images when I save?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Three common sources: the wp_kses sanitizer strips data: URIs from users without the unfiltered_html capability; switching between visual and code editors can mangle very long attributes; and SMTP or email-log plugins sanitize outgoing HTML, removing data URIs from sent messages. The fix is to allow the data protocol via wp_kses_allowed_protocols, or host images in the Media Library."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which markdown editors render Base64 images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Typora and Obsidian render data URI images, and so does VS Code's built-in preview, although VS Code has a long-standing parsing bug with some data URIs. These local renderers are where Base64 markdown works best: the goal is a single self-contained file, not publishing."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my Base64 markdown work in Typora but not on GitHub?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Rendering happens wherever the file is displayed. Typora renders locally with full HTML support, while github.com runs every markdown file through a sanitizer that removes data: URIs. The same file can work perfectly in one and show nothing in the other."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the common mistakes that break Base64 images in markdown?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Using an invalid MIME type such as image/jpg instead of image/jpeg, leaving line breaks inside the Base64 payload (many CLI encoders wrap at 76 characters by default), and stray whitespace or BOM characters picked up during copy-paste. Strict renderers reject all of these even where data URIs are allowed."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Embedding Base64 Images in Markdown: What Works, What Gets Stripped, and Per-Platform Fixes</h1>
+    <p>You dropped a data URI into a markdown file — <code>![diagram](data:image/png;base64,...)</code> — and the preview shows it perfectly. Then the README looks blank on github.com, the Notion API call fails, or the image vanishes from your WordPress post the moment you hit save. Nothing is wrong with your Base64 string in most of these cases: <strong>several of the most popular markdown hosts and editors structurally refuse or strip data URIs</strong>. Here is the full compatibility picture, and what to do on each platform.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#matrix">Compatibility matrix: who renders Base64 markdown images</a></li>
+        <li><a href="#github">GitHub: data URIs are banned, not broken</a></li>
+        <li><a href="#notion">Notion: the API only accepts hosted URLs</a></li>
+        <li><a href="#wordpress">WordPress: three places data URIs get stripped</a></li>
+        <li><a href="#works">Where Base64 in markdown works well</a></li>
+        <li><a href="#pitfalls">Universal pitfalls that break data URIs anywhere</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="matrix">Compatibility matrix: who renders Base64 markdown images</h2>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption>Data URI images across markdown renderers and platforms</caption>
+        <thead>
+          <tr><th>Renderer / platform</th><th>Renders Base64 images?</th><th>What actually happens</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>GitHub (README, issues, discussions)</th><td class="warn">No</td><td>GitHub Flavored Markdown explicitly disallows <code>data:</code> URIs — a spec-level ban, not a setting.</td></tr>
+          <tr><th>Notion API</th><td class="warn">No</td><td>Image blocks accept external HTTPS URLs only; no field for inline Base64.</td></tr>
+          <tr><th>Notion app (paste / upload)</th><td class="ok">Yes</td><td>Works because Notion re-hosts the file as an attachment — the data URI itself is never stored.</td></tr>
+          <tr><th>WordPress (editing &amp; saving)</th><td class="warn">Depends</td><td>The <code>wp_kses</code> sanitizer strips <code>data:</code> from users without the <code>unfiltered_html</code> capability; editor round-trips can mangle long attributes.</td></tr>
+          <tr><th>WordPress (emails via SMTP/log plugins)</th><td class="warn">No</td><td>Mail plugins sanitize outgoing HTML and remove data URIs from sent messages.</td></tr>
+          <tr><th>Typora</th><td class="ok">Yes</td><td>Full local rendering — the classic home of single-file Base64 markdown.</td></tr>
+          <tr><th>Obsidian</th><td class="ok">Yes</td><td>Renders in the reading view; keep the MIME type strict (<code>image/jpeg</code>, not <code>image/jpg</code>).</td></tr>
+          <tr><th>VS Code built-in preview</th><td class="warn">Mostly</td><td>Generally works, but a long-standing parsing bug (microsoft/vscode#76080) breaks some data URIs — test before blaming your string.</td></tr>
+          <tr><th>Pandoc → standalone HTML</th><td class="ok">Yes</td><td>The data URI is just an <code>img src</code> in the generated HTML.</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cmp-note">The pattern to remember: <strong>local renderers show it, publishing platforms strip it.</strong> The same restrictions apply to email clients — see our guides on Base64 images in <a href="/base64-image-not-showing-in-outlook">Outlook</a> and <a href="/base64-image-in-gmail-signature-not-working">Gmail signatures</a>.</p>
+
+    <h2 id="github">GitHub: data URIs are banned, not broken</h2>
+    <p>GitHub Flavored Markdown allows only a short whitelist of URL schemes in image sources — <code>http</code>, <code>https</code>, <code>mailto</code> and relative paths. <code>data:</code> is not on the list, so a Base64 <code>&lt;img&gt;</code> or <code>![]()</code> is structurally blocked on github.com: READMEs, issues, pull requests, discussions, wikis. This is the spec working as written, and no repository setting changes it. If the same file renders in Typora or VS Code but shows nothing on GitHub, that is exactly what is happening.</p>
+
+    <h3>Fixes that work on GitHub</h3>
+    <ol>
+      <li><strong>Commit the image and use a relative path.</strong> In READMEs and other in-repo markdown files, <code>![logo](docs/assets/logo.png)</code> resolves against the file's location. (In issues and PR descriptions relative paths don't resolve — use the next option there.)</li>
+      <li><strong>Upload through the GitHub editor.</strong> Drag-and-drop an image into an issue, PR or the web file editor and GitHub hosts it on a <code>githubusercontent.com</code> URL you can reference anywhere.</li>
+      <li><strong>For badges and diagrams, use hosted services.</strong> Shields.io badges, hosted chart images or an <code>mermaid</code> code block cover most of the reasons people reach for Base64 in the first place.</li>
+    </ol>
+    <p>If you still want a Base64 string for local previews of that same README, generate one in the browser with the <a href="/">Image to Base64 converter</a> — and remember you will need the hosted fallback for GitHub itself.</p>
+
+    <h2 id="notion">Notion: the API only accepts hosted URLs</h2>
+    <p>Notion's API is unambiguous: image blocks take an <strong>external HTTPS URL</strong> (or a file previously uploaded through Notion). There is no field for inline Base64, and passing a <code>data:image/...;base64,</code> string fails. The File Upload API added in 2025 doesn't change this for block content — it still doesn't accept inline data URIs. Automation builders keep hitting this wall: the n8n and Latenode community forums are full of "why can't I push this base64 image into Notion" threads.</p>
+
+    <h3>Fixes that work in Notion</h3>
+    <ol>
+      <li><strong>In automations: decode, host, then link.</strong> Decode the Base64 to a binary file, upload it to any host that returns an HTTPS URL (S3, Cloudinary, a GitHub raw URL), then create the image block with that URL. Tools like the <a href="/image-to-base64-for-api">Base64 payload builder</a> show the encode direction; the decode side is a one-line <code>Buffer.from(str, 'base64')</code> or <code>base64 -d</code>.</li>
+      <li><strong>Manual: paste or upload in the app.</strong> Notion re-hosts pasted images as attachments, which is why the app works while the API doesn't.</li>
+      <li><strong>For markdown imports, use real URLs.</strong> Notion's importer fetches and re-hosts remote images, but a data URI inside imported markdown does not survive — convert your images to hosted URLs first.</li>
+    </ol>
+
+    <h2 id="wordpress">WordPress: three places data URIs get stripped</h2>
+    <p>WordPress is the subtlest of the three because the behavior depends on <em>who</em> is editing and <em>where</em> the HTML ends up. The symptom is always some flavor of "the image was there in preview and gone after save" — but the culprit differs:</p>
+    <ol>
+      <li><strong>The <code>wp_kses</code> sanitizer.</strong> Users without the <code>unfiltered_html</code> capability — authors and contributors, and editors on multisite — get <code>data:</code> removed from <code>src</code> attributes on save. Administrators usually keep their images, which makes the bug look random. If an admin sees the image and an author doesn't, this is it.</li>
+      <li><strong>Editor round-trips.</strong> Switching between visual and code editing, or between the block and classic editors, can mangle very long attribute values. A 50 KB data URI is a long attribute.</li>
+      <li><strong>SMTP and email-log plugins.</strong> Plugins that send or log transactional HTML often sanitize the message body — your post renders fine in the editor but the Base64 images vanish from the sent email. WordPress.org support threads document exactly this, including in mail-logging contexts.</li>
+    </ol>
+
+    <h3>Fixes that work in WordPress</h3>
+    <ol>
+      <li><strong>Allow the <code>data</code> protocol for KSES</strong> — in a plugin or theme functions file:
+        <pre><code>add_filter( 'wp_kses_allowed_protocols', function ( $protocols ) {
+    $protocols[] = 'data';
+    return $protocols;
+} );</code></pre>
+        One caution: this whitelists <code>data:</code> everywhere KSES applies, including links. <code>data:text/html</code> URLs are a known phishing vector, so on multi-author or open-registration sites prefer the next option.</li>
+      <li><strong>Use the Media Library instead.</strong> Hosting through WordPress's own media system is the platform-native path, avoids the sanitizer entirely, and performs better: large data URIs bloat the HTML of every page view and delay first paint.</li>
+      <li><strong>Diagnose by role and destination.</strong> Admin sees it, author doesn't → <code>wp_kses</code>. Editor fine, sent email stripped → the mail plugin. Preview fine, gone after save → editor round-trip.</li>
+    </ol>
+
+    <h2 id="works">Where Base64 in markdown works well</h2>
+    <p>The legitimate use case is <strong>single-file portability</strong> — a markdown document that travels with its images intact: notes emailed as one <code>.md</code>, archived documentation, a self-contained spec that renders in Typora, Obsidian or a pandoc-generated standalone HTML file. In those environments data URIs are genuinely useful.</p>
+    <ul>
+      <li><strong>Typora</strong> renders them natively.</li>
+      <li><strong>Obsidian</strong> renders them in reading view when the MIME type is exact.</li>
+      <li><strong>VS Code preview</strong> mostly works — but if one string fails while another renders, you are probably hitting the known parsing bug, not a bad encoding.</li>
+    </ul>
+    <p>Watch the weight: Base64 inflates files by ~33%, and a few screenshots can turn a 20 KB document into a megabyte slug. Compress first (see the <a href="/compress-png-to-base64">PNG</a> and <a href="/compress-jpg-to-base64">JPG</a> compressors) and check the result with the <a href="/base64-image-size-calculator">size calculator</a>. If you inherit a document stuffed with data URIs, the <a href="/extract-base64-image-from-css">Base64 extractor</a> pulls them back out as files.</p>
+
+    <h2 id="pitfalls">Universal pitfalls that break data URIs anywhere</h2>
+    <p>Even on renderers that fully support data URIs, four mistakes account for most "my Base64 image doesn't show" reports:</p>
+    <ol>
+      <li><strong>Wrong MIME type.</strong> <code>data:image/jpg;base64,</code> is invalid — the registered type is <code>image/jpeg</code>. Strict renderers (Obsidian, VS Code preview in some versions) refuse the whole URI over this.</li>
+      <li><strong>Line breaks in the payload.</strong> Many CLI encoders wrap Base64 at 76 characters by default, and markdown renderers do not strip those newlines inside the URI. Use <code>base64 -w 0</code> on Linux (see the <a href="/how-to-convert-image-to-base64">per-language conversion guide</a>) or a browser encoder that outputs one line.</li>
+      <li><strong>Stray whitespace or a BOM</strong> picked up during copy-paste — invisible in an editor, fatal to the parser.</li>
+      <li><strong>Assuming your editor's renderer is the target.</strong> The single most common trap in this whole topic: testing in Typora or VS Code and shipping to GitHub or Notion. Always verify in the renderer that will actually display the file.</li>
+    </ol>
+    <p>For corrupted strings rather than blocked ones — truncation, missing padding, stray characters — the <a href="/fix-invalid-base64-image-data">invalid Base64 data guide</a> covers diagnosis step by step.</p>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Why is my Base64 image not showing in GitHub markdown?</summary>
+        <p>GitHub Flavored Markdown explicitly disallows data: URIs, so Base64 images are structurally blocked on github.com in READMEs, issues and discussions. Commit the image and use a relative path, or upload it in the GitHub editor for a hosted URL.</p>
+      </details>
+      <details>
+        <summary>Does Notion support Base64 or data URI images?</summary>
+        <p>Not via the API — image blocks accept external HTTPS URLs only, and the File Upload API doesn't take inline data URIs. Decode and upload to an external host, then pass the URL. Pasting in the app works because Notion re-hosts the file.</p>
+      </details>
+      <details>
+        <summary>Why does my WordPress post lose Base64 images when I save?</summary>
+        <p>Usually wp_kses stripping data: from users without unfiltered_html; editor round-trips and SMTP/email-log plugins are the other two common culprits. Allow the data protocol via wp_kses_allowed_protocols, or host images in the Media Library.</p>
+      </details>
+      <details>
+        <summary>Which markdown editors render Base64 images?</summary>
+        <p>Typora and Obsidian do, and VS Code's preview mostly does (with a known parsing bug on some strings). These local renderers are where single-file Base64 markdown shines.</p>
+      </details>
+      <details>
+        <summary>Why does my Base64 markdown work in Typora but not on GitHub?</summary>
+        <p>Rendering happens where the file is displayed: Typora renders locally with full support, github.com sanitizes data: URIs out. Test in the renderer that will actually display the file.</p>
+      </details>
+      <details>
+        <summary>How do I make a Base64 data URI for markdown?</summary>
+        <p>Encode the image in your browser with the Image to Base64 converter — nothing is uploaded — and copy the data URI output. Keep the source image small: Base64 adds about 33% to file size.</p>
+      </details>
+    </section>
+
+    <p>Need a clean, single-line data URI to drop into a markdown file? Encode it locally with the <a href="/">Image to Base64 converter</a>, size it with the <a href="/base64-image-size-calculator">calculator</a>, and check the platform matrix above before you ship.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>

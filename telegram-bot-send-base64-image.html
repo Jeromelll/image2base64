@@ -1,0 +1,292 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Send a Base64 Image via the Telegram Bot API — sendPhoto Fix</title>
+<meta name="description" content="Telegram's sendPhoto rejects Base64 and data: URIs. Decode the string and upload it as multipart/form-data — copy-paste Node.js, Python and curl examples." />
+<link rel="canonical" href="https://image2base64.com/telegram-bot-send-base64-image" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Send a Base64 Image via the Telegram Bot API — sendPhoto Fix" />
+<meta property="og:description" content="sendPhoto refuses Base64 and data: URIs. Decode the string and upload the bytes as multipart/form-data — copy-paste examples for Node.js, Python and curl." />
+<meta property="og:url" content="https://image2base64.com/telegram-bot-send-base64-image" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can the Telegram Bot API accept a Base64 or data URI image directly?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The photo parameter of sendPhoto only accepts a file_id, a public HTTPS URL, or an uploaded file via multipart/form-data. A Base64 string or data: URI is none of these, so Telegram answers 400 Bad Request."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why do I get HTTP 414 when sending a Base64 image to Telegram?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "HTTP 414 (Request-URI Too Large) happens when the data URI is stuffed into the request URL or query string. A Base64 image is typically thousands of characters and does not fit in a URL. Decode it and send it as a multipart file upload instead."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the maximum photo size for Telegram sendPhoto?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Photos must be up to 10 MB after decoding, and Base64 inflates the data by about 33%. Keep the decoded image under 10 MB; shrink it first if needed."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should I use sendPhoto or sendDocument for the image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "sendPhoto delivers the picture as a compressed photo Telegram may re-encode. Use sendDocument when you need the original bytes preserved — for example PNGs with transparency — at the cost of no inline photo preview."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I pass an image URL to sendPhoto instead of uploading?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes, if it is a public http(s) URL — Telegram's servers fetch it themselves. A data: URI is not a fetchable URL, which is exactly why it fails. A file_id from a previously uploaded photo also works and avoids re-uploading."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I strip the data: prefix from a Base64 string before decoding?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Remove everything up to and including the first comma — for example b64.split(',')[1] in JavaScript or b64.split(',', 1)[1] in Python. The prefix is only needed for browser rendering; upload APIs want the raw payload or the decoded bytes."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>How to Send a Base64 Image with the Telegram Bot API</h1>
+    <p>You have an image as a Base64 string — from an API response, a webhook payload, or a converter — and you try to pass it straight into <code>sendPhoto</code> as <code>data:image/png;base64,...</code>. Telegram answers <strong>400 Bad Request</strong>, and if you stuffed the string into a URL you may have seen <strong>414 Request-URI Too Large</strong> instead. That is not a bug in your code. <strong>The Telegram Bot API does not accept Base64 or data URIs for photos at all</strong> — and it never has. Here is what it does accept, and the decode-then-upload fix in Node.js, Python and curl.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#short-answer">The short answer</a></li>
+        <li><a href="#why">Why sendPhoto rejects Base64</a></li>
+        <li><a href="#fix-code">Working code: decode, then upload</a></li>
+        <li><a href="#limits">Size limits and gotchas</a></li>
+        <li><a href="#alternatives">URL and file_id alternatives</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="short-answer">The short answer</h2>
+    <p>The <code>photo</code> parameter of <code>sendPhoto</code> accepts exactly three things:</p>
+    <ul>
+      <li><strong>A multipart/form-data file upload</strong> — the bytes of the image, posted like a normal file form field.</li>
+      <li><strong>A public HTTPS URL</strong> — Telegram's servers fetch the image themselves.</li>
+      <li><strong>A <code>file_id</code></strong> — Telegram's handle for a file that was already uploaded to Telegram (for example a photo a user sent your bot).</li>
+    </ul>
+    <p>A Base64 string is none of the three, and a <code>data:</code> URI is not a fetchable URL. <strong>The fix: strip the <code>data:image/...;base64,</code> prefix, decode the payload to bytes, and upload it as multipart/form-data.</strong></p>
+
+    <h2 id="why">Why sendPhoto rejects Base64</h2>
+    <p>Telegram's servers never see your string as an image. When you pass a URL, <em>they</em> download it; when you pass a file, the HTTP client packs the raw bytes into a multipart body. Base64 is a text encoding sitting in front of both paths:</p>
+    <ul>
+      <li>A <strong>data URI is not a URL Telegram can fetch</strong> — there is no host, and the <code>data:</code> scheme is explicitly not fetchable.</li>
+      <li>A <strong>raw Base64 string is text, not bytes</strong> — even without the prefix, Telegram stores it as a broken text "document" or rejects the request.</li>
+      <li>If the data URI lands in the <strong>request URL or query string</strong>, the request usually dies before reaching the API with <strong>HTTP 414</strong> — Base64 payloads run thousands of characters and blow past every URL length limit.</li>
+    </ul>
+    <p>This trips up bot builders on every stack because vision APIs like OpenAI <em>do</em> accept data URIs — see the <a href="/image-to-base64-for-api">payload shapes for AI vision APIs</a>. Chat APIs have the opposite rule: bytes or a URL, never a data URI.</p>
+
+    <h2 id="fix-code">Working code: decode, then upload</h2>
+    <p>The decode step is the same everywhere: cut everything up to the first comma, then Base64-decode the rest. The upload is a normal multipart POST.</p>
+
+    <h3>Node.js (node-telegram-bot-api)</h3>
+    <pre><code>const b64 = 'data:image/png;base64,iVBORw0KGgoAAAANS...';
+
+// strip the data: prefix, decode to binary
+const raw = Buffer.from(b64.replace(/^data:image\/[a-z+]+;base64,/, ''), 'base64');
+
+// the library streams a Buffer as multipart/form-data automatically
+await bot.sendPhoto(chatId, raw, { caption: 'Generated report' });</code></pre>
+
+    <h3>Node.js (raw fetch, no library)</h3>
+    <pre><code>const raw = Buffer.from(b64.split(',')[1], 'base64');
+
+const form = new FormData();
+form.append('chat_id', String(chatId));
+form.append('photo', new Blob([raw], { type: 'image/png' }), 'photo.png');
+
+await fetch(`https://api.telegram.org/bot${TOKEN}/sendPhoto`, {
+  method: 'POST',
+  body: form,
+});</code></pre>
+
+    <h3>Python (requests)</h3>
+    <pre><code>import base64, requests
+
+raw = base64.b64decode(b64.split(',', 1)[1])  # drop the data: prefix, decode
+
+r = requests.post(
+    f"https://api.telegram.org/bot{TOKEN}/sendPhoto",
+    data={"chat_id": chat_id},
+    files={"photo": ("photo.png", raw, "image/png")},
+)
+r.raise_for_status()</code></pre>
+
+    <h3>curl</h3>
+    <pre><code># 1. strip the prefix (if present) and decode to a file
+sed 's/^data:image\/[a-z+]*;base64,//' image.b64 | base64 -d &gt; photo.png
+
+# 2. upload it as multipart
+curl -s "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
+  -F chat_id="123456789" \
+  -F "photo=@photo.png;type=image/png"</code></pre>
+    <p>If your string is already raw Base64 with no <code>data:</code> prefix, skip the <code>sed</code> step. Wrapped lines (the 76-character line breaks some encoders insert) are handled by <code>base64 -d</code> and by the decoders in the examples above.</p>
+
+    <h2 id="limits">Size limits and gotchas</h2>
+    <ul>
+      <li><strong>10 MB after decoding.</strong> Photos must be at most 10 MB — and remember the Base64 <em>string</em> is about 33% larger than the bytes it represents, so a 13 MB string is already too big. Encode smaller images with the <a href="/">Image to Base64 converter</a> or shrink photos first via <a href="/compress-jpg-to-base64">compress JPG to Base64</a>.</li>
+      <li><strong>sendPhoto re-encodes.</strong> Telegram converts photos for in-chat display, which can flatten PNG transparency and reduce quality. If the exact bytes matter (logos, screenshots, certificates), send them with <code>sendDocument</code> instead — same multipart fix, different method name.</li>
+      <li><strong>Keep the prefix decision straight.</strong> The <code>data:</code> prefix is only meaningful inside HTML/CSS/JSON renderers. Upload APIs want either the raw payload or the decoded bytes — the <a href="/fix-invalid-base64-image-data">invalid Base64 troubleshooting guide</a> covers the prefix bugs that survive into requests.</li>
+      <li><strong>GIF animation needs sendAnimation.</strong> An animated GIF posted via <code>sendPhoto</code> arrives as a static frame.</li>
+    </ul>
+
+    <h2 id="alternatives">URL and file_id alternatives</h2>
+    <p>Sometimes you can skip the upload entirely:</p>
+    <ul>
+      <li><strong>Public HTTPS URL.</strong> If the image already lives at a reachable URL, pass it directly — Telegram downloads it server-side. The URL must be publicly reachable; localhost, intranet hosts and signed URLs that expire mid-flight will fail.</li>
+      <li><strong>file_id roundtrip.</strong> Everything Telegram ever received — including photos users send your bot — has a stable <code>file_id</code>. Re-sending by <code>file_id</code> is instant and skips uploads completely, which makes it the cheapest option for repeat sends of the same image.</li>
+    </ul>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Can the Telegram Bot API accept a Base64 or data URI image directly?</summary>
+        <p>No. <code>sendPhoto</code> only accepts a <code>file_id</code>, a public HTTPS URL, or a multipart/form-data upload. A Base64 string or data URI is none of these, so Telegram answers 400 Bad Request.</p>
+      </details>
+      <details>
+        <summary>Why do I get HTTP 414 when sending a Base64 image to Telegram?</summary>
+        <p>The data URI was stuffed into the request URL or query string. Base64 payloads run thousands of characters and do not fit in a URL — decode the payload and send it as a multipart file upload instead.</p>
+      </details>
+      <details>
+        <summary>What is the maximum photo size for sendPhoto?</summary>
+        <p>Up to 10 MB after decoding. Base64 adds about 33%, so keep an eye on the string length too — the <a href="/base64-image-size-calculator">size calculator</a> shows the overhead before you send.</p>
+      </details>
+      <details>
+        <summary>Should I use sendPhoto or sendDocument?</summary>
+        <p><code>sendPhoto</code> shows an inline preview but Telegram may re-encode the image. <code>sendDocument</code> preserves the original bytes (good for PNG transparency) without the preview.</p>
+      </details>
+      <details>
+        <summary>Can I pass an image URL instead of uploading?</summary>
+        <p>Yes — any publicly reachable http(s) URL works, since Telegram fetches it server-side. A data: URI is not a fetchable URL, which is exactly why it fails. A previously seen <code>file_id</code> also works.</p>
+      </details>
+      <details>
+        <summary>How do I strip the data: prefix before decoding?</summary>
+        <p>Remove everything up to and including the first comma: <code>b64.split(',')[1]</code> in JavaScript, <code>b64.split(',', 1)[1]</code> in Python, or the <code>sed</code> one-liner above in shell. The prefix belongs to browser rendering, not to upload APIs.</p>
+      </details>
+    </section>
+
+    <p>Building a pipeline that also feeds images to AI vision APIs? Those want the opposite format — a full data URI in JSON. The <a href="/image-to-base64-for-api">Image to Base64 for API</a> page outputs both payload shapes, and the homepage <a href="/">converter</a> produces plain data URIs for HTML, CSS and email.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

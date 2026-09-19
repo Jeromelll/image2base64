@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Power Automate: Base64 Image in Email — Working Pattern &amp; Fixes | Image2Base64</title>
+<meta name="description" content="The working Power Automate pattern for embedding a Base64 image in an email body — Compose with base64(body('Get_file_content')) plus a data URI img tag — and why the image may still not render: wrong MIME prefix, the ~1MB limit, and Outlook desktop." />
+<link rel="canonical" href="https://image2base64.com/power-automate-base64-image-in-email" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Power Automate: Base64 Image in Email — Working Pattern &amp; Fixes" />
+<meta property="og:description" content="Embed an image in a Power Automate email with base64(body('Get_file_content')) — and debug the cases where it still won't render." />
+<meta property="og:url" content="https://image2base64.com/power-automate-base64-image-in-email" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I embed an image in a Power Automate email without showing it as an attachment?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Convert the file to a Base64 data URI and put it in the email body HTML: add a Get file content action, then a Compose action with the expression base64(body('Get_file_content')), then reference it in the Send an email (V2) body as <img src=\"data:image/png;base64,@{outputs('Compose')}\">. Because the image travels inside the HTML body, no attachment icon appears in the received mail."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is my Power Automate Base64 image not showing in the email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The four most common causes are: a missing or wrong MIME prefix (image/png vs image/jpeg), an image that is too large (inline Base64 images of roughly 1 MB or more are reported to fail to render), the expression not being evaluated (literal @{...} text pasted instead of a resolved dynamic value), and recipients using Outlook desktop, which does not render data URI images at all."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I use the base64() expression directly in the img src?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. <img src=\"data:image/png;base64,@{base64(body('Get_file_content'))}\"> works without a separate Compose action. The Compose step is preferred when the same image is reused in several places or you want to inspect the intermediate value while testing the flow."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my Base64 image stop working when the file is large?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Inline Base64 images are embedded in the email HTML itself, and very large payloads — community reports put the failure point around 1 MB — can exceed what the mail pipeline renders. Compress or resize the image before encoding: a small logo of a few KB always works, and Base64 adds about 33% to the file size on top."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does the Attachments Content field break my Base64 string?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Attachments Content field of the email action expects binary content, not Base64 text. Passing a Base64 string there can be converted to binary again, producing a corrupted or double-encoded attachment. The data URI pattern in this guide is for inline body images; for attachments, feed the field the raw file content from the trigger or a Get file content action."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will the embedded Base64 image show for Outlook desktop recipients?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Outlook desktop uses the Word rendering engine, which does not support data URIs, and Outlook on the web strips them during sanitization — independent of how the flow built the image. If your recipients are on Outlook, host the image at an HTTPS URL and use a normal img src, or send it as a CID inline attachment."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Power Automate: Embed a Base64 Image in an Email (and Why It May Not Show)</h1>
+    <p>Your flow has an image — a SharePoint or OneDrive file, an HTTP response payload — and you want it <em>inside</em> the email body, not dangling off the message as an attachment. Power Automate has no built-in "insert picture" button, so the reliable route is a <strong>Base64 data URI in the HTML body</strong>. Below is the exact working pattern, a lighter variant when your data is already Base64, and the four reasons the image still shows up blank — with fixes for each.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#pattern">The working pattern</a></li>
+        <li><a href="#already-base64">If your data is already Base64</a></li>
+        <li><a href="#options">Three ways to get an image into the email</a></li>
+        <li><a href="#not-showing">Image not showing? The 4 causes</a></li>
+        <li><a href="#size">Keep the payload small</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="pattern">The working pattern</h2>
+    <p>Three actions in sequence:</p>
+    <ol>
+      <li><strong>Get file content</strong> — point it at your SharePoint or OneDrive file. This action returns the raw binary of the image.</li>
+      <li><strong>Compose</strong> — with the expression:</li>
+    </ol>
+    <pre><code>base64(body('Get_file_content'))</code></pre>
+    <ol start="3">
+      <li><strong>Send an email (V2)</strong> — with the image referenced in the HTML body:</li>
+    </ol>
+    <pre><code>&lt;img src="data:image/png;base64,@{outputs('Compose')}" width="200" alt="Logo"&gt;</code></pre>
+    <p>Two details make or break this:</p>
+    <ul>
+      <li><strong>The MIME prefix must match the real format.</strong> A PNG file needs <code>data:image/png</code>, a JPEG needs <code>data:image/jpeg</code>. A mismatched prefix is the single most common reason the image renders as broken.</li>
+      <li><strong>The expression must actually evaluate.</strong> Type it in the expression editor (fx) or insert it as dynamic content — pasting <code>@{outputs('Compose')}</code> as plain text leaves literal braces in the HTML and the src becomes garbage.</li>
+    </ul>
+    <p>You can skip the Compose action and inline the expression directly, which is handy for one-off flows:</p>
+    <pre><code>&lt;img src="data:image/png;base64,@{base64(body('Get_file_content'))}" width="200"&gt;</code></pre>
+    <p>Power Automate also offers a <code>dataUri()</code> expression, but it is designed for text values — for binary file content, stick with <code>base64(body(...))</code> and add the prefix yourself.</p>
+    <p>Embedding as a data URI has one cosmetic advantage over attachments: the image travels inside the HTML body, so received mail shows no attachment icon. This is the cleanest of the approaches for logos and small inline graphics.</p>
+
+    <h2 id="already-base64">If your data is already Base64</h2>
+    <p>When the Base64 comes from your own data — an API response, a webhook payload, a database column — you do not need <code>base64()</code> at all. You need the right wrapper:</p>
+    <ul>
+      <li><strong>Raw Base64 string</strong> (just the characters, no commas): prepend the prefix yourself —
+      <pre><code>&lt;img src="data:image/jpeg;base64,@{body('Parse_JSON')?['imageData']}" width="200"&gt;</code></pre></li>
+      <li><strong>Full data URI</strong> (already starts with <code>data:image/...;base64,</code>): use it as-is in the src — do <em>not</em> add a second prefix, double prefixes are another classic broken-image cause.</li>
+      <li><strong>Base64 with line breaks</strong> (some systems wrap at 76 characters): strip the newlines first, or the HTML attribute breaks mid-value. If the source is a command-line pipeline, encode with <code>base64 -w 0</code> — see the <a href="/image-to-base64-for-api">image to Base64 for API guide</a> for the full command-line patterns.</li>
+    </ul>
+
+    <h2 id="options">Three ways to get an image into the email</h2>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption>Inline data URI vs. hosted URL vs. attachment in Power Automate</caption>
+        <thead>
+          <tr><th>Method</th><th>No attachment icon</th><th>Renders in Outlook desktop?</th><th>Best for</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>Base64 data URI in body</th><td class="ok">Yes</td><td class="warn">No</td><td>Small logos/icons in mail read in Gmail, Apple Mail, Thunderbird, Outlook web*</td></tr>
+          <tr><th>Hosted HTTPS URL</th><td class="ok">Yes</td><td class="ok">Yes</td><td>Newsletters, templates, anything recipient-agnostic</td></tr>
+          <tr><th>Email attachment</th><td class="warn">No</td><td class="ok">Yes</td><td>Files the recipient should keep (invoices, reports)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p class="cmp-note">*Outlook on the web is inconsistent with data URIs; Outlook desktop never renders them. Treat hosted URLs as the only universal option.</p>
+    <p>The trade-off is not specific to Power Automate — it is how email clients treat data URIs. The client-by-client breakdown is in the <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a> guide.</p>
+
+    <h2 id="not-showing">Image not showing? The 4 causes</h2>
+    <ol>
+      <li><strong>Wrong or missing MIME prefix.</strong> <code>data:image/png</code> on a JPEG payload (or a forgotten prefix entirely) breaks rendering everywhere. Check what the source file actually is before wiring the prefix.</li>
+      <li><strong>The image is too large.</strong> Inline Base64 images of roughly <strong>1 MB or more</strong> are repeatedly reported to fail to render in Power Automate emails, even where data URIs are otherwise supported. Compress before encoding (next section).</li>
+      <li><strong>The expression never evaluated.</strong> Open the received email's raw HTML (or the flow run history, Compose output) and look for literal <code>@{...}</code> braces or an empty src. If the Compose output is empty, the Get file content step returned nothing — check the file path and permissions.</li>
+      <li><strong>The recipient is on Outlook desktop.</strong> The Word rendering engine has no data URI support — the image was embedded correctly and the client still refuses it. The fix is a hosted HTTPS URL or a CID inline attachment; both are covered in the <a href="/base64-image-not-showing-in-outlook">Outlook guide</a>. The same class of restriction explains <a href="/base64-image-in-gmail-signature-not-working">Gmail's handling of inline Base64</a>.</li>
+    </ol>
+    <p>A fifth pitfall sits one field over: the <strong>Attachments Content</strong> field expects binary content, not Base64 text. If you paste a Base64 string there, it can be converted to binary a second time and arrive corrupted. Use the body-embed pattern above for inline images; for true attachments, feed the field the raw file content directly.</p>
+
+    <h2 id="size">Keep the payload small</h2>
+    <p>Base64 encoding adds about <strong>33% overhead</strong> on top of the file size, and the result lives inside the email HTML — a 300 KB logo becomes a 400 KB email before any text is added. Before encoding:</p>
+    <ul>
+      <li>Shrink the file: <a href="/compress-png-to-base64">compress PNG</a> or <a href="/compress-jpg-to-base64">compress JPG</a> first, targeting a few KB for logos and icons.</li>
+      <li>Predict the encoded weight with the <a href="/base64-image-size-calculator">Base64 size calculator</a> — it shows the exact overhead before you paste anything into a flow.</li>
+      <li>Encode in the browser with the <a href="/">image to Base64 converter</a> — nothing is uploaded — and copy a ready-to-paste HTML snippet from the same page.</li>
+    </ul>
+    <p>If the image is destined for a <em>signature</em> rather than a flow-generated email, the mechanics differ per client — start from the <a href="/base64-image-email-signature">Base64 image in email signature guide</a>.</p>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>How do I embed an image in a Power Automate email without showing it as an attachment?</summary>
+        <p>Get file content → Compose with <code>base64(body('Get_file_content'))</code> → reference it in the Send an email (V2) body as <code>&lt;img src="data:image/png;base64,@{outputs('Compose')}"&gt;</code>. The image rides inside the HTML, so no attachment icon appears.</p>
+      </details>
+      <details>
+        <summary>Why is my Power Automate Base64 image not showing?</summary>
+        <p>In order of likelihood: wrong MIME prefix, image too large (~1 MB and up fails), the expression pasted as literal text instead of evaluated, or the recipient is on Outlook desktop which never renders data URIs.</p>
+      </details>
+      <details>
+        <summary>Can I use base64() directly in the img src?</summary>
+        <p>Yes — <code>@{base64(body('Get_file_content'))}</code> inline works. The Compose step is nicer for reuse and debugging.</p>
+      </details>
+      <details>
+        <summary>Why does the image fail when the file is large?</summary>
+        <p>Inline images live inside the email HTML; around 1 MB of Base64 the mail pipeline may stop rendering them. Compress or resize first — Base64 adds ~33% on top.</p>
+      </details>
+      <details>
+        <summary>Why does the Attachments Content field break my Base64 string?</summary>
+        <p>That field expects binary content; a Base64 string passed there can get converted to binary again and arrive corrupted. For attachments, pass raw file content; the data URI pattern is for the HTML body.</p>
+      </details>
+      <details>
+        <summary>Will it show for Outlook desktop recipients?</summary>
+        <p>No. Outlook desktop has no data URI support regardless of how the flow built the image. Use a hosted HTTPS URL or a CID attachment for Outlook audiences.</p>
+      </details>
+    </section>
+
+    <p>Building the Base64 string by hand? Encode it in the browser with the <a href="/">Image to Base64 converter</a>, check the final weight with the <a href="/base64-image-size-calculator">size calculator</a>, and paste the HTML output straight into your flow's email body.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>
