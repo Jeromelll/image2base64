@@ -225,6 +225,7 @@ curl -s "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
     </section>
 
     <p>Building a pipeline that also feeds images to AI vision APIs? Those want the opposite format — a full data URI in JSON. The <a href="/image-to-base64-for-api">Image to Base64 for API</a> page outputs both payload shapes, and the homepage <a href="/">converter</a> produces plain data URIs for HTML, CSS and email.</p>
+    <p>Posting to other chat platforms instead? Slack answers <code>no_file_data</code> for the same reason — the <a href="/slack-base64-image-not-working">Slack Base64 fix</a> walks through the three-call upload flow — and discord.js needs the string decoded to a Buffer first, per the <a href="/discord-js-send-base64-image">discord.js Base64 guide</a>.</p>
   </article>
 </main>
 
@@ -281,6 +282,8 @@ curl -s "https://api.telegram.org/bot$BOT_TOKEN/sendPhoto" \
         <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
         <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
         <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
       </nav>

@@ -1,0 +1,329 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Slack Base64 Image Not Working? Fix the files.upload Error</title>
+<meta name="description" content="Slack rejects raw Base64 with &quot;no_file_data&quot;. Here's why, and the exact Node and Python code to strip the data URI prefix and post a real file." />
+<link rel="canonical" href="https://image2base64.com/slack-base64-image-not-working" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Slack Base64 Image Not Working? Fix the files.upload Error" />
+<meta property="og:description" content="Slack rejects raw Base64 with no_file_data. Here's why, and the exact Node and Python code to strip the data URI prefix and post a real file." />
+<meta property="og:url" content="https://image2base64.com/slack-base64-image-not-working" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does Slack support sending Base64 images in a message?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not directly. Base64 is not a message attachment format. Convert it to bytes, upload it through the file APIs, then reference the uploaded file in your message."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I avoid writing a temporary file when uploading a Base64 image to Slack?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Buffer.from(str, 'base64') in Node and io.BytesIO(base64.b64decode(...)) in Python both keep everything in memory — no disk write required."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my image upload to Slack but show as corrupted?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Almost always a data URI prefix that was not stripped, or a truncated string. Decode it locally first and check the magic bytes start with the PNG (89 50 4E 47) or JPEG (FF D8 FF) signature."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the file size limit for Slack uploads?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Slack's file limits depend on your plan. Base64 expands the payload by about 33%, so a 5 MB image becomes roughly 6.7 MB of text before you start — check the size before building the string."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does this work with Slack incoming webhooks?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Incoming webhooks accept text and Block Kit only. File uploads require a bot token and the file APIs (files.getUploadURLExternal / files.upload)."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need special Slack scopes to upload files?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The bot needs the files:write scope, plus files:read if you want to verify the upload afterwards. A missing scope returns not_allowed_token_type rather than no_file_data — a useful way to tell the two failures apart."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Slack Base64 Image Not Working? The <code>no_file_data</code> Fix</h1>
+    <p>You have a Base64 string, you post it to Slack, and back comes <code>{ "ok": false, "error": "no_file_data" }</code>. Nothing is wrong with your Base64. <strong>Slack simply does not accept Base64 as an upload format</strong> — it wants binary bytes in a multipart request. This page is the shortest path from "I have a Base64 string" to "the image is in the channel", with the exact code for Node.js and Python.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#what-slack-returns">What Slack actually returns</a></li>
+        <li><a href="#why">Why Slack rejects a Base64 string</a></li>
+        <li><a href="#fix">The fix, in one line</a></li>
+        <li><a href="#still-wrong">The three ways this still goes wrong</a></li>
+        <li><a href="#json-payload">If your Base64 came from a JSON payload</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="what-slack-returns">What Slack actually returns</h2>
+    <p>The confusing part is that <code>no_file_data</code> sounds like an empty payload, so people go hunting for a truncation bug. There isn't one. Slack parses the request as <code>multipart/form-data</code>, looks for a <code>file</code> part containing binary content, finds a text field holding a 40,000-character string instead, and reports that it never received file data.</p>
+    <p>Two smaller hints usually accompany it: the error appears immediately (a network or size problem would hang first), and the same string renders fine in a browser if you paste it into a viewer — proof the encoding is intact.</p>
+
+    <h2 id="why">Why Slack rejects a Base64 string</h2>
+    <p>Base64 is a <em>transport</em> encoding: a way to move binary through channels that only accept text, such as JSON. Slack's file APIs are not one of those channels. They accept a real file — bytes with a filename — and expect the multipart body a browser would send if you had used a file input.</p>
+    <p>So the job is a conversion, not a workaround. Take the text, turn it back into bytes, attach those bytes as a file. Once you frame it that way, the fix is mechanical.</p>
+
+    <h2 id="fix">The fix, in one line</h2>
+    <p>Every solution below starts the same way: <strong>strip the data URI prefix and everything before the comma.</strong></p>
+    <pre><code>const base64Only = dataUri.substring(dataUri.indexOf(',') + 1);</code></pre>
+    <p>If your string starts with <code>data:image/png;base64,</code>, you want only what follows the comma. Send the prefix and Slack decodes garbage; send the whole thing as a form <em>field</em> and you get <code>no_file_data</code>.</p>
+
+    <h3>Node.js — modern <code>files.getUploadURLExternal</code> flow</h3>
+    <p>Slack's current recommended path is three calls. It avoids the deprecated <code>files.upload</code> endpoint and handles files larger than a few megabytes cleanly.</p>
+    <pre><code>import { WebClient } from '@slack/web-api';
+
+const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
+
+/**
+ * Post a Base64 image (with or without data URI prefix) to a channel.
+ * @param {string} dataUri  e.g. "data:image/png;base64,iVBORw0..."
+ * @param {string} channel  channel ID, e.g. "C01234567"
+ */
+export async function postBase64Image(dataUri, channel) {
+  // 1. Normalise: accept both raw Base64 and a full data URI.
+  const base64Only = dataUri.includes(',')
+    ? dataUri.substring(dataUri.indexOf(',') + 1)
+    : dataUri;
+
+  // 2. Text -&gt; bytes. Do NOT post the string itself.
+  const buffer = Buffer.from(base64Only, 'base64');
+
+  // 3. Call 1: ask Slack where to put it.
+  const { upload_url, file_id } = await slack.files.getUploadURLExternal({
+    filename: 'image.png',
+    length: buffer.length,
+  });
+
+  // 4. Call 2: POST the raw bytes to that URL (no auth header, not JSON).
+  const put = await fetch(upload_url, { method: 'POST', body: buffer });
+  if (!put.ok) throw new Error(`upload failed: ${put.status}`);
+
+  // 5. Call 3: attach the uploaded file to a channel.
+  return slack.files.completeUploadExternal({
+    files: [{ id: file_id, title: 'image.png' }],
+    channel_id: channel,
+  });
+}</code></pre>
+    <p>Useful detail: <code>Buffer.from(str, 'base64')</code> is lenient — it ignores whitespace and newlines, so a string that has been line-wrapped at 76 characters still decodes correctly.</p>
+
+    <h3>Node.js — legacy <code>files.upload</code> (still the fastest patch)</h3>
+    <p>If you are patching older code and the modern flow is more refactor than you want today, this works and is what most Stack Overflow answers settle on. It does require writing a temporary file.</p>
+    <pre><code>import fs from 'node:fs';
+import path from 'node:path';
+import os from 'node:os';
+import { WebClient } from '@slack/web-api';
+
+const slack = new WebClient(process.env.SLACK_BOT_TOKEN);
+
+export async function postBase64ImageLegacy(dataUri, channel) {
+  const base64Only = dataUri.includes(',')
+    ? dataUri.substring(dataUri.indexOf(',') + 1)
+    : dataUri;
+  const tmp = path.join(os.tmpdir(), `slack-${Date.now()}.png`);
+  fs.writeFileSync(tmp, base64Only, 'base64');
+
+  try {
+    return await slack.files.upload({
+      channels: channel,
+      filename: 'image.png',
+      filetype: 'png',
+      file: fs.createReadStream(tmp),
+    });
+  } finally {
+    fs.unlinkSync(tmp);
+  }
+}</code></pre>
+
+    <h3>Python</h3>
+    <p>Python users have a cleaner option: <code>files_upload_v2</code> accepts an in-memory <code>BytesIO</code>, so nothing ever touches disk.</p>
+    <pre><code>import base64, io, os
+from slack_sdk import WebClient
+
+slack = WebClient(token=os.environ["SLACK_BOT_TOKEN"])
+
+def post_base64_image(data_uri: str, channel: str) -&gt; dict:
+    # 1. Strip the data URI prefix if present.
+    base64_only = data_uri.split(",", 1)[1] if "," in data_uri else data_uri
+
+    # 2. Decode text -&gt; bytes, in memory.
+    raw = base64.b64decode(base64_only)
+
+    # 3. Upload the bytes as a real file part.
+    return slack.files_upload_v2(
+        channel=channel,
+        filename="image.png",
+        title="image.png",
+        file=io.BytesIO(raw),
+    )</code></pre>
+    <p>One difference from JavaScript worth knowing: <code>base64.b64decode</code> is strict. A wrapped or truncated string raises <code>binascii.Error</code> instead of quietly producing a short buffer — which is a feature, because it fails at the encode boundary instead of as a corrupt image in Slack.</p>
+
+    <h2 id="still-wrong">The three ways this still goes wrong</h2>
+    <ul>
+      <li><strong>You forgot to strip the prefix.</strong> The single most common cause. Slack decodes the string starting at <code>data:image/png;base64,</code>, gets nonsense, and either errors or uploads a broken file. The same pitfall shows up in JSON API payloads — see the <a href="/image-to-base64-for-api">API payload guide</a> — which is why "raw Base64 or full data URI?" is the first question to answer for any endpoint.</li>
+      <li><strong>You sent JSON instead of form data.</strong> <code>{"file": "&lt;base64&gt;"}</code> will never work against a file endpoint. If you are already inside a JSON-only code path, decode to bytes first, then hand the bytes to the file API.</li>
+      <li><strong>You used a URL for an image that isn't public.</strong> Slack cannot fetch a URL your own machine is serving. This only works if the image is genuinely reachable from the internet with no auth. In that case you do not need Base64 at all — pass the URL directly to an image block.</li>
+    </ul>
+
+    <h2 id="json-payload">If your Base64 came from a JSON payload</h2>
+    <p>The reverse direction trips people up just as often: pulling an image <em>out</em> of an API response. Keys are not standardised — you will see <code>image</code>, <code>data</code>, <code>content</code>, <code>file</code>, or a nested <code>attachments[0].data</code> — and the string may or may not carry the <code>data:</code> prefix. If you got an opaque blob back and want to see what it actually is, the <a href="/base64-to-image">Base64 to Image decoder</a> detects the format from the magic bytes rather than trusting the declared MIME type.</p>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Does Slack support sending Base64 images in a message?</summary>
+        <p>Not directly. Base64 is not a message attachment format. Convert it to bytes, upload it through the file APIs, then reference the uploaded file in your message.</p>
+      </details>
+      <details>
+        <summary>Can I avoid writing a temporary file?</summary>
+        <p>Yes. <code>Buffer.from(str, 'base64')</code> in Node and <code>io.BytesIO(base64.b64decode(...))</code> in Python both keep everything in memory — the modern upload flow above never touches disk.</p>
+      </details>
+      <details>
+        <summary>Why does my image upload but show as corrupted?</summary>
+        <p>Almost always a prefix that was not stripped, or a truncated string. Decode it locally first and check the magic bytes start with <code>\x89PNG</code> (PNG) or <code>\xFF\xD8\xFF</code> (JPEG) — the <a href="/fix-invalid-base64-image-data">invalid Base64 guide</a> walks through the diagnosis.</p>
+      </details>
+      <details>
+        <summary>What is the size limit?</summary>
+        <p>Slack's file limits depend on your plan. Base64 expands your payload by about 33%, so a 5 MB image becomes roughly 6.7 MB of text before you start — worth checking with the <a href="/base64-image-size-calculator">size calculator</a> before building the string.</p>
+      </details>
+      <details>
+        <summary>Does this work with Slack incoming webhooks?</summary>
+        <p>No. Webhooks accept text and Block Kit only. File uploads require a bot token and the file APIs above.</p>
+      </details>
+      <details>
+        <summary>Do I need special scopes?</summary>
+        <p>The bot needs <code>files:write</code>, plus <code>files:read</code> if you want to verify the upload afterwards. A missing scope returns <code>not_allowed_token_type</code> rather than <code>no_file_data</code>, which is a useful way to tell the two failures apart.</p>
+      </details>
+    </section>
+
+    <p>Sending images to other chat platforms? Telegram's <code>sendPhoto</code> rejects data URIs the same way — the <a href="/telegram-bot-send-base64-image">Telegram Bot API guide</a> covers the multipart fix — and discord.js needs the string decoded to a Buffer first, per the <a href="/discord-js-send-base64-image">discord.js Base64 guide</a>. Building the payloads for AI vision APIs goes the opposite direction: the <a href="/image-to-base64-for-api">Image to Base64 for API</a> page outputs the full data URI shape those endpoints want, and the homepage <a href="/">converter</a> produces plain data URIs for HTML, CSS and email.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

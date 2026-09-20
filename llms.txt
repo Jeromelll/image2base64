@@ -49,6 +49,8 @@ Core user value: turn an image into a self-contained text string for inline embe
 - [Embed Base64 Image in Markdown](/embed-base64-image-in-markdown): Which renderers allow data URIs — GitHub, Notion and WordPress restrictions explained.
 - [Power Automate Base64 Image in Email](/power-automate-base64-image-in-email): The working Compose + base64() pattern for inline images, and why they still don't render.
 - [Send Base64 Image via Telegram Bot](/telegram-bot-send-base64-image): sendPhoto rejects data URIs — decode the payload and upload as multipart.
+- [Slack Base64 Image Not Working](/slack-base64-image-not-working): Slack answers no_file_data for raw Base64 — strip the prefix and upload as multipart.
+- [Send Base64 Image with Discord.js](/discord-js-send-base64-image): Decode the payload to a Buffer and wrap it in AttachmentBuilder.
 
 ## Optional
 

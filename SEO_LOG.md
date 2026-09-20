@@ -600,3 +600,13 @@ Last updated: 2026-09-07 CST
 - 并发碰撞处置：统一闭环会话同窗口建 telegram/power-automate 两页，其 batch commit f888a91（00:59）把本页与施工中 power-automate 一并扫入；本会话静默等待至 01:10 确认对方停笔，补 power-automate 缺失的 sitemap+llms 两条目（check_seo 由 FAIL=1 归零），合并提交。
 - 部署：wrangler 一次 deploy；线上验证新页 200/canonical/H1/JSON-LD、outlook 与 fix-invalid 上下文内链、sitemap 36 locs、llms.txt 三新页齐。
 - 待办：GSC UI 人工请求索引（新页 3 个，仅 Jerome 可做）。
+
+## 2026-09-20 · Slack + Discord 两页建页上线（0920 选词雷达行动单 rank1/rank2 落地）
+
+- 触发：Jerome「按你建议来」批准 0920 action_log 三单；本会话施工 rank1 slack + rank2 discord 同批（rank3 框架族批次已批，走 8e2b617e 周四槽 09-24）。
+- 事实底座（0919/0918 池内验证 + 0920 复核）：Slack files API 仅收 multipart 文件（裸 base64 → no_file_data；webhooks 不收文件；缺 files:write 报 not_allowed_token_type）；discord.js 拒收 base64 文本（字符串当路径 → ENOENT；embed 仅收 attachment:// 或 http(s)，data URI 空白；v14 AttachmentBuilder=v13 MessageAttachment 更名；默认上传 25 MiB，超限 413）。
+- 页面 /slack-base64-image-not-working：9/17 周四雷达草稿全文承接（no_file_data 归因 + 一行剥前缀 + Node 现代三段式/legacy 临时文件/Python BytesIO 三套代码 + 三坑 + JSON payload 反向段 + FAQPage JSON-LD 6 问；建页时修正草稿 Python 缺 import os 并把 FilesystemLoader 改为 io.BytesIO 直传）。
+- 页面 /discord-js-send-base64-image：新写（ENOENT/Invalid Form Body/空白 embed 三种失败面归因 + v14/v13/discord.py 三套代码 + attachment://embed 同消息约束 + 25MiB/413 + FAQPage JSON-LD 6 问）。
+- 内链铺设：41 页 footer Guides +2、llms.txt Troubleshooting +2、sitemap 36→38 locs、api 页新增「When the endpoint is a chat platform」正文段（三 bot 族页互链）、telegram 页正文交叉链；两新页互链并各含 5-6 处既有页内链。check_seo fail=0（43 页/38 locs，3 个已知 canonical 合并 WARN）。
+- 部署：本会话一次 rsync+wrangler deploy；commit+push main。
+- 待办：GSC UI 人工请求索引新页 2 个（仅 Jerome 可做）。
