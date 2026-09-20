@@ -599,7 +599,7 @@ Last updated: 2026-09-07 CST
 - 内链铺设：40 页 footer Guides + llms.txt Troubleshooting 段 + sitemap + outlook 页与 fix-invalid 页正文上下文内链各 1 处。
 - 并发碰撞处置：统一闭环会话同窗口建 telegram/power-automate 两页，其 batch commit f888a91（00:59）把本页与施工中 power-automate 一并扫入；本会话静默等待至 01:10 确认对方停笔，补 power-automate 缺失的 sitemap+llms 两条目（check_seo 由 FAIL=1 归零），合并提交。
 - 部署：wrangler 一次 deploy；线上验证新页 200/canonical/H1/JSON-LD、outlook 与 fix-invalid 上下文内链、sitemap 36 locs、llms.txt 三新页齐。
-- 待办：GSC UI 人工请求索引（新页 3 个，仅 Jerome 可做）。
+- 待办已消（2026-09-20 01:2x）：GSC 请求索引 3 页已由 agent 经 research Chrome(9333) CDP 后台完成——inspect 深链→REQUEST INDEXING→两步确认，三页均回执「Indexing requested / priority crawl queue」；研究 Chrome 已登录 Google 会话，此路径可复用，不再列为「仅 Jerome 可做」。
 
 ## 2026-09-20 · Slack + Discord 两页建页上线（0920 选词雷达行动单 rank1/rank2 落地）
 
