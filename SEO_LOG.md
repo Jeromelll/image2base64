@@ -618,3 +618,13 @@ Last updated: 2026-09-07 CST
 - 已确认请求索引（各收到 Indexing requested 回执）：/power-automate-base64-image-in-email（10:56:20Z）、/embed-base64-image-in-markdown（10:57:15Z）、/telegram-bot-send-base64-image（10:57:52Z）。
 - 现场观察：并行统一闭环会话同窗口处理其收录缺口页（亲见 data-uri-generator、editorial-policy 两页 Indexing requested 回执），未冲突；本会话曾误开 404 深链标签 2 个，已清理，用户原活跃标签已恢复。
 - 坑：/inspect?id=<明文URL> 深链 404，必须走站内检查框；omnibox set_value 后 Return 键对该 Chrome 实例不可靠。
+
+## 2026-09-21 · 新增 /google-apps-script-base64-image-in-email（apps script 建页单落地）
+
+- 触发：0921 选词雷达行动建议 rank1，Jerome 拍板「按你建议来」（B 类过期 09-28，当日落地）。
+- 新页：Apps Script 邮件嵌 Base64 图 = Gmail 拒渲染 data: URI 的结构性限制；标准解法 Utilities.base64Decode → newBlob → inlineImages{cid:}；7 节 + 对比表 + 6 问 FAQPage JSON-LD；复用 power-automate 页模板。
+- 内链铺设：44 页 footer Guides +1（插 Power Automate 之后）、llms.txt +1、sitemap 38→39 locs、power-automate 页正文交叉链（options 段后）、gmail 排障页正文回链（「Why Base64 fails」段后）。
+- 部署：rsync 到 dist/（首跑漏了这步导致线上 404+边缘缓存残留，绕参复测恢复）+ wrangler deploy Version e2a4ddc4；commit 5a4f50a（一并收编了 0920 GSC 代操作日志的未提交 8 行，*.md 不进部署）。
+- 验证：线上 200/canonical/JSON-LD/首页与 howto footer/llms/sitemap 39 locs/PA 交叉链/gmail 回链全核通过；check_seo fail=0（44 页/39 locs，3 个已知 canonical 合并 WARN）。
+- 附带更正：选词池候选「invalid base64 image data fix」实际早已由 /fix-invalid-base64-image-data 承接（commit 84c801e 早期批次，线上 200+sitemap 在档），0921 建议 rank3 系误报，已同步更正状态文件。
+- 待办：GSC 请求索引新页 1 个（走 gsc_request_indexing.mjs）；python requests+fastapi 姊妹页已批走 8e2b617e 周四槽 09-24（行动清单 A7）。
