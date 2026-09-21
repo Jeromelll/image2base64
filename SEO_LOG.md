@@ -610,3 +610,11 @@ Last updated: 2026-09-07 CST
 - 内链铺设：41 页 footer Guides +2、llms.txt Troubleshooting +2、sitemap 36→38 locs、api 页新增「When the endpoint is a chat platform」正文段（三 bot 族页互链）、telegram 页正文交叉链；两新页互链并各含 5-6 处既有页内链。check_seo fail=0（43 页/38 locs，3 个已知 canonical 合并 WARN）。
 - 部署：本会话一次 rsync+wrangler deploy；commit+push main。
 - 待办：GSC UI 人工请求索引新页 2 个（仅 Jerome 可做）。
+
+## 2026-09-20 · GSC 请求索引 3 新页完成（自动化浏览器代操作）
+
+- 触发：Jerome 指示由 agent 在本机浏览器代做 GSC「请求编入索引」（原待办标「仅 Jerome 可做」）。
+- 执行路径：研究 Chrome（~/.research-chrome，CDP 9333）后台开标签 → 填「Inspect any URL」框 → 等检查完成 → 点 REQUEST INDEXING → 收到「Indexing requested」确认 → 自动关标签；脚本 ~/webcafe/marketing/gsc_request_indexing.mjs（Node 22 原生 WebSocket，无依赖）。
+- 已确认请求索引（各收到 Indexing requested 回执）：/power-automate-base64-image-in-email（10:56:20Z）、/embed-base64-image-in-markdown（10:57:15Z）、/telegram-bot-send-base64-image（10:57:52Z）。
+- 现场观察：并行统一闭环会话同窗口处理其收录缺口页（亲见 data-uri-generator、editorial-policy 两页 Indexing requested 回执），未冲突；本会话曾误开 404 深链标签 2 个，已清理，用户原活跃标签已恢复。
+- 坑：/inspect?id=<明文URL> 深链 404，必须走站内检查框；omnibox set_value 后 Return 键对该 Chrome 实例不可靠。

@@ -119,6 +119,7 @@
       <li><strong>The 10,000-character signature cap.</strong> Gmail signatures are capped at roughly 10,000 characters including all HTML. Base64 strings blow through that budget instantly (next section).</li>
     </ul>
     <p>None of these can be turned off with a setting. The fix is to stop shipping Base64 in the signature — not to shrink it and hope.</p>
+    <p>If you are sending the image yourself from a script rather than embedding it in a signature, the mail can carry it properly: the <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email guide</a> shows the inlineImages + CID pattern Gmail accepts.</p>
 
     <h2 id="char-limit">The 10,000-character trap</h2>
     <p>Gmail caps signatures at about <strong>10,000 characters — tags, inline styles, URLs and Base64 strings all count</strong>. The math is unforgiving:</p>
@@ -236,6 +237,7 @@
         <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
 <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
         <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
         <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
         <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>

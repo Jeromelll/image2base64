@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Google Apps Script: Base64 Image in Email — the inlineImages Pattern | Image2Base64</title>
+<meta name="description" content="Gmail won't render a Base64 data URI in an email body. The working Apps Script pattern is Utilities.base64Decode → newBlob → inlineImages with a cid: reference — plus the prefix, MIME and size pitfalls that leave the image blank." />
+<link rel="canonical" href="https://image2base64.com/google-apps-script-base64-image-in-email" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Google Apps Script: Base64 Image in Email — the inlineImages Pattern" />
+<meta property="og:description" content="Gmail rejects data URIs in mail bodies — decode the Base64 to a blob and send it via inlineImages with a cid: reference." />
+<meta property="og:url" content="https://image2base64.com/google-apps-script-base64-image-in-email" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why doesn't a Base64 data URI image show in my Apps Script email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Gmail does not render data: URI images inside email bodies, so an htmlBody containing <img src=\"data:image/png;base64,...\"> arrives with a blank or broken frame. The supported route is to decode the Base64 into a blob and attach it as an inline image: Utilities.newBlob(Utilities.base64Decode(str), 'image/png', 'logo.png'), then pass it in the sendEmail options as inlineImages and reference it from the HTML with src=\"cid:key\"."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I convert a Base64 string to an inline image in Apps Script?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Two calls: const blob = Utilities.newBlob(Utilities.base64Decode(base64String), 'image/png', 'logo.png'); then include inlineImages: { image1: blob } in the MailApp.sendEmail or GmailApp.sendEmail options and reference it in htmlBody as <img src=\"cid:image1\">."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "My Base64 string starts with data:image/png;base64, — do I keep the prefix?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Strip it before decoding: base64String.split(',')[1] returns the raw payload Utilities.base64Decode expects. The MIME type moves into the blob instead — pass 'image/png' as the contentType argument of Utilities.newBlob. Feeding a full data URI into base64Decode throws an invalid argument error."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the inlineImages pattern work with GmailApp as well as MailApp?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Both MailApp.sendEmail(message, htmlBody, '', { inlineImages: { image1: blob } }) and GmailApp.sendEmail(recipient, subject, body, { htmlBody: ..., inlineImages: { image1: blob } }) accept the same inlineImages map. GmailApp additionally records the message in the mailbox's sent view and can attach drafts."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is there a size limit for inline images in Apps Script emails?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The overall message must stay under Gmail's ~25 MB send limit, but practical failures start much earlier: large inline images bloat the HTML, inflate quota consumption and may get clipped by clients. Keep logos and charts in the tens of KB — Base64 adds about 33% overhead, so compress the source image before encoding."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I skip Base64 entirely if the image is already a file or URL?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. inlineImages accepts any blob: DriveApp.getFileById(id).getBlob() for Drive files, UrlFetchApp.fetch(url).getBlob() for hosted images. Base64 decoding is only needed when the source is already a Base64 string — for example an API response that returned an encoded image."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Google Apps Script: Send an Email with a Base64 Image (the inlineImages Pattern)</h1>
+    <p>You have a Base64 image — an API response, a spreadsheet-driven report, a generated chart — and you want it <em>inside</em> the email your script sends. The instinctive move is to paste a <code>data:image/png;base64,</code> URI into <code>htmlBody</code>, and it fails silently: Gmail does not render data URIs in email bodies. The supported route is different: <strong>decode the Base64 into a blob and attach it as an inline image with a CID reference</strong>. Below is the exact working pattern, the prefix-stripping step people miss, and the four reasons the image still shows up blank.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#pattern">The working pattern</a></li>
+        <li><a href="#prefix">If your Base64 has the <code>data:</code> prefix</a></li>
+        <li><a href="#already-blob">If the image is already a file or URL</a></li>
+        <li><a href="#options">Four ways to get an image into the email</a></li>
+        <li><a href="#not-showing">Image not showing? The 4 causes</a></li>
+        <li><a href="#size">Keep the payload small</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="pattern">The working pattern</h2>
+    <p>Three steps, all in one script:</p>
+    <pre><code>function sendEmailWithImage() {
+  const base64Data = "iVBORw0KGgo..."; // raw Base64, no data: prefix
+  const blob = Utilities.newBlob(
+    Utilities.base64Decode(base64Data),
+    "image/png",       // must match the real format
+    "logo.png"
+  );
+
+  MailApp.sendEmail({
+    to: "recipient@example.com",
+    subject: "Weekly report",
+    htmlBody: '&lt;p&gt;Hi — here is this week\'s chart.&lt;/p&gt;' +
+              '&lt;img src="cid:reportChart" width="480" alt="Chart"&gt;',
+    inlineImages: { reportChart: blob }
+  });
+}</code></pre>
+    <p>What each piece does:</p>
+    <ul>
+      <li><code>Utilities.base64Decode()</code> turns the string back into raw bytes.</li>
+      <li><code>Utilities.newBlob()</code> wraps the bytes as a file-like blob — the <strong>contentType must match the real format</strong> (<code>image/png</code> vs <code>image/jpeg</code>), because the client trusts it when rendering.</li>
+      <li><code>inlineImages</code> is a map of <strong>CID keys to blobs</strong>. Each key becomes an attachment-like inline part, referenced from the HTML with <code>src="cid:key"</code> — the same mechanism email clients have used for embedded images for decades.</li>
+    </ul>
+    <p>Because the image travels as a proper MIME part, it renders in Gmail, Apple Mail, Thunderbird and Outlook desktop alike — no data URI restrictions apply.</p>
+
+    <h2 id="prefix">If your Base64 has the <code>data:</code> prefix</h2>
+    <p>Base64 coming from a converter tool or an API often arrives wrapped: <code>data:image/png;base64,iVBORw0KGgo...</code>. <code>Utilities.base64Decode</code> wants <strong>only the payload</strong> — a full data URI makes it throw an invalid argument error:</p>
+    <pre><code>const payload = fullDataUri.split(",")[1];   // strips "data:image/png;base64,"
+const blob = Utilities.newBlob(Utilities.base64Decode(payload), "image/png", "logo.png");</code></pre>
+    <p>The prefix is not wasted information — the MIME type it declared belongs in the blob's <code>contentType</code>. Check the two agree: declaring <code>image/png</code> over JPEG bytes renders as broken in most clients. If you generated the string yourself, the <a href="/">Image to Base64 converter</a> outputs the MIME type alongside the data so you can wire both correctly.</p>
+    <p>One more transport gotcha: if the Base64 was produced by a command line, it may contain line breaks every 76 characters. Strip them before decoding — <code>payload.replace(/\s/g, "")</code> — or the decode silently corrupts. The command-line side of this is covered in the <a href="/image-to-base64-for-api">image to Base64 for API guide</a>.</p>
+
+    <h2 id="already-blob">If the image is already a file or URL</h2>
+    <p>Base64 decoding is only necessary when your source <em>is</em> a Base64 string. Apps Script has richer image sources, and <code>inlineImages</code> accepts any blob:</p>
+    <ul>
+      <li><strong>Drive file:</strong> <code>DriveApp.getFileById(id).getBlob()</code> — no encoding step at all.</li>
+      <li><strong>Hosted image:</strong> <code>UrlFetchApp.fetch(url).getBlob()</code> — fetch and forward in one line.</li>
+      <li><strong>HTTP response payload:</strong> if you already fetched bytes, <code>response.getBlob()</code> is the blob.</li>
+    </ul>
+    <p>Reaching for Base64 when you hold a blob is added work and added failure modes (wrong MIME, prefix confusion) — pass the blob directly.</p>
+
+    <h2 id="options">Four ways to get an image into the email</h2>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption>CID inline vs. data URI vs. hosted URL vs. attachment in Apps Script mail</caption>
+        <thead>
+          <tr><th>Method</th><th>No attachment icon</th><th>Renders everywhere?</th><th>Best for</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>inlineImages + cid:</th><td class="ok">Yes</td><td class="ok">Yes</td><td>Logos and charts in app notifications — the pattern on this page</td></tr>
+          <tr><th>data URI in htmlBody</th><td class="ok">Yes</td><td class="warn">No — Gmail strips it</td><td>Nothing; listed so you don't debug it twice</td></tr>
+          <tr><th>Hosted HTTPS URL</th><td class="ok">Yes</td><td class="ok">Yes</td><td>When the image already lives at a stable URL</td></tr>
+          <tr><th>attachments: [blob]</th><td class="warn">No</td><td class="ok">Yes</td><td>Files the recipient should keep (invoices, exports)</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The data URI row is the trap this page exists for: it works in browsers, which is why converter tools show you one, and it dies in every mail client. That client-side restriction is not Apps Script specific — the client-by-client breakdown is in the <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a> guide, and <a href="/power-automate-base64-image-in-email">Power Automate runs into the same wall</a>. The difference: Apps Script mail goes through Gmail's own send pipeline, so the CID pattern above is first-class here.</p>
+
+    <h2 id="not-showing">Image not showing? The 4 causes</h2>
+    <ol>
+      <li><strong>The data URI never left your script.</strong> You put <code>&lt;img src="data:image/png;base64,..."&gt;</code> in <code>htmlBody</code> — Gmail strips it on send or render. There is no flag to enable it; switch to the <code>inlineImages</code> pattern.</li>
+      <li><strong>CID key mismatch.</strong> The key in <code>inlineImages</code> and the string in <code>src="cid:..."</code> must match exactly, including case. <code>{ image1: blob }</code> pairs with <code>cid:image1</code>, not <code>cid:logo.png</code>.</li>
+      <li><strong>Wrong or missing MIME type.</strong> <code>Utilities.newBlob(bytes)</code> without a contentType produces <code>application/octet-stream</code>, which some clients refuse to render inline. Always pass the real format as the second argument.</li>
+      <li><strong>The payload is corrupted.</strong> A data-URI prefix left in the string throws on decode; embedded line breaks corrupt it silently. Strip the prefix with <code>split(",")[1]</code> and whitespace with <code>.replace(/\s/g, "")</code>. If the decoded blob's size looks wrong next to the source file, this is why.</li>
+    </ol>
+    <p>If the image is destined for a <em>signature</em> typed into Gmail's settings rather than a script-sent mail, the mechanics differ per client — start from the <a href="/base64-image-email-signature">Base64 image in email signature guide</a>, or the <a href="/base64-image-in-gmail-signature-not-working">Gmail signature troubleshooting page</a> if it already went wrong.</p>
+
+    <h2 id="size">Keep the payload small</h2>
+    <p>Inline images ride inside the message, and Base64 adds about <strong>33% overhead</strong> on top of the file size — a 300 KB chart becomes a 400 KB email before any text. Large payloads also burn through <code>MailApp</code> daily quota faster. Before encoding:</p>
+    <ul>
+      <li>Shrink the file: <a href="/compress-png-to-base64">compress PNG</a> or <a href="/compress-jpg-to-base64">compress JPG</a> first — logos and charts want to live in the tens of KB.</li>
+      <li>Predict the encoded weight with the <a href="/base64-image-size-calculator">Base64 size calculator</a> before it lands in a mailbox.</li>
+      <li>Encode in the browser with the <a href="/">image to Base64 converter</a> — nothing is uploaded — and copy the MIME type and payload separately for the <code>newBlob</code> call.</li>
+    </ul>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Why doesn't a Base64 data URI image show in my Apps Script email?</summary>
+        <p>Gmail does not render <code>data:</code> URIs in email bodies. Decode the string to a blob (<code>Utilities.newBlob(Utilities.base64Decode(str), 'image/png', 'logo.png')</code>) and send it via <code>inlineImages</code>, referenced from the HTML as <code>src="cid:key"</code>.</p>
+      </details>
+      <details>
+        <summary>How do I convert a Base64 string to an inline image in Apps Script?</summary>
+        <p><code>const blob = Utilities.newBlob(Utilities.base64Decode(str), "image/png", "logo.png")</code>, then <code>inlineImages: { image1: blob }</code> in the send options and <code>&lt;img src="cid:image1"&gt;</code> in <code>htmlBody</code>.</p>
+      </details>
+      <details>
+        <summary>My Base64 starts with data:image/png;base64, — do I keep the prefix?</summary>
+        <p>No — <code>str.split(",")[1]</code> keeps only the payload the decoder expects; the MIME goes into the blob's contentType. A full data URI passed to <code>base64Decode</code> throws an invalid argument error.</p>
+      </details>
+      <details>
+        <summary>Does the inlineImages pattern work with GmailApp too?</summary>
+        <p>Yes — <code>GmailApp.sendEmail</code> takes the same <code>inlineImages</code> map in its advanced options, alongside <code>htmlBody</code>. MailApp works identically but doesn't record the message in the sent view.</p>
+      </details>
+      <details>
+        <summary>Is there a size limit for inline images?</summary>
+        <p>The message must stay under Gmail's ~25 MB send limit, but practical trouble starts earlier: large inline images bloat the mail and burn MailApp quota. Keep sources in the tens of KB — Base64 adds ~33% on top.</p>
+      </details>
+      <details>
+        <summary>Can I skip Base64 if the image is already a file or URL?</summary>
+        <p>Yes — <code>DriveApp.getFileById(id).getBlob()</code> or <code>UrlFetchApp.fetch(url).getBlob()</code> feed <code>inlineImages</code> directly. Decode only when your source is already a Base64 string.</p>
+      </details>
+    </section>
+
+    <p>Generating the Base64 by hand? Encode it in the browser with the <a href="/">Image to Base64 converter</a>, check the final weight with the <a href="/base64-image-size-calculator">size calculator</a>, and split the output into MIME type + payload for your <code>newBlob</code> call.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>

@@ -155,7 +155,7 @@
       </table>
     </div>
     <p class="cmp-note">*Outlook on the web is inconsistent with data URIs; Outlook desktop never renders them. Treat hosted URLs as the only universal option.</p>
-    <p>The trade-off is not specific to Power Automate — it is how email clients treat data URIs. The client-by-client breakdown is in the <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a> guide.</p>
+    <p>The trade-off is not specific to Power Automate — it is how email clients treat data URIs. The client-by-client breakdown is in the <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a> guide. For Google Apps Script the same restriction holds, and the fix is neater: mail goes through Gmail's own pipeline, so the pattern is a decoded blob plus a CID reference — see the <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email guide</a>.</p>
 
     <h2 id="not-showing">Image not showing? The 4 causes</h2>
     <ol>
@@ -235,6 +235,7 @@
         <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
         <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
         <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
         <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
         <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
