@@ -1,0 +1,432 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>HEIC to Base64 Converter — Encode iPhone Photos Locally</title>
+<meta name="description" content="Convert HEIC photos to a Base64 data URI in your browser. No upload, no server, no account. Copy the raw string, an HTML img tag, or a CSS background rule." />
+<link rel="canonical" href="https://image2base64.com/heic-to-base64" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="HEIC to Base64 Converter — Encode iPhone Photos Locally" />
+<meta property="og:description" content="Convert HEIC photos to Base64 in your browser. No upload, no server. Copy raw Base64, data URI, HTML or CSS." />
+<meta property="og:url" content="https://image2base64.com/heic-to-base64" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is my HEIC uploaded anywhere?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The file is read locally with FileReader and encoded in memory. There is no server-side conversion step and no storage."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What MIME type does HEIC use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "image/heic for .heic files and image/heif for .heif. The data URI prefix follows from that: data:image/heic;base64,…"
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is there no preview for HEIC?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Chrome, Edge, and Firefox cannot render HEIC, so this tool does not fake a thumbnail. Encoding is a byte-for-byte read and does not require the browser to decode the image. Safari can show a preview because it decodes HEIC natively."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will converting to Base64 make my photo smaller?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Base64 makes it about 33% larger. It is a transport encoding, not a compression step."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the EXIF data stay in the string?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The original bytes are encoded verbatim, so EXIF, colour profile, and orientation travel with the string — including location data if present."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "HEIC to Base64 Converter",
+  "url": "https://image2base64.com/heic-to-base64",
+  "description": "Free HEIC to Base64 Converter — 100% client-side, no upload, no server. Encode iPhone photos locally and copy a data URI, HTML img tag, or CSS background.",
+  "operatingSystem": "Web",
+  "applicationCategory": "UtilitiesApplication",
+  "applicationSubCategory": "ImageConverter",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "100% client-side",
+    "No upload — files never leave your browser",
+    "Copy as Base64 or data URI",
+    "Drag & drop",
+    "Handles .heic and .heif"
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>HEIC to Base64 Converter</h1>
+        <p class="lead-note" style="margin-top:-8px;color:var(--muted,#667)">Also covers <strong>.heif</strong> — same family, one page.</p>
+      <p class="lede">
+        Drop a <strong>.heic</strong> or <strong>.heif</strong> file and get a Base64 string you can paste into HTML, CSS, JSON, or an email template.
+        Everything runs in your browser with the <code>FileReader</code> API — the photo is never uploaded.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> Your iPhone photo never leaves your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="drop" class="dropzone" data-accept="hei">
+          <div class="dz-icon" aria-hidden="true">📱</div>
+          <h2>Drop a HEIC here</h2>
+          <p>or click to browse · .heic and .heif both work</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose HEIC</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/heic,image/heif,.heic,.heif" />
+        </div>
+
+        <p id="enc-error" class="error" hidden></p>
+
+        <div id="results" class="results" hidden>
+          <div class="result-head">
+            <dl class="meta">
+              <div><dt>File</dt><dd id="m-name">—</dd></div>
+              <div><dt>Type</dt><dd id="m-type">—</dd></div>
+              <div><dt>Size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Base64 size</dt><dd id="m-b64size">—</dd></div>
+              <div><dt>Base64 length</dt><dd id="m-len">—</dd></div>
+            </dl>
+          </div>
+
+          <p id="overhead-note" class="overhead-note" hidden></p>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-datauri">Data URI <span class="muted">(for JSON payloads &amp; API requests)</span></label>
+              <button class="copy" type="button" data-copy="#out-datauri">Copy</button>
+            </div>
+            <textarea id="out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <label class="toggle">
+            <input id="prefix-toggle" type="checkbox" />
+            Show raw Base64 only (without the <code>data:image/heic;base64,</code> prefix)
+          </label>
+          <div id="raw-wrap" class="field" hidden>
+            <div class="field-head">
+              <label for="out-raw">Raw Base64 string</label>
+              <button class="copy" type="button" data-copy="#out-raw">Copy</button>
+            </div>
+            <textarea id="out-raw" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-html">HTML <code>&lt;img&gt;</code> snippet <span class="muted">(see FAQ — Chrome can't render HEIC)</span></label>
+              <button class="copy" type="button" data-copy="#out-html">Copy</button>
+            </div>
+            <textarea id="out-html" class="out short" readonly spellcheck="false"></textarea>
+            <label class="toggle">
+              <input id="credit-toggle" type="checkbox" />
+              Add a small <code>via Image2Base64</code> credit link (optional)
+            </label>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-css">CSS <code>background-image</code> snippet</label>
+              <button class="copy" type="button" data-copy="#out-css">Copy</button>
+            </div>
+            <textarea id="out-css" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>What is HEIC (and why it needs converting)</h2>
+      <p>
+        HEIC is the container Apple uses by default for photos taken on iPhone and iPad. It is efficient — the same
+        picture usually takes roughly half the space of a JPEG — but that efficiency comes from a codec most tools
+        outside Apple's ecosystem cannot render. Chrome on Windows, most email clients, and many CMS upload pipelines
+        cannot display a <code>.heic</code> file at all.
+      </p>
+      <p>
+        Base64 sidesteps the compatibility question entirely. A Base64 string is just text: ASCII characters that
+        describe the file byte for byte. Once a photo is encoded, nothing downstream has to understand HEIC, decode a
+        codec, or fetch a separate asset. The text <em>is</em> the image. You are not converting HEIC to another image
+        format — you are turning it into transportable text.
+      </p>
+
+      <h2>How to convert a HEIC photo to Base64</h2>
+      <h3>Step 1 — Pick the photo</h3>
+      <p>
+        Drag your <code>.heic</code> file onto the drop zone, or click to browse. Files are read with
+        <code>FileReader.readAsDataURL()</code>, which means the bytes are base64-encoded locally in memory. Nothing
+        is sent anywhere.
+      </p>
+      <h3>Step 2 — Choose the output shape</h3>
+      <div class="cmp-scroll">
+        <table class="cmp">
+          <caption>Which Base64 shape to copy</caption>
+          <thead><tr><th>You need it for</th><th>Use</th></tr></thead>
+          <tbody>
+            <tr><th>An API or JSON body that documents "Base64, no prefix"</th><td><strong>Raw Base64</strong> — no <code>data:</code> prefix</td></tr>
+            <tr><th>An <code>&lt;img&gt;</code> tag</th><td><strong>data URI</strong> — <code>data:image/heic;base64,…</code></td></tr>
+            <tr><th>A stylesheet</th><td><strong>CSS background</strong> — <code>background-image: url("data:image/heic;base64,…")</code></td></tr>
+            <tr><th>A quick check</th><td><strong>Copy / download</strong> — prefer copy when the string is long</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <h3>Step 3 — Paste it</h3>
+      <p>
+        For HTML use the full data URI inside <code>src</code>. For CSS, wrap the same data URI in <code>url()</code>.
+        For a JSON payload, check what the receiving API wants — several require the prefix stripped. See
+        <a href="/image-to-base64-for-api">Image to Base64 for API</a>.
+      </p>
+
+      <h2>Why no preview shows for HEIC (and why that's fine)</h2>
+      <p>
+        Chrome, Edge, and Firefox cannot render HEIC, so the tool cannot draw a thumbnail the way our PNG or JPG
+        converters do. We deliberately do not fake one. Encoding a file to Base64 is a byte-for-byte read — it never
+        requires the browser to decode the image, which is exactly why a HEIC converter can work in Chrome while a
+        HEIC <em>editor</em> cannot. The same trade-off applies to our <a href="/tiff-to-base64">TIFF to Base64</a> converter.
+        Safari can show a preview because it decodes HEIC natively.
+      </p>
+
+      <h2>How big does Base64 make a HEIC photo?</h2>
+      <p>Base64 maps every 3 bytes of binary into 4 characters, so the encoded text is always about <strong>33% larger</strong> than the file itself, plus a short <code>data:</code> prefix.</p>
+      <div class="cmp-scroll">
+        <table class="cmp">
+          <caption>HEIC size vs Base64 overhead</caption>
+          <thead><tr><th>HEIC file</th><th>Base64 text</th><th>Sensible?</th></tr></thead>
+          <tbody>
+            <tr><th>20 KB</th><td>~27 KB</td><td class="ok">Yes — icons, avatars</td></tr>
+            <tr><th>80 KB</th><td>~107 KB</td><td>Borderline — small inline assets</td></tr>
+            <tr><th>400 KB</th><td>~533 KB</td><td class="warn">No — link the file instead</td></tr>
+            <tr><th>2 MB (typical iPhone photo)</th><td>~2.7 MB</td><td class="warn">No — never inline this</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>A full-resolution iPhone photo is almost never a good inline asset. Base64 is for small, always-needed graphics — and for cases where there is no alternative.</p>
+
+      <h2>When to embed a photo as Base64 — and when not to</h2>
+      <p><strong>Embed when the constraint forbids an external file:</strong> single-file HTML, email signatures and templates
+        (see <a href="/base64-image-email-signature">Base64 Image Email Signature</a>), CMS/CRM string fields, or generated CSS.</p>
+      <p><strong>Don't embed when</strong> the image is large, reused across pages, or you need SEO/accessibility signals from a separate asset.</p>
+
+      <h2>HEIC vs JPG vs WebP for embedding</h2>
+      <p>
+        If you control the source photo, format choice matters more than encoding. A JPEG at the same visual quality is
+        typically 2–4× larger than a HEIC but is universally portable; WebP is smaller than JPEG and widely supported in
+        current browsers. HEIC gives you the smallest original file — and thus the smallest Base64 output — but nothing
+        but Apple products will render the result. Given the 33% expansion, converting a HEIC to WebP or JPG
+        <em>before</em> encoding is the right move for any photo you intend to actually display. Use HEIC-to-Base64 when
+        you must carry the original bytes; use <a href="/jpg-to-base64">JPG to Base64</a> or
+        <a href="/webp-to-base64">WebP to Base64</a> when you only need small, portable inline output.
+      </p>
+
+      <h2>Troubleshooting</h2>
+      <h3>The string is cut off</h3>
+      <p>Base64 output is tens of thousands of characters; terminals and chat clients truncate silently. Copy carefully, or re-encode and paste in one shot. A valid string contains only <code>A–Z a–z 0–9 + /</code> and possibly <code>=</code> padding at the end.</p>
+      <h3>The browser strips the data URI</h3>
+      <p>Several Markdown renderers, CMS sanitizers, and code-hosting previews remove <code>data:</code> URIs for security. That is a policy decision, not a malformed string — test in the final target.</p>
+      <h3>The email client blocks it anyway</h3>
+      <p>Outlook desktop and the Gmail app have their own restrictions on inline data. See
+        <a href="/base64-image-not-showing-in-outlook">Base64 not showing in Outlook</a> and
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>.</p>
+      <h3>An API rejects the prefix</h3>
+      <p>If the endpoint documents "Base64 string", send the raw section only — strip everything through the comma in <code>data:image/heic;base64,</code>. The <a href="/image-to-base64-for-api">API payload guide</a> covers the pattern.</p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>More Base64 converters</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Any format — PNG, JPG, GIF, WebP, SVG.</span></a>
+        <a class="sib-card" href="/how-to-convert-image-to-base64"><strong>Convert in code</strong><span>JavaScript, Python, PHP, Java, Linux &amp; n8n snippets.</span></a>
+        <a class="sib-card" href="/data-uri-generator"><strong>Data URI Generator</strong><span>Turn any image into a data URI for CSS or HTML.</span></a>
+        <a class="sib-card" href="/png-to-base64"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
+        <a class="sib-card" href="/jpg-to-base64"><strong>JPG to Base64</strong><span>Encode JPEG photos for web use.</span></a>
+        <a class="sib-card" href="/svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
+        <a class="sib-card" href="/webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
+        <a class="sib-card" href="/gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
+        <a class="sib-card" href="/tiff-to-base64"><strong>TIFF to Base64</strong><span>Encode .tif scans — same no-preview pattern.</span></a>
+        <a class="sib-card" href="/bmp-to-base64"><strong>BMP to Base64</strong><span>Encode Windows bitmap files locally.</span></a>
+        <a class="sib-card" href="/base64-to-image"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
+        <a class="sib-card" href="/base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
+        <a class="sib-card" href="/base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
+        <a class="sib-card" href="/base64-to-svg"><strong>Base64 to SVG</strong><span>Decode vector SVG markup.</span></a>
+        <a class="sib-card" href="/base64-to-webp"><strong>Base64 to WebP</strong><span>Decode and save as WebP.</span></a>
+        <a class="sib-card" href="/base64-to-gif"><strong>Base64 to GIF</strong><span>Decode and save as a GIF.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>Is my HEIC uploaded anywhere?</summary>
+        <p>No. The file is read locally with <code>FileReader</code> and encoded in memory. There is no server-side conversion step and no storage.</p>
+      </details>
+      <details>
+        <summary>What MIME type does HEIC use?</summary>
+        <p><code>image/heic</code> for <code>.heic</code> files and <code>image/heif</code> for <code>.heif</code>. The data URI prefix follows from that: <code>data:image/heic;base64,…</code>.</p>
+      </details>
+      <details>
+        <summary>Why is there no preview for HEIC?</summary>
+        <p>Chrome, Edge, and Firefox cannot render HEIC, so this tool does not fake a thumbnail. Encoding does not require decoding. Safari can show a preview because it decodes HEIC natively.</p>
+      </details>
+      <details>
+        <summary>Can I convert several photos at once?</summary>
+        <p>Yes — drop multiple files one after another and copy each result in turn. For a broader walkthrough, see <a href="/how-to-convert-image-to-base64">How to Convert an Image to Base64</a>.</p>
+      </details>
+      <details>
+        <summary>Will converting to Base64 make my photo smaller?</summary>
+        <p>No. It makes it about 33% larger. Base64 is a transport encoding, not a compression step.</p>
+      </details>
+      <details>
+        <summary>Does it work on iPhone and iPad?</summary>
+        <p>Yes — it runs in mobile Safari and Chrome. Safari can show a preview; Chrome typically cannot, since only Safari decodes HEIC natively.</p>
+      </details>
+      <details>
+        <summary>Does the EXIF data stay in the string?</summary>
+        <p>Yes. The original bytes are encoded verbatim, so EXIF, colour profile, and orientation travel with the string — including location data if present.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

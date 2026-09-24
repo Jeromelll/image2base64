@@ -171,13 +171,27 @@
     function handleFile(file) {
       showError("");
       if (!file) return;
-      if (!/^image\//.test(file.type)) {
-        showError("That doesn't look like an image file. Please choose a PNG, JPG, GIF, WebP or SVG.");
+      // Some OS/browsers leave File.type empty for HEIC/HEIF (and occasionally
+      // TIFF/BMP). Encoding only needs bytes, so fall back to the extension.
+      var nameLower = (file.name || "").toLowerCase();
+      var isHeic = /image\/hei[cf]/.test(file.type || "") || /\.hei[cf]$/.test(nameLower);
+      var isTiff = /image\/tiff/.test(file.type || "") || /\.tiff?$/.test(nameLower);
+      var isBmp = /image\/(bmp|x-ms-bmp)/.test(file.type || "") || /\.bmp$/.test(nameLower);
+      if (!/^image\//.test(file.type) && !isHeic && !isTiff && !isBmp) {
+        showError("That doesn't look like an image file. Please choose a PNG, JPG, GIF, WebP, SVG, TIFF, BMP or HEIC.");
         return;
       }
-      if (accept && file.type.indexOf(accept) === -1) {
+      var effectiveType = file.type || "";
+      if (isHeic && !/^image\/hei[cf]/.test(effectiveType)) {
+        effectiveType = nameLower.endsWith(".heif") ? "image/heif" : "image/heic";
+      } else if (isTiff && !/^image\/tiff/.test(effectiveType)) {
+        effectiveType = "image/tiff";
+      } else if (isBmp && !/^image\/(bmp|x-ms-bmp)/.test(effectiveType)) {
+        effectiveType = "image/bmp";
+      }
+      if (accept && effectiveType && effectiveType.indexOf(accept) === -1) {
         // Soft note only — still convert, since the engine is format-agnostic.
-        showError("Heads up: this is a " + (file.type || "non-" + accept) +
+        showError("Heads up: this is a " + (effectiveType || "non-" + accept) +
           " file, but the converter handles it the same way.");
       }
       var reader = new FileReader();
@@ -185,17 +199,25 @@
         var dataUri = e.target.result;            // data:image/png;base64,AAAA...
         var comma = dataUri.indexOf(",");
         var raw = comma >= 0 ? dataUri.slice(comma + 1) : dataUri;
+        // FileReader prefixes from File.type; empty/octet-stream HEIC/TIFF/BMP
+        // get a correct image/* data URI so HTML/CSS snippets paste cleanly.
+        if (effectiveType && /^image\//.test(effectiveType)) {
+          var declared = comma >= 0 ? dataUri.slice(5, dataUri.indexOf(";", 5)).toLowerCase() : "";
+          if (!declared || declared === "application/octet-stream" || declared !== effectiveType) {
+            dataUri = "data:" + effectiveType + ";base64," + raw;
+          }
+        }
 
         outData.value = dataUri;
         if (outRaw) outRaw.value = raw;
         lastDataUri = dataUri;
         if (outHtml) outHtml.value = buildHtmlSnippet(dataUri);
         if (outCss) outCss.value = "background-image: url(" + dataUri + ");";
-        if (outLink) outLink.value = '<link rel="icon" type="' + (file.type || "image/png") + '" href="' + dataUri + '" />';
+        if (outLink) outLink.value = '<link rel="icon" type="' + (effectiveType || file.type || "image/png") + '" href="' + dataUri + '" />';
 
         if (preview) { preview.src = dataUri; preview.hidden = false; }
         if (metaName) metaName.textContent = file.name || "(pasted image)";
-        if (metaType) metaType.textContent = file.type || "image";
+        if (metaType) metaType.textContent = effectiveType || file.type || "image";
         if (metaSize) metaSize.textContent = bytesToSize(file.size);
         if (metaLen) metaLen.textContent = raw.length.toLocaleString() + " chars";
         if (metaB64Size) metaB64Size.textContent = bytesToSize(dataUri.length);
@@ -207,7 +229,7 @@
           var pct = (((dataUri.length - file.size) / file.size) * 100).toFixed(1);
           // Derive a friendly format label + extension from the actual file type
           // (jpeg page shows "JPG"/".jpg" exactly as before; png page shows "PNG"/".png").
-          var sub = (file.type.split("/")[1] || "image").toLowerCase();
+          var sub = ((effectiveType || file.type).split("/")[1] || "image").toLowerCase();
           var fmtLabel = sub === "jpeg" ? "JPG" : sub.toUpperCase();
           var fmtExt = sub === "jpeg" ? "jpg" : sub;
           var msg = "Base64 encoding added <strong>≈ " + pct + "%</strong> of overhead: this " +
@@ -225,8 +247,8 @@
         if (results) results.hidden = false;
         results.scrollIntoView({ behavior: "smooth", block: "nearest" });
         // Per-page extras (e.g. API payload templates on /image-to-base64-for-api)
-        document.dispatchEvent(new CustomEvent("i2b64:encoded", { detail: { dataUri: dataUri, mime: file.type || "" } }));
-        track("convert", file.type || "image", sizeBucket(file.size));
+        document.dispatchEvent(new CustomEvent("i2b64:encoded", { detail: { dataUri: dataUri, mime: effectiveType || file.type || "" } }));
+        track("convert", effectiveType || file.type || "image", sizeBucket(file.size));
       };
       reader.onerror = function () { showError("Sorry — the file could not be read. Try another image."); };
       reader.readAsDataURL(file);

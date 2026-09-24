@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Embed Images in a Single HTML File — Base64, No External Assets</title>
+<meta name="description" content="Build a self-contained HTML file with images as Base64 data URIs. Works offline, in emailable demos, and in CMS fields that block uploads. Copy a ready template." />
+<link rel="canonical" href="https://image2base64.com/embed-images-in-single-html-file" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Embed Images in a Single HTML File — Base64, No External Assets" />
+<meta property="og:description" content="Build a self-contained HTML file with images as Base64 data URIs. Works offline, in emailable demos, and in CMS fields that block uploads." />
+<meta property="og:url" content="https://image2base64.com/embed-images-in-single-html-file" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does a single-file HTML with Base64 images work offline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Once the data URIs are in the file, no network is required to render those images."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is Base64 secure?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Encoding is not encryption. Anyone with the HTML can decode the image. Do not inline secrets."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should every image be inlined?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Inline the assets that must travel with the document; leave heavy, cacheable media external when you can."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I encode an image for a single HTML file?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Open the Image to Base64 converter, drop the file, and copy the full data URI that starts with data:image/…;base64,. Paste it into an img src or a CSS url()."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Embed Images in a Single HTML File</h1>
+    <p>You need one <code>.html</code> file that still shows its images — offline on a USB stick, forwarded as an email attachment, pasted into a CMS field that refuses uploads, or opened in an air-gapped browser. External <code>src="https://…"</code> links fail the moment the file leaves the network that hosted those assets. The fix is not another CDN. The fix is to put the image bytes <strong>inside the HTML</strong> as Base64 data URIs.</p>
+    <p>Encode the image locally with the <a href="/">Image to Base64</a> converter, paste the string into the template below, and ship a single file.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#when">When a single file is the real constraint</a></li>
+        <li><a href="#how">How Base64 removes the asset dependency</a></li>
+        <li><a href="#steps">Step-by-step — encode, paste, ship one file</a></li>
+        <li><a href="#template">Copy-paste template (img + CSS background)</a></li>
+        <li><a href="#size">Size, caching, and when not to inline</a></li>
+        <li><a href="#troubleshoot">Troubleshooting</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="when">When a single file is the real constraint</h2>
+    <p>People reach for Base64 HTML when the workflow forbids a second file:</p>
+    <ul>
+      <li><strong>Offline / air-gapped demos</strong> — sales decks, factory-floor kiosks, or review builds that must open from <code>file://</code> with no HTTP server.</li>
+      <li><strong>Emailable HTML packages</strong> — a stakeholder gets one attachment, not a zip of assets that mail clients often strip.</li>
+      <li><strong>CMS / CRM paste-only fields</strong> — the editor accepts HTML but blocks media libraries or remote URLs.</li>
+      <li><strong>Disposable prototypes</strong> — a one-pager you can drop in Slack/Discord as a file without hosting screenshots.</li>
+    </ul>
+    <p>If you can host images on HTTPS and control the page for months, keep normal files. Single-file Base64 is for the cases where <strong>the delivery unit must be one document</strong>.</p>
+
+    <h2 id="how">How Base64 removes the asset dependency</h2>
+    <p>A data URI is a URL that <em>is</em> the file:</p>
+    <pre><code>&lt;img src="data:image/png;base64,iVBORw0KGgo..." alt="Logo"&gt;</code></pre>
+    <p>The browser does not fetch anything. The MIME type and the Base64 payload travel with the HTML. Relative paths like <code>./logo.png</code> die as soon as you move the HTML alone; a data URI does not.</p>
+    <p>Trade-off: Base64 expands payload by about <strong>33%</strong>, and inlined images cannot be cached separately. Keep icons, logos, and small diagrams inline; leave large photos as external files when the environment allows.</p>
+
+    <h2 id="steps">Step-by-step — encode, paste, ship one file</h2>
+    <ol>
+      <li><strong>Shrink first if needed.</strong> Large PNGs blow up HTML fast. Run them through <a href="/compress-png-to-base64">Compress PNG to Base64</a> or check size with the <a href="/base64-image-size-calculator">Base64 image size calculator</a> before you commit.</li>
+      <li><strong>Encode in the browser.</strong> Open <a href="/">Image to Base64</a> (or the <a href="/data-uri-generator">Data URI Generator</a>), drop the file, and copy the <strong>full data URI</strong> — the string that starts with <code>data:image/…;base64,</code>.</li>
+      <li><strong>Paste into <code>src</code> or CSS <code>url()</code>.</strong> Use the template in the next section. Do not wrap the data URI in quotes incorrectly, and do not prefix it with <code>http://</code>.</li>
+      <li><strong>Ship the one file.</strong> Open it from disk, attach it, or paste the HTML. No <code>images/</code> folder travels with it.</li>
+    </ol>
+    <p>For a site favicon that should also live inside the same file, generate the <code>&lt;link rel="icon"&gt;</code> tag with <a href="/base64-favicon">Base64 Favicon</a>.</p>
+
+    <h2 id="template">Copy-paste template (img + CSS background)</h2>
+    <p>Replace <code>PASTE_DATA_URI_HERE</code> with the full data URI from the converter. The 1×1 PNG below is only a structural placeholder so the template validates before you swap real assets.</p>
+    <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html lang="en"&gt;
+&lt;head&gt;
+  &lt;meta charset="utf-8"&gt;
+  &lt;title&gt;Self-contained report&lt;/title&gt;
+  &lt;style&gt;
+    body { font-family: system-ui, sans-serif; margin: 2rem; color: #111; }
+    .hero {
+      width: 320px;
+      height: 120px;
+      background-image: url("PASTE_DATA_URI_HERE");
+      background-size: contain;
+      background-repeat: no-repeat;
+      border: 1px solid #ddd;
+    }
+    .logo { max-width: 160px; height: auto; }
+  &lt;/style&gt;
+  &lt;!-- Optional inline favicon: paste from /base64-favicon --&gt;
+  &lt;!-- &lt;link rel="icon" href="data:image/png;base64,..." type="image/png"&gt; --&gt;
+&lt;/head&gt;
+&lt;body&gt;
+  &lt;h1&gt;Quarterly snapshot&lt;/h1&gt;
+  &lt;p&gt;This file has no external image requests.&lt;/p&gt;
+
+  &lt;!-- Inline image --&gt;
+  &lt;img
+    class="logo"
+    src="data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg=="
+    alt="1x1 placeholder — replace with your data URI"&gt;
+
+  &lt;!-- CSS background using the same pattern --&gt;
+  &lt;div class="hero" role="img" aria-label="Chart"&gt;&lt;/div&gt;
+
+  &lt;p&gt;Generated for offline delivery. Encode real assets at
+     https://image2base64.com/&lt;/p&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+    <p>Need to pull a data URI back out of an existing stylesheet later? Use <a href="/extract-base64-image-from-css">Extract Base64 image from CSS</a>.</p>
+
+    <h2 id="size">Size, caching, and when not to inline</h2>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption>When to inline vs host</caption>
+        <thead><tr><th>Situation</th><th>Prefer</th></tr></thead>
+        <tbody>
+          <tr><th>Logo ≤ ~20–40 KB after encode</th><td>Inline data URI</td></tr>
+          <tr><th>Full-bleed photo / screenshot gallery</th><td>Hosted HTTPS files</td></tr>
+          <tr><th>Markdown README on GitHub</th><td>Relative path — GitHub strips <code>data:</code> URIs; see <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a></td></tr>
+          <tr><th>API JSON payload</th><td>Raw or prefixed Base64 per API docs — <a href="/image-to-base64-for-api">Image to Base64 for API</a></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>If the HTML must stay under a mail-gateway size limit, compress first and favor SVG/PNG icons over camera JPEGs.</p>
+
+    <h2 id="troubleshoot">Troubleshooting</h2>
+    <p><strong>Image shows as a broken icon.</strong> The data URI was truncated on copy, the <code>data:</code> prefix was dropped, or a line break was inserted mid-string. Re-copy from the converter in one shot.</p>
+    <p><strong>Works in the browser preview, fails after CMS save.</strong> Some editors sanitize <code>data:</code> URLs. Confirm the field allows them; if not, the constraint has moved — you need a host that permits uploads, not a bigger Base64 string.</p>
+    <p><strong>File opens fine locally but looks empty in email.</strong> Many clients block or strip CSS backgrounds and sometimes <code>&lt;img data:&gt;</code>. Treat email as a separate constraint — see the Outlook and Gmail signature pages on this site.</p>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Does a single-file HTML with Base64 images work offline?</summary>
+        <p>Yes. Once the data URIs are in the file, no network is required to render those images.</p>
+      </details>
+      <details>
+        <summary>Is Base64 secure?</summary>
+        <p>Encoding is not encryption. Anyone with the HTML can decode the image. Do not inline secrets.</p>
+      </details>
+      <details>
+        <summary>Should every image be inlined?</summary>
+        <p>No. Inline the assets that must travel with the document; leave heavy, cacheable media external when you can.</p>
+      </details>
+      <details>
+        <summary>How do I encode an image for a single HTML file?</summary>
+        <p>Open the <a href="/">Image to Base64</a> converter, drop the file, and copy the full data URI. Paste it into an <code>img src</code> or a CSS <code>url()</code>.</p>
+      </details>
+    </section>
+
+    <h2>Related tools</h2>
+    <ul>
+      <li><a href="/">Image to Base64</a> — encode any image locally</li>
+      <li><a href="/data-uri-generator">Data URI Generator</a> — build <code>data:</code> URLs for paste</li>
+      <li><a href="/base64-favicon">Base64 Favicon</a> — inline <code>rel=icon</code></li>
+      <li><a href="/how-to-convert-image-to-base64">How to convert image to Base64</a> — method overview</li>
+      <li><a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a> — when the host is Markdown instead of HTML</li>
+    </ul>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

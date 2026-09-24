@@ -13,6 +13,8 @@ Core user value: turn an image into a self-contained text string for inline embe
 - [SVG to Base64](/svg-to-base64): Encode vector SVGs for CSS and HTML embedding.
 - [GIF to Base64](/gif-to-base64): Encode GIF animations into a data URI.
 - [TIFF to Base64](/tiff-to-base64): Encode TIFF files, a legacy/scanning format.
+- [HEIC to Base64](/heic-to-base64): Encode iPhone HEIC/HEIF photos locally (no-preview in Chrome).
+- [BMP to Base64](/bmp-to-base64): Encode Windows bitmap files to Base64.
 
 ## Decode: Base64 to image
 

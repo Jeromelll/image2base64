@@ -141,6 +141,18 @@
     <priority>0.8</priority>
   </url>
   <url>
+    <loc>https://image2base64.com/heic-to-base64</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
+    <loc>https://image2base64.com/bmp-to-base64</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.8</priority>
+    <lastmod>2026-09-24</lastmod>
+  </url>
+  <url>
     <loc>https://image2base64.com/how-to-convert-image-to-base64</loc>
     <changefreq>monthly</changefreq>
     <priority>0.6</priority>
@@ -159,6 +171,7 @@
   <url><loc>https://image2base64.com/fix-invalid-base64-image-data</loc></url>
   <url><loc>https://image2base64.com/telegram-bot-send-base64-image</loc></url>
   <url><loc>https://image2base64.com/embed-base64-image-in-markdown</loc></url>
+  <url><loc>https://image2base64.com/embed-images-in-single-html-file</loc><lastmod>2026-09-24</lastmod></url>
   <url><loc>https://image2base64.com/power-automate-base64-image-in-email</loc></url>
   <url><loc>https://image2base64.com/google-apps-script-base64-image-in-email</loc></url>
   <url><loc>https://image2base64.com/slack-base64-image-not-working</loc></url>

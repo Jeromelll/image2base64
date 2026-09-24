@@ -3,11 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>JPEG to Base64 Converter — Free Online JPEG Encoder</title>
-<meta name="description" content="Free online JPEG to Base64 converter. Drag &amp; drop a JPEG photo and instantly copy its Base64 string or data URI for HTML, CSS or JSON. 100% in-browser, no upload, no sign-up." />
-<!-- Alias of /jpg-to-base64 (jpg+jpeg same format). CF _redirects 301. -->
-<link rel="canonical" href="https://image2base64.com/jpg-to-base64" />
-<meta name="robots" content="noindex, follow" />
+<title>BMP to Base64 Converter — Encode Bitmap Files Locally</title>
+<meta name="description" content="Convert a BMP image to Base64 in your browser. No upload. Copy raw Base64, a full data URI, an HTML img tag, or a CSS background rule in one click." />
+<link rel="canonical" href="https://image2base64.com/bmp-to-base64" />
+<meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
 <link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
 <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
@@ -17,9 +16,9 @@
 
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Image to Base64 Converter" />
-<meta property="og:title" content="JPEG to Base64 Converter — Free Online JPEG Encoder" />
-<meta property="og:description" content="Drag &amp; drop a JPEG and copy its Base64 data URI. Runs 100% in your browser." />
-<meta property="og:url" content="https://image2base64.com/jpg-to-base64" />
+<meta property="og:title" content="BMP to Base64 Converter — Encode Bitmap Files Locally" />
+<meta property="og:description" content="Convert BMP to Base64 in your browser. Copy raw Base64, data URI, HTML img, or CSS background — no upload." />
+<meta property="og:url" content="https://image2base64.com/bmp-to-base64" />
 <meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
 <meta property="og:image:width" content="1200" />
 <meta property="og:image:height" content="630" />
@@ -36,26 +35,34 @@
   "mainEntity": [
     {
       "@type": "Question",
-      "name": "What does a JPEG Base64 string start with?",
+      "name": "Can I convert BMP to Base64 without uploading?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "A JPEG data URI starts with data:image/jpeg;base64, followed by the encoded body, which typically begins with /9j/ — the Base64 signature of the JPEG file header."
+        "text": "Yes. This page encodes in your browser with FileReader; the file stays on your device."
       }
     },
     {
       "@type": "Question",
-      "name": "Should I inline a large JPEG photo as Base64?",
+      "name": "Do I need to decode BMP to PNG before Base64?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Usually not. Base64 adds about 33% to the file size and inlined images can't be cached separately by the browser. For large photos keep a normal .jpg file; reserve Base64 for small images or single-file deliverables."
+        "text": "Not for encoding itself. Decode or convert only if the destination cannot handle BMP bytes after it Base64-decodes your string."
       }
     },
     {
       "@type": "Question",
-      "name": "Is the JPEG to Base64 conversion private?",
+      "name": "Is BMP good for web pages?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Everything happens in your browser with the FileReader API. The JPEG is never uploaded to any server."
+        "text": "Rarely as a delivery format. Use BMP to Base64 when your source is BMP and you need text transport; prefer PNG, JPEG, or WebP for public pages."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What MIME type does a BMP data URI use?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Usually image/bmp, producing data:image/bmp;base64,…. Some systems expect image/x-ms-bmp — adjust the header to match their docs if they are strict."
       }
     }
   ]
@@ -66,9 +73,9 @@
 {
   "@context": "https://schema.org",
   "@type": "SoftwareApplication",
-  "name": "JPEG to Base64 Converter",
-  "url": "https://image2base64.com/jpg-to-base64",
-  "description": "Free JPEG to Base64 Converter — 100% client-side, no upload, no server. Convert instantly in your browser with drag & drop and copy-paste output.",
+  "name": "BMP to Base64 Converter",
+  "url": "https://image2base64.com/bmp-to-base64",
+  "description": "Free BMP to Base64 Converter — 100% client-side, no upload. Encode bitmap files and copy raw Base64, data URI, HTML, or CSS.",
   "operatingSystem": "Web",
   "applicationCategory": "UtilitiesApplication",
   "applicationSubCategory": "ImageConverter",
@@ -82,7 +89,7 @@
     "No upload — files never leave your browser",
     "Copy as Base64 or data URI",
     "Drag & drop",
-    "Batch conversion"
+    "Browser preview for BMP"
   ]
 }
 </script>
@@ -107,31 +114,32 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>JPEG to Base64 Converter</h1>
+      <h1>BMP to Base64 Converter</h1>
       <p class="lede">
-        Drag in a <strong>JPEG</strong> photo and instantly get its Base64 string and data URI —
-        ready to paste into HTML, CSS, JSON or JavaScript. One click to copy.
+        Drop a <strong>.bmp</strong> file and get a Base64 string you can paste into HTML, CSS, JSON, or a fixture file.
+        Encoding runs entirely in your browser with <code>FileReader.readAsDataURL()</code> — the bitmap is never uploaded.
+        Most desktop browsers can also <strong>preview</strong> BMP, so you can confirm the image before you copy.
       </p>
-      <p class="trust"><strong>100% client-side.</strong> Your photo never leaves your device.</p>
+      <p class="trust"><strong>100% client-side.</strong> Your bitmap never leaves your device.</p>
     </div>
   </section>
 
   <section id="tool" class="tool-section">
     <div class="wrap">
       <div class="tool">
-        <div id="drop" class="dropzone" data-accept="jpeg">
-          <div class="dz-icon" aria-hidden="true">🖼️</div>
-          <h2>Drop a JPEG here</h2>
-          <p>or paste from clipboard · JPEG and JPG both work</p>
-          <button id="pick" class="btn btn-primary" type="button">Choose JPEG</button>
-          <input id="file" class="visually-hidden" type="file" accept="image/jpeg" />
+        <div id="drop" class="dropzone" data-accept="bmp">
+          <div class="dz-icon" aria-hidden="true">🗂️</div>
+          <h2>Drop a BMP here</h2>
+          <p>or click to browse · most browsers can preview BMP</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose BMP</button>
+          <input id="file" class="visually-hidden" type="file" accept=".bmp,image/bmp,image/x-ms-bmp" />
         </div>
 
         <p id="enc-error" class="error" hidden></p>
 
         <div id="results" class="results" hidden>
           <div class="result-head">
-            <div class="preview-box"><img id="preview" alt="Preview of the selected JPEG before Base64 encoding" width="120" height="120" hidden /></div>
+            <div class="preview-box"><img id="preview" alt="Preview of the selected BMP before Base64 encoding" width="120" height="120" hidden /></div>
             <dl class="meta">
               <div><dt>File</dt><dd id="m-name">—</dd></div>
               <div><dt>Type</dt><dd id="m-type">—</dd></div>
@@ -150,7 +158,7 @@
 
           <label class="toggle">
             <input id="prefix-toggle" type="checkbox" />
-            Show raw Base64 only (without the <code>data:image/jpeg;base64,</code> prefix)
+            Show raw Base64 only (without the <code>data:image/bmp;base64,</code> prefix)
           </label>
           <div id="raw-wrap" class="field" hidden>
             <div class="field-head">
@@ -186,30 +194,73 @@
 
   <section id="guide" class="content-section">
     <div class="wrap prose">
-      <h2>JPEG to Base64, explained</h2>
+      <h2>What is BMP (and why it still shows up)</h2>
       <p>
-        Encoding a JPEG to Base64 turns the photo's binary data into a plain-text string you can embed directly
-        in your code. JPEG is a <strong>compressed, lossy</strong> format built for photographs, so its Base64
-        strings are far shorter than an equivalent uncompressed image — handy when you want a small inline thumbnail.
+        BMP (Bitmap) is a long-lived Windows image format. It is simple and widely supported in legacy toolchains,
+        which is exactly why it refuses to die: scanner exports, fax middleware, ERP attachments, older design assets,
+        and some industrial UIs still emit <code>.bmp</code> files.
+      </p>
+      <p>
+        Those pipelines often need the image as <strong>text</strong> next — an API field, a unit-test fixture, a CSS
+        sprite experiment, or a single-file HTML demo. Base64 is the bridge: the bytes become ASCII you can paste
+        anywhere binary uploads are awkward. You are not required to convert BMP to PNG first just to encode it.
       </p>
 
-      <h3>How to use it</h3>
-      <pre><code>&lt;img src="data:image/jpeg;base64,/9j/4AAQSkZJRg..." alt="photo" /&gt;
+      <h2>How to convert a BMP to Base64</h2>
+      <ol>
+        <li><strong>Pick the file.</strong> Drag a <code>.bmp</code> onto the drop zone, or use the site-wide <a href="/">Image to Base64</a> tool.</li>
+        <li><strong>Choose the output shape.</strong> The same encode supports four paste targets (see next section).</li>
+        <li><strong>Copy once, paste once.</strong> Long strings break when messengers insert line wraps.</li>
+      </ol>
+      <p>Prefer a modern format for web delivery? Encode PNG or JPG instead via <a href="/png-to-base64">PNG to Base64</a> or <a href="/jpg-to-base64">JPG to Base64</a>.</p>
 
-.banner { background-image: url(data:image/jpeg;base64,/9j/4AAQSkZJRg...); }</code></pre>
+      <h2>Raw Base64 vs data URI — which shape to copy</h2>
+      <div class="cmp-scroll">
+        <table class="cmp">
+          <caption>BMP Base64 output shapes</caption>
+          <thead><tr><th>Destination</th><th>Copy this</th></tr></thead>
+          <tbody>
+            <tr><th>JSON / API field documented as “Base64 only”</th><td><strong>Raw Base64</strong> (no <code>data:</code> prefix)</td></tr>
+            <tr><th>HTML <code>&lt;img src&gt;</code></th><td><strong>Full data URI</strong> — <code>data:image/bmp;base64,…</code></td></tr>
+            <tr><th>CSS <code>background-image</code></th><td><code>url("data:image/bmp;base64,…")</code></td></tr>
+            <tr><th>Quick archive</th><td>Copy the full string carefully</td></tr>
+          </tbody>
+        </table>
+      </div>
+      <p>For API-oriented payloads, see <a href="/image-to-base64-for-api">Image to Base64 for API</a>.</p>
 
-      <h3>Keep an eye on size</h3>
+      <h2>JavaScript snippet (FileReader)</h2>
+      <p>If you are wiring this into your own page, the browser API is enough — no WASM decoder required for encoding:</p>
+      <pre><code>&lt;input type="file" id="bmp" accept=".bmp,image/bmp,image/x-ms-bmp"&gt;
+&lt;pre id="out"&gt;&lt;/pre&gt;
+&lt;script&gt;
+document.getElementById('bmp').addEventListener('change', (e) =&gt; {
+  const file = e.target.files &amp;&amp; e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = () =&gt; {
+    const dataUrl = reader.result; // data:image/bmp;base64,...
+    const raw = String(dataUrl).split(',')[1] || '';
+    document.getElementById('out').textContent =
+      'DATA URI:\n' + dataUrl.slice(0, 80) + '...\n\nRAW:\n' + raw.slice(0, 80) + '...';
+  };
+  reader.readAsDataURL(file);
+});
+&lt;/script&gt;</code></pre>
+
+      <h2>Size notes for BMP embeds</h2>
       <p>
-        Base64 inflates data by about <strong>33%</strong>, and an inlined photo can't be cached on its own. For a
-        large hero image, a normal <code>.jpg</code> file the browser can cache will load faster. Reserve Base64 for
-        small thumbnails, avatars, or single-file deliverables like emails and self-contained HTML reports.
+        Uncompressed BMP is often <strong>much larger</strong> than the same picture as PNG or JPEG. Base64 then adds ~33%.
+        Check size with the <a href="/base64-image-size-calculator">Base64 image size calculator</a>. Prefer converting
+        large bitmaps to PNG/JPEG first when the consumer accepts those formats. Keep BMP→Base64 for small icons,
+        fixtures, and true legacy hand-offs. See also <a href="/tiff-to-base64">TIFF to Base64</a> and
+        <a href="/heic-to-base64">HEIC to Base64</a>.
       </p>
 
-      <h3>Private by design</h3>
-      <p>
-        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server. Check
-        your Network tab and you'll see the photo never goes anywhere.
-      </p>
+      <h2>Troubleshooting</h2>
+      <p><strong>Preview works, paste fails in the app.</strong> You likely pasted a truncated string or the wrong shape (raw vs data URI).</p>
+      <p><strong>MIME type looks wrong.</strong> Some systems expect <code>image/x-ms-bmp</code> instead of <code>image/bmp</code>.</p>
+      <p><strong>File is huge.</strong> That is usually the BMP, not Base64. Compress or convert before encoding.</p>
     </div>
   </section>
 
@@ -221,10 +272,13 @@
         <a class="sib-card" href="/data-uri-generator"><strong>Data URI Generator</strong><span>Turn any image into a data URI for CSS or HTML.</span></a>
         <a class="sib-card" href="/base64-favicon"><strong>Base64 Favicon</strong><span>Inline your favicon with a data URI link tag.</span></a>
         <a class="sib-card" href="/png-to-base64"><strong>PNG to Base64</strong><span>Encode PNGs, transparency kept.</span></a>
+        <a class="sib-card" href="/jpg-to-base64"><strong>JPG to Base64</strong><span>Turn JPEG photos into a data URI.</span></a>
+        <a class="sib-card" href="/jpg-to-base64"><strong>JPEG to Base64</strong><span>Encode JPEG photos with the .jpeg extension.</span></a>
         <a class="sib-card" href="/svg-to-base64"><strong>SVG to Base64</strong><span>Encode vector SVGs for CSS.</span></a>
         <a class="sib-card" href="/webp-to-base64"><strong>WebP to Base64</strong><span>Encode modern WebP images.</span></a>
         <a class="sib-card" href="/gif-to-base64"><strong>GIF to Base64</strong><span>Encode GIF animations into a data URI.</span></a>
-        <a class="sib-card" href="/jpg-to-base64"><strong>JPG to Base64</strong><span>Encode JPEG photos with the classic .jpg extension.</span></a>
+        <a class="sib-card" href="/tiff-to-base64"><strong>TIFF to Base64</strong><span>Encode .tif scans for APIs and JSON.</span></a>
+        <a class="sib-card" href="/heic-to-base64"><strong>HEIC to Base64</strong><span>Encode iPhone photos locally.</span></a>
         <a class="sib-card" href="/base64-to-image"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
         <a class="sib-card" href="/base64-to-png"><strong>Base64 to PNG</strong><span>Decode and save as PNG.</span></a>
         <a class="sib-card" href="/base64-to-jpg"><strong>Base64 to JPG</strong><span>Decode and save as JPEG.</span></a>
@@ -239,16 +293,20 @@
     <div class="wrap">
       <h2>Frequently asked questions</h2>
       <details>
-        <summary>What does a JPEG Base64 string start with?</summary>
-        <p>A JPEG data URI starts with <code>data:image/jpeg;base64,</code> and the body typically begins with <code>/9j/</code> — the Base64 signature of the JPEG header.</p>
+        <summary>Can I convert BMP to Base64 without uploading?</summary>
+        <p>Yes. This page encodes in your browser with <code>FileReader</code>; the file stays on your device.</p>
       </details>
       <details>
-        <summary>Should I inline a large JPEG as Base64?</summary>
-        <p>Usually not. Base64 adds about 33% to the size and inlined images can't be cached separately. For large photos keep a normal <code>.jpg</code>; reserve Base64 for small images or single-file deliverables.</p>
+        <summary>Do I need to decode BMP to PNG before Base64?</summary>
+        <p>Not for encoding itself. Decode/convert only if the destination cannot handle BMP bytes after it Base64-decodes your string.</p>
       </details>
       <details>
-        <summary>Is the conversion private?</summary>
-        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The JPEG is never uploaded to any server.</p>
+        <summary>Is BMP good for web pages?</summary>
+        <p>Rarely as a delivery format. Use BMP→Base64 when your source is BMP and you need text transport; prefer PNG/JPEG/WebP for public pages.</p>
+      </details>
+      <details>
+        <summary>What MIME type does a BMP data URI use?</summary>
+        <p>Usually <code>image/bmp</code>, producing <code>data:image/bmp;base64,…</code>. Some systems expect <code>image/x-ms-bmp</code> — adjust the header if they are strict.</p>
       </details>
     </div>
   </section>
@@ -271,6 +329,7 @@
         <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
         <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
         <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
         <a href="/svg-to-base64">SVG to Base64</a>
         <a href="/webp-to-base64">WebP to Base64</a>
         <a href="/gif-to-base64">GIF to Base64</a>
@@ -307,7 +366,7 @@
         <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
         <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
         <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
-        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+<a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
         <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
         <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
         <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>

@@ -1,5 +1,14 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-24 — 上线 /heic-to-base64 + /bmp-to-base64 + /embed-images-in-single-html-file
+
+- 来源：Lifestyle / Jerome 批准三页（草稿 `Research/image2base64/SEO/内容草稿/2026-09-17_heic-to-base64.md`、`2026-09-24_bmp-to-base64.md`、`2026-09-24_embed-images-in-single-html-file.md`）。HEIC 此前线上 404。
+- 新建工具页：`heic-to-base64.html`（复用 TIFF 无预览模板；`accept` heic/heif；Chrome 不解码 HEIC，正文说明与 TIFF 同口径）、`bmp-to-base64.html`（复用 GIF 有预览模板）。
+- 新建场景页：`embed-images-in-single-html-file.html`（可复制单文件 HTML 模板 + FAQ）。
+- `app.js`：空 MIME / octet-stream 时按扩展名放行 HEIC/HEIF/TIFF/BMP，并纠正 data URI 前缀（编码不依赖解码，不引入 wasm）。
+- 枢纽同步：sitemap 三 loc + lastmod；index 格式卡 + footer；faq 格式列表；llms.txt；全站 footer Converters/Guides 补 HEIC/BMP/单文件 HTML；worker.js 无需改（事件页路径为 deny-based，非白名单）。
+- 部署：rsync dist → `wrangler@4 deploy` Version ID `17f327c6-81f6-4745-a362-7b6b4e5bb709`；线上 curl 三页均 200；`check_seo_consistency` fail=0 warn=3（jpeg/image-to-base64 合并，已知）。
+
 ## 2026-09-16 — llms.txt 上线 + /online-vs-local 上下文内链 ×2
 
 - 来源：9/15 AI 可见度月检 B 类项（llms.txt 缺失）+ 9/16 D1 行为周报实证 chatgpt.com 为第 2 大真实引荐来源（28 PV，8 次落 /base64-to-gif）。Jerome 当轮批准执行。
