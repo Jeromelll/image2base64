@@ -1,0 +1,305 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SendGrid: Inline Image with Base64 — attachments + content_id Pattern | Image2Base64</title>
+<meta name="description" content="The working SendGrid pattern for an inline Base64 image: attachments with content, content_id and disposition 'inline', referenced as cid: in the HTML — plus why a data URI in the src gets stripped and the four causes of a blank image." />
+<link rel="canonical" href="https://image2base64.com/sendgrid-inline-image-base64" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="SendGrid: Inline Image with Base64 — attachments + content_id Pattern" />
+<meta property="og:description" content="Send an inline image with SendGrid: raw Base64 in attachments + content_id + disposition 'inline', cid: in the HTML body — and how to debug a blank image." />
+<meta property="og:url" content="https://image2base64.com/sendgrid-inline-image-base64" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I embed an inline image with SendGrid?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Base64-encode the image, add it to the message's attachments array with disposition \"inline\" and a content_id, then reference it in the HTML body as <img src=\"cid:your-content-id\">. SendGrid reassembles the message as MIME, and the cid: reference resolves to the inline attachment — the mechanism every major client renders."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why doesn't a data URI image work in SendGrid emails?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The message may send fine, but many clients — Gmail most prominently — strip data: URIs from email HTML during sanitization, so recipients see a blank box or nothing. The reliable pattern is an inline attachment with a content_id referenced as cid:. Data URIs in email are unreliable by design; they are a web-page mechanism, not a mail mechanism."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is my SendGrid inline image not showing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The four most common causes: the content_id in the attachment does not exactly match the cid: reference in the HTML (case-sensitive), disposition is missing so the image defaults to a regular attachment, the content field still carries the data:image/...;base64, prefix so the decoded attachment is corrupt, or the recipient's client strips data URIs because a data URI was used instead of the CID pattern."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Should the SendGrid attachment content field include the data: prefix?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The content field expects raw Base64 characters only — no data:image/png;base64, prefix and no line breaks. The MIME type goes in the separate type field. A prefix in the content field produces a corrupt decoded attachment; line breaks can break the JSON payload itself."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I convert an image file to the Base64 string SendGrid needs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In code: Node's fs.readFileSync(file).toString('base64') or Python's base64.b64encode(f.read()).decode(). Without code, use a browser-based converter like image2base64.com — drag the image in and copy the raw Base64 output, which is exactly what the content field expects."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do inline images with SendGrid work in Gmail and Outlook?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The CID pattern works in Gmail, Apple Mail, Outlook desktop, and Outlook on the web — it is standard MIME, not a rendering hack. That is exactly why it beats data URIs, which Outlook desktop never renders and Gmail strips. Use the same inline attachment approach from Power Automate or Apps Script — see the linked guides."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>SendGrid: Send an Inline Image with Base64 (and Why a Data URI Gets Stripped)</h1>
+    <p>You have a logo or a chart that must appear <em>inside</em> the email body via SendGrid — no paperclip, no hosted URL. The official docs explain the concept; this page is the complete working payload: <strong>Base64 in the <code>attachments</code> array with <code>content_id</code> and <code>disposition: "inline"</code></strong>, a <code>cid:</code> reference in the HTML, in Node.js, Python, and curl — plus the four reasons the image still arrives blank.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#pattern">The working pattern</a></li>
+        <li><a href="#node">Node.js example</a></li>
+        <li><a href="#python">Python example</a></li>
+        <li><a href="#curl">curl example</a></li>
+        <li><a href="#data-uri">Why the data URI fails</a></li>
+        <li><a href="#not-showing">Image not showing? The 4 causes</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="pattern">The working pattern</h2>
+    <p>Three moving parts, all required:</p>
+    <ol>
+      <li><strong>The Base64 string</strong> — raw characters only. No <code>data:image/png;base64,</code> prefix, no line breaks. The MIME type goes in the separate <code>type</code> field.</li>
+      <li><strong>An attachments entry</strong> with <code>disposition: "inline"</code> and a <code>content_id</code> you choose.</li>
+      <li><strong>A <code>cid:</code> reference</strong> in the HTML body that matches the <code>content_id</code> exactly (case-sensitive).</li>
+    </ol>
+    <pre><code>attachments: [
+  {
+    "content":    "&lt;raw base64, no prefix&gt;",
+    "filename":   "logo.png",
+    "type":       "image/png",
+    "disposition": "inline",
+    "content_id": "logo001"
+  }
+]
+html: '&lt;img src="cid:logo001" width="200"&gt;'</code></pre>
+    <p>SendGrid reassembles your JSON into a MIME message on send, and <code>cid:</code> references resolve inside that MIME structure — the one mechanism Gmail, Apple Mail, Outlook desktop, and Outlook web all render. Getting the Base64 string right is step zero: encode in the browser with the <a href="/">image to Base64 converter</a> or in code as shown below, and see the <a href="/image-to-base64-for-api">image to Base64 for API</a> guide for the encoding patterns behind step 1.</p>
+
+    <h2 id="node">Node.js example</h2>
+    <pre><code>const sgMail = require('@sendgrid/mail');
+const fs = require('fs');
+sgMail.setApiKey(process.env.SENDGRID_API_KEY);
+
+const base64 = fs.readFileSync('logo.png').toString('base64');
+
+const msg = {
+  to: 'user@example.com',
+  from: 'sender@example.com',
+  subject: 'Weekly report',
+  html: '&lt;img src="cid:logo001" width="200"&gt;',
+  attachments: [
+    {
+      content: base64,          // raw Base64 — no data: prefix, no line breaks
+      filename: 'logo.png',
+      type: 'image/png',
+      disposition: 'inline',
+      content_id: 'logo001'     // must match cid:logo001 exactly
+    }
+  ]
+};
+
+sgMail.send(msg);</code></pre>
+
+    <h2 id="python">Python example</h2>
+    <pre><code>import base64, os
+from sendgrid import SendGridAPIClient
+from sendgrid.helpers.mail import (
+    Mail, Attachment, FileContent, FileType,
+    FileName, Disposition, ContentId
+)
+
+with open('logo.png', 'rb') as f:
+    b64 = base64.b64encode(f.read()).decode()
+
+msg = Mail(
+    from_email='sender@example.com',
+    to_emails='user@example.com',
+    subject='Weekly report',
+    html_content='&lt;img src="cid:logo001" width="200"&gt;'
+)
+msg.attachment = Attachment(
+    file_content=FileContent(b64),
+    file_type=FileType('image/png'),
+    file_name=FileName('logo.png'),
+    disposition=Disposition('inline'),
+    content_id=ContentId('logo001')
+)
+
+SendGridAPIClient(os.environ['SENDGRID_API_KEY']).send(msg)</code></pre>
+
+    <h2 id="curl">curl example</h2>
+    <pre><code>curl -X POST https://api.sendgrid.com/v3/mail/send \
+  -H "Authorization: Bearer $SENDGRID_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "personalizations": [{"to": [{"email": "user@example.com"}]}],
+    "from": {"email": "sender@example.com"},
+    "subject": "Weekly report",
+    "content": [{"type": "text/html",
+                 "value": "&lt;img src=\"cid:logo001\" width=\"200\"&gt;"}],
+    "attachments": [{
+      "content": "iVBORw0KGgoAAAANSUhEUg...",
+      "filename": "logo.png",
+      "type": "image/png",
+      "disposition": "inline",
+      "content_id": "logo001"
+    }]
+  }'</code></pre>
+    <p>If the Base64 was produced by a command-line pipeline, generate it without wrapping — <code>base64 -w 0 logo.png</code> on Linux — or the newlines will break the JSON payload itself. The full command-line pattern set is in the <a href="/image-to-base64-for-api">API encoding guide</a>.</p>
+
+    <h2 id="data-uri">Why the data URI fails</h2>
+    <p>It is tempting to skip attachments and paste <code>&lt;img src="data:image/png;base64,..."></code> straight into the <code>html</code> field. SendGrid will accept it and the message will send — but <strong>Gmail strips data URIs during sanitization</strong>, Outlook desktop never renders them (its Word engine has no data URI support), and the recipient sees a blank box. Data URIs are a web-page mechanism; email clients treat them as untrusted by default.</p>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption>Inline data URI vs. CID attachment via SendGrid</caption>
+        <thead>
+          <tr><th>Method</th><th>Gmail</th><th>Outlook desktop</th><th>Attachment icon</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>attachments + content_id (CID)</th><td class="ok">Renders</td><td class="ok">Renders</td><td class="ok">None</td></tr>
+          <tr><th>data: URI in HTML</th><td class="warn">Stripped</td><td class="warn">Never renders</td><td class="ok">None</td></tr>
+          <tr><th>disposition "attachment"</th><td class="ok">Renders (as file)</td><td class="ok">Renders (as file)</td><td class="warn">Shows paperclip</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The same restriction drives the platform-specific guides: <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>, <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>, and the low-code equivalents <a href="/power-automate-base64-image-in-email">Power Automate</a> / <a href="/google-apps-script-base64-image-in-email">Apps Script</a> — in every case the fix is CID, not a better data URI.</p>
+
+    <h2 id="not-showing">Image not showing? The 4 causes</h2>
+    <ol>
+      <li><strong>content_id / cid: mismatch.</strong> The reference is case-sensitive and must match character for character — <code>cid:Logo001</code> does not resolve an attachment id of <code>logo001</code>. The only symptom is a silent blank box.</li>
+      <li><strong>Missing <code>disposition: "inline"</code>.</strong> Without it the attachment defaults to a regular file: the image arrives as a paperclip instead of rendering in the body.</li>
+      <li><strong>The <code>data:</code> prefix left in <code>content</code>.</strong> The field must be raw Base64; a prefix makes SendGrid decode corrupt bytes, and the client shows a broken image. Same family: line breaks inside the Base64 (see curl section).</li>
+      <li><strong>A data URI used instead of CID.</strong> If the HTML contains <code>src="data:..."</code>, Gmail strips it and Outlook desktop ignores it — the send succeeded, the mechanism didn't. Switch to the attachments pattern above.</li>
+    </ol>
+    <p>Corrupted-looking output after decode is a broader topic — the <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a> guide covers prefix duplication, whitespace, and truncation issues.</p>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>How do I embed an inline image with SendGrid?</summary>
+        <p>Base64-encode the image, add it to <code>attachments</code> with <code>disposition: "inline"</code> and a <code>content_id</code>, and reference <code>&lt;img src="cid:your-content-id"&gt;</code> in the HTML body.</p>
+      </details>
+      <details>
+        <summary>Why doesn't a data URI work in SendGrid emails?</summary>
+        <p>Gmail strips data URIs during sanitization and Outlook desktop never renders them. The message sends, the image doesn't show. Use the CID attachment pattern.</p>
+      </details>
+      <details>
+        <summary>Should the content field include the data: prefix?</summary>
+        <p>No — raw Base64 only. The prefix corrupts the decoded attachment; the MIME type belongs in the <code>type</code> field.</p>
+      </details>
+      <details>
+        <summary>Why is my inline image not showing?</summary>
+        <p>Check in order: cid/content_id match (case-sensitive), disposition "inline" present, no data: prefix or line breaks in content, and no data URI in the HTML.</p>
+      </details>
+      <details>
+        <summary>How do I get the Base64 string?</summary>
+        <p><code>fs.readFileSync(file).toString('base64')</code> in Node, <code>base64.b64encode(f.read()).decode()</code> in Python, or a browser converter — see the <a href="/image-to-base64-for-api">API guide</a>.</p>
+      </details>
+      <details>
+        <summary>Do inline images work in Gmail and Outlook?</summary>
+        <p>Yes, with the CID pattern — it is standard MIME and renders everywhere, unlike data URIs which Gmail strips and Outlook desktop ignores.</p>
+      </details>
+    </section>
+
+    <p>Need the Base64 string? Encode it in the browser with the <a href="/">Image to Base64 converter</a>, size it with the <a href="/base64-image-size-calculator">Base64 size calculator</a>, and paste the raw output straight into the <code>content</code> field.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>

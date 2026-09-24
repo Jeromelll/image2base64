@@ -1,5 +1,15 @@
 # Image2Base64 SEO 日志
 
+## 2026-09-24 — 上线 /excel-vba-base64-image-outlook-email + /sendgrid-inline-image-base64
+
+- 来源：ffc17c37 选词雷达 0924 轮（Jerome「按你建议来」批准两单）。两词根 SERP 当日实测：excel vba=2012 MrExcel 老论坛帖占顶零专门页；sendgrid=Twilio 官方指南占顶零专门工具页。
+- 新建：`excel-vba-base64-image-outlook-email.html`（ADODB.Stream+MSXML 编码片段 + 隐藏附件 CID 模式主线；Outlook Word 引擎拒 data URI=结构性限制；与 outlook 排障页互补：那边讲为什么不显示/这边讲怎么正确做）、`sendgrid-inline-image-base64.html`（attachments+content_id+disposition inline 完整 Node/Python/curl payload；data URI 被 Gmail 剥主线）。
+- 内链：全站 footer Guides +2；api 页 chat-platform 段后新增 email-API 交叉句；power-automate 页加 VBA 交叉句；新页内链 outlook/gmail 排障页、email signature、apps-script、fix-invalid、compress 页。
+- 枢纽同步：sitemap +2 loc（44）；llms.txt +2 行；模板复用 power-automate/slack，FAQPage JSON-LD 6 问/页。
+- 部署：rsync dist → wrangler deploy Version `e362bfee-9962-46a5-81d9-7a09196acab7`；线上两页 200/canonical 已核；check_seo fail=0 warn=3（已知 canonical 合并）。
+- GSC：两页 Indexing requested 已由 gsc_request_indexing.mjs 经 research-Chrome CDP 完成（03:22Z/03:23Z）。
+- 流程注记：当日双链撞车（ffc17c37 cron 与统一闭环 radar 各写 4 词根，幂等闸并行窗口穿透），两轮互不重叠；防御=先写 used_roots 占位再搜索。
+
 ## 2026-09-24 — 上线 /heic-to-base64 + /bmp-to-base64 + /embed-images-in-single-html-file
 
 - 来源：Lifestyle / Jerome 批准三页（草稿 `Research/image2base64/SEO/内容草稿/2026-09-17_heic-to-base64.md`、`2026-09-24_bmp-to-base64.md`、`2026-09-24_embed-images-in-single-html-file.md`）。HEIC 此前线上 404。

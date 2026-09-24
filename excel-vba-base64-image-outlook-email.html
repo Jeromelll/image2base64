@@ -1,0 +1,276 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Excel VBA: Convert Image to Base64 &amp; Embed in Outlook Email | Image2Base64</title>
+<meta name="description" content="Encode an image to Base64 in Excel VBA with ADODB.Stream + MSXML, and embed it in an Outlook email correctly — why the data URI pattern fails in Outlook and the hidden-attachment CID method that works." />
+<link rel="canonical" href="https://image2base64.com/excel-vba-base64-image-outlook-email" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Excel VBA: Convert Image to Base64 &amp; Embed in Outlook Email" />
+<meta property="og:description" content="ADODB.Stream + MSXML Base64 encoding in VBA — and why Outlook needs a hidden CID attachment instead of a data URI." />
+<meta property="og:url" content="https://image2base64.com/excel-vba-base64-image-outlook-email" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do I need to Base64-encode the image at all when sending from Excel VBA via Outlook?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No — not for the standard Outlook automation path. Attachments.Add accepts a file path directly, and a hidden inline attachment referenced as cid: in the HTML body is how Outlook embeds images. Base64 encoding in VBA is needed when the string travels somewhere else: saved into XML or JSON, sent to an API, or used with CDO/SMTP."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why doesn't my Base64 data URI image show in the Outlook email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Outlook desktop renders email HTML with the Word engine, which has no support for data: URIs, and Outlook on the web strips them during sanitization. The image never renders regardless of how correct the Base64 string is. The fix is the CID pattern: add the image as an attachment, mark it hidden, and reference it as <img src=\"cid:...\">."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I hide the inline attachment in the Outlook recipient's attachment bar?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Set the PidTagAttachmentHidden property on the attachment: attachment.PropertyAccessor.SetProperty \"http://schemas.microsoft.com/mapi/proptag/0x7FFE000B\", True. Combined with the cid: reference in the HTML body, the image renders inline and no attachment icon appears."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my VBA Base64 string have line breaks every 76 characters?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The MSXML bin.base64 data type produces RFC 2045 output wrapped at 76 characters. If you need one continuous string — for a data URI, JSON payload, or API call — strip the breaks with Replace(Replace(b64, vbCr, \"\"), vbLf, \"\"). A broken-into-lines string inside an HTML attribute is a classic cause of a blank image."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I pass a Base64 string directly to Attachments.Add?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Attachments.Add expects a file path (or an Outlook item), not a Base64 string. Either point it at the original file, or write the decoded bytes back to a temporary file first. Passing encoded text where a path is expected is a compile-time-safe but run-time-failing mistake."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How large can the embedded image be in a VBA-generated email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "There is no hard Outlook limit for inline images, but the payload rides inside the message and inflates it — Base64 adds roughly 33% over the binary size. Keep logos and chart exports to a few hundred KB or less; compress or resize before embedding for repeated report emails."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Excel VBA: Convert an Image to Base64 and Embed It in an Outlook Email</h1>
+    <p>You have a logo or a chart export in Excel VBA and you want it <em>inside</em> the email body — not as a paperclip attachment. Forum threads going back a decade converge on two different problems that get mixed up: <strong>encoding the image to Base64</strong> (easy, four lines of ADODB + MSXML) and <strong>getting it to render in Outlook</strong> (where the popular data-URI advice silently fails). This page separates them: the encoding snippet, the CID pattern that actually renders in Outlook, and the pitfalls that break each.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#which-path">First pick your path</a></li>
+        <li><a href="#encode">Encode an image to Base64 in VBA</a></li>
+        <li><a href="#cid">Embed in Outlook: the CID pattern</a></li>
+        <li><a href="#why">Why the data URI fails in Outlook</a></li>
+        <li><a href="#pitfalls">Pitfalls</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="which-path">First pick your path</h2>
+    <p>Most VBA email-image questions are really three different jobs:</p>
+    <ul>
+      <li><strong>Send via Outlook automation and show the image inline</strong> → you need the hidden-attachment CID pattern (below). You do <em>not</em> need Base64 for this at all — <code>Attachments.Add</code> takes the file path directly.</li>
+      <li><strong>Get the Base64 string itself</strong> — to store in a worksheet/XML, POST to an API, or feed CDO/SMTP → you need the ADODB.Stream + MSXML snippet.</li>
+      <li><strong>Paste a <code>data:image/...;base64,</code> URI into the HTML body and hope</strong> → this is the path that fills old forum threads. It renders in Gmail, Apple Mail, and most webmail, but <strong>Outlook desktop never renders data URIs</strong>. If your recipients are Outlook, this path is dead on arrival.</li>
+    </ul>
+
+    <h2 id="encode">Encode an image to Base64 in VBA</h2>
+    <p>VBA has no native Base64 function. The standard pair is <code>ADODB.Stream</code> (reads the file as binary) and <code>MSXML2.DOMDocument</code> (does the encoding):</p>
+    <pre><code>Function EncodeFileToBase64(ByVal path As String) As String
+    Dim xml As Object, node As Object, stream As Object
+
+    Set xml = CreateObject("MSXML2.DOMDocument.6.0")
+    Set node = xml.createElement("b64")
+    node.DataType = "bin.base64"
+
+    Set stream = CreateObject("ADODB.Stream")
+    stream.Type = 1                       ' adTypeBinary
+    stream.Open
+    stream.LoadFromFile path
+    node.nodeTypedValue = stream.Read
+    stream.Close
+
+    EncodeFileToBase64 = node.Text        ' NOTE: wrapped at 76 chars
+End Function</code></pre>
+    <p>Two things to know about the output:</p>
+    <ul>
+      <li><strong>It contains line breaks every 76 characters</strong> (RFC 2045). Before building a data URI or a JSON payload, strip them:
+      <pre><code>clean = Replace(Replace(EncodeFileToBase64(p), vbCr, ""), vbLf, "")</code></pre></li>
+      <li><strong>It is raw Base64 — no <code>data:</code> prefix.</strong> Add the MIME wrapper yourself: <code>"data:image/png;base64," &amp; clean</code>. The prefix must match the actual format (png vs jpeg).</li>
+    </ul>
+    <p>To produce the string from a workbook image instead of a file, export the shape or chart first — <code>Shape.CopyPicture</code> plus <code>Chart.Export</code> to a PNG temp file — then run the same function on the file.</p>
+    <p>Want the encoded string without touching VBA? Encode in the browser with the <a href="/">image to Base64 converter</a> — nothing is uploaded — and paste the result where you need it.</p>
+
+    <h2 id="cid">Embed in Outlook: the CID pattern</h2>
+    <p>The way Outlook itself embeds inline images is a hidden attachment referenced by Content-ID. This macro attaches the image, hides it from the attachment bar, and points an <code>&lt;img&gt;</code> at it:</p>
+    <pre><code>Sub SendEmailWithEmbeddedImage()
+    Dim ol As Object, mail As Object, att As Object
+    Const imgPath As String = "C:\Users\you\Pictures\logo.png"
+    Const cid As String = "logo001"
+
+    Set ol = CreateObject("Outlook.Application")
+    Set mail = ol.CreateItem(0)           ' olMailItem
+
+    Set att = mail.Attachments.Add(imgPath)
+    att.PropertyAccessor.SetProperty _
+        "http://schemas.microsoft.com/mapi/proptag/0x3712001F", cid   ' PR_ATTACH_CONTENT_ID
+    att.PropertyAccessor.SetProperty _
+        "http://schemas.microsoft.com/mapi/proptag/0x7FFE000B", True  ' PR_ATTACHMENT_HIDDEN
+
+    mail.HTMLBody = "&lt;html&gt;&lt;body&gt;" &amp; _
+        "&lt;p&gt;Weekly report attached below.&lt;/p&gt;" &amp; _
+        "&lt;img src=""cid:" &amp; cid &amp; """ width=""200""&gt;" &amp; _
+        "&lt;/body&gt;&lt;/html&gt;"
+
+    mail.To = "someone@example.com"
+    mail.Subject = "Weekly report"
+    mail.Display                          ' use .Send when tested
+End Sub</code></pre>
+    <p>Why this works where the data URI doesn't: Outlook re-assembles the message as MIME on send, and <code>cid:</code> references resolve inside that MIME structure — the one mechanism every Outlook build renders. The <code>0x7FFE000B</code> property (PidTagAttachmentHidden) keeps the image off the recipient's attachment bar, so the mail looks like a body image, not an attachment.</p>
+    <p>The same CID logic is what the low-code paths use — see the <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a> and <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a> guides for the hosted equivalents.</p>
+
+    <h2 id="why">Why the data URI fails in Outlook</h2>
+    <p>Outlook desktop renders HTML email with the <strong>Word rendering engine</strong>, and that engine has never supported <code>data:</code> URIs. Outlook on the web goes further and strips them during sanitization. So a <code>&lt;img src="data:image/png;base64,..."></code> in an Outlook-generated mail renders fine in Gmail or Apple Mail — and shows a blank box in Outlook. This is the single most common outcome in the old forum threads on the topic.</p>
+    <div class="cmp-scroll">
+      <table class="cmp">
+        <caption>Base64 image embedding in VBA-generated mail, by mechanism</caption>
+        <thead>
+          <tr><th>Mechanism</th><th>Renders in Outlook desktop</th><th>Needs VBA Base64 code</th><th>Best for</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>Hidden attachment + cid:</th><td class="ok">Yes</td><td class="ok">No — file path only</td><td>Outlook recipients (the default choice)</td></tr>
+          <tr><th>data: URI in HTMLBody</th><td class="warn">No</td><td class="ok">Yes</td><td>Gmail/webmail recipients only</td></tr>
+          <tr><th>Plain attachment</th><td class="ok">Yes (as file)</td><td class="warn">No — but shows paperclip</td><td>Files the recipient should keep</td></tr>
+        </tbody>
+      </table>
+    </div>
+    <p>The client-by-client breakdown of this restriction is in the <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a> guide; the signature-specific variant is in <a href="/base64-image-email-signature">Base64 image in email signature</a>.</p>
+
+    <h2 id="pitfalls">Pitfalls</h2>
+    <ol>
+      <li><strong>Wrapped Base64 pasted into an HTML attribute.</strong> MSXML output breaks at 76 characters; inside <code>src="..."</code> the line breaks terminate the value and the image is blank. Always strip <code>vbCr</code>/<code>vbLf</code> before use.</li>
+      <li><strong>Wrong MIME prefix.</strong> <code>data:image/png</code> on JPEG bytes (or a missing prefix) breaks rendering in every client that otherwise supports data URIs.</li>
+      <li><strong><code>Attachments.Add</code> given a Base64 string.</strong> It expects a path. If all you have is encoded text, decode to a temp file first — or skip encoding entirely and point it at the original file.</li>
+      <li><strong>cid mismatch.</strong> The <code>content_id</code> property and the <code>cid:</code> reference must match exactly, including case. A silent blank box is the only symptom.</li>
+      <li><strong>Image too heavy.</strong> Base64 adds ~33% over binary size, and the payload rides in the message. A 300 KB logo becomes a 400 KB email. Compress first — see <a href="/compress-png-to-base64">compress PNG to Base64</a> / <a href="/compress-jpg-to-base64">compress JPG to Base64</a>, and size it with the <a href="/base64-image-size-calculator">Base64 size calculator</a>.</li>
+    </ol>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <section class="faq-section">
+      <details>
+        <summary>Do I need to Base64-encode the image at all when sending from VBA via Outlook?</summary>
+        <p>No — the Outlook automation path doesn't need it. Attachments.Add takes a file path, and the hidden CID attachment is the inline-image mechanism. Encoding matters when the string goes elsewhere: XML, JSON, an API, or CDO/SMTP.</p>
+      </details>
+      <details>
+        <summary>Why doesn't the data URI image show in Outlook?</summary>
+        <p>Outlook desktop renders with the Word engine, which has no data: URI support; Outlook web strips them. Use the hidden attachment + cid: pattern for Outlook recipients.</p>
+      </details>
+      <details>
+        <summary>How do I hide the inline attachment icon?</summary>
+        <p>Set <code>0x7FFE000B</code> (PidTagAttachmentHidden) to True via PropertyAccessor on the attachment, and reference it as <code>cid:</code> in the HTML body.</p>
+      </details>
+      <details>
+        <summary>Why does the Base64 string have line breaks every 76 characters?</summary>
+        <p>MSXML's bin.base64 type emits RFC 2045 output. Strip the breaks with Replace before building a data URI or JSON payload.</p>
+      </details>
+      <details>
+        <summary>Can I pass a Base64 string directly to Attachments.Add?</summary>
+        <p>No — it needs a file path. Use the original file, or decode to a temp file first.</p>
+      </details>
+      <details>
+        <summary>How large can the embedded image be?</summary>
+        <p>No hard limit, but the payload inflates the message (~33% over binary). Keep logos and chart exports to a few hundred KB; compress before embedding.</p>
+      </details>
+    </section>
+
+    <p>Producing the Base64 string for an API or a webmail audience? Encode it in the browser with the <a href="/">Image to Base64 converter</a>, check the weight with the <a href="/base64-image-size-calculator">size calculator</a>, and copy the HTML or data-URI output straight from the results panel.</p>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+</body>
+</html>
