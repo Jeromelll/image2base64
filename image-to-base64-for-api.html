@@ -283,9 +283,10 @@
         pattern each platform expects.
       </p>
       <p>
-        Email APIs work the other way: SendGrid wants raw Base64 in the attachments array with a
-        content_id — the <a href="/sendgrid-inline-image-base64">SendGrid inline image guide</a> has the
-        full Node, Python and curl payloads.
+        Email APIs work the other way. See the <a href="/sendgrid-inline-image-base64">SendGrid inline image guide</a>
+        for raw Base64 attachments with a <code>content_id</code>, the <a href="/postmark-cid-inline-image-base64">Postmark CID example</a>,
+        and the <a href="/brevo-transactional-base64-attachment-no-cid">Brevo transactional attachment guide</a> for the fields its public endpoint documents.
+        For Node.js image processing, <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64</a> returns a complete data URI.
       </p>
     </div>
   </section>
@@ -396,6 +397,9 @@
         <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
         <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
         <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
       </nav>

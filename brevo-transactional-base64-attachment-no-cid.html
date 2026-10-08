@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Brevo Base64 Attachments: Why a CID Image May Not Work</title>
+<meta name="description" content="Build a Brevo transactional email with a raw Base64 attachment and a hosted image. Understand the documented attachment fields and avoid assuming CID support." />
+<link rel="canonical" href="https://image2base64.com/brevo-transactional-base64-attachment-no-cid" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Brevo Base64 Attachments: Why a CID Image May Not Work" />
+<meta property="og:description" content="Build a Brevo transactional email with a raw Base64 attachment and a hosted image. Understand the documented attachment fields and avoid assuming CID support." />
+<meta property="og:url" content="https://image2base64.com/brevo-transactional-base64-attachment-no-cid" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does this prove that all Brevo email products lack CID support?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. This guide describes the checked public transactional endpoint. Product capabilities and schemas can change."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I add a `contentId` property anyway?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "That would depend on undocumented behavior. Use documented fields or get a supported method confirmed by Brevo."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do I need Base64 for the hosted image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The hosted image uses an HTTPS URL. Base64 is used separately for the ordinary attachment in this example."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+<h1>Brevo Base64 attachments and CID images</h1>
+<p>Adding a Base64 attachment to a Brevo transactional email does not by itself make that attachment an inline image. An HTML reference such as <code>&lt;img src="cid:logo001"&gt;</code> needs a matching Content-ID in the email's MIME structure.</p>
+<p>The <a href="https://developers.brevo.com/docs/send-a-transactional-email">public transactional API schema</a> checked on October 8, 2026, documents attachment <code>url</code>, <code>content</code>, and <code>name</code> fields. It does not expose a caller-controlled Content-ID field in that attachment object. Do not invent a <code>cid</code> or <code>contentId</code> field and assume it will work.</p>
+<p>You can prepare a raw Base64 attachment with the <a href="/">Image to Base64 tool</a>. For an image displayed inside the message, the example below uses an HTTPS image URL and keeps the Base64 file as an ordinary attachment.</p>
+<h2>What the transactional API documents</h2>
+<p>For <code>POST /v3/smtp/email</code>, Brevo documents two attachment sources: an absolute file URL, or Base64 <code>content</code>. When you provide <code>content</code>, also provide the filename in <code>name</code>.</p>
+<p>These fields describe an attachment. They are not a documented way to bind an HTML <code>cid:</code> reference. A setting from another Brevo product or a different provider is not automatically part of this transactional endpoint's contract. If CID is essential to your delivery workflow, confirm the currently supported method with Brevo or use a provider that documents the required CID fields, such as the <a href="/sendgrid-inline-image-base64">SendGrid inline-image API</a>.</p>
+<h2>A hosted image plus a Base64 attachment</h2>
+<p>Save this as <code>brevo-attachment.mjs</code>. It requires Node.js 18 or later and a local <code>logo.png</code>. Set <code>IMAGE_URL</code> to a public HTTPS image you control. The default command prints JSON; adding <code>--send</code> makes an actual request.</p>
+<pre><code>import { readFile } from &quot;node:fs/promises&quot;;
+
+const imageUrl = new URL(process.env.IMAGE_URL || &quot;https://example.com/logo.png&quot;);
+if (imageUrl.protocol !== &quot;https:&quot;) throw new Error(&quot;IMAGE_URL must use HTTPS&quot;);
+const bytes = await readFile(&quot;logo.png&quot;);
+const safeImageUrl = imageUrl.href.replaceAll(&quot;&amp;&quot;, &quot;&amp;amp;&quot;).replaceAll(&#x27;&quot;&#x27;, &quot;&amp;quot;&quot;);
+const payload = {
+  sender: { email: process.env.EMAIL_FROM || &quot;sender@example.com&quot; },
+  to: [{ email: process.env.EMAIL_TO || &quot;recipient@example.com&quot; }],
+  subject: &quot;Image and attachment example&quot;,
+  htmlContent: `&lt;p&gt;Your image:&lt;/p&gt;&lt;img src=&quot;${safeImageUrl}&quot; alt=&quot;Company logo&quot;&gt;`,
+  textContent: &quot;This message includes a hosted image and a PNG attachment.&quot;,
+  attachment: [{ content: bytes.toString(&quot;base64&quot;), name: &quot;logo.png&quot; }]
+};
+
+if (!process.argv.includes(&quot;--send&quot;)) {
+  console.log(JSON.stringify(payload, null, 2));
+} else {
+  const key = process.env.BREVO_API_KEY;
+  if (!key || !process.env.EMAIL_FROM || !process.env.EMAIL_TO || !process.env.IMAGE_URL) {
+    throw new Error(&quot;Set BREVO_API_KEY, EMAIL_FROM, EMAIL_TO, and IMAGE_URL first.&quot;);
+  }
+  const response = await fetch(&quot;https://api.brevo.com/v3/smtp/email&quot;, {
+    method: &quot;POST&quot;,
+    headers: { &quot;api-key&quot;: key, &quot;Content-Type&quot;: &quot;application/json&quot;, &quot;Accept&quot;: &quot;application/json&quot; },
+    body: JSON.stringify(payload)
+  });
+  const result = await response.json();
+  if (!response.ok) throw new Error(`Brevo request failed: ${JSON.stringify(result)}`);
+  console.log(result.messageId);
+}</code></pre>
+<p><code>https://example.com/logo.png</code> is a placeholder, not a working image asset. The real image must be reachable without your private login. Recipients' mail clients may block remote images until the user allows them. Keep credentials on your server, and test the intended clients before relying on the visual result.</p>
+<h2>Raw Base64 is not a data URI</h2>
+<p>The <code>content</code> field holds the encoded file bytes. Do not include <code>data:image/png;base64,</code> in that field, and do not Base64-encode a string that is already Base64. Use the <a href="/image-to-base64-for-api">API payload guide</a> when converting between output shapes.</p>
+<p>A browser can render a data URI even when an email client strips it. Switching the HTML source to a data URI is therefore not a reliable substitute for a supported inline-attachment workflow. The <a href="/base64-image-not-showing-in-outlook">Outlook image guide</a> covers this compatibility distinction.</p>
+<h2>Troubleshooting</h2>
+<p><strong>The attachment arrives but <code>cid:logo001</code> is blank.</strong> The attachment filename is not a Content-ID. The checked schema does not document a field that connects that CID to the attachment. Use a hosted image or confirm a supported CID method before relying on it.</p>
+<p><strong>The API rejects the attachment.</strong> Inspect raw Base64 versus data URI, the required filename, supported file types, and your current provider limits. Decode the value locally to confirm it contains the intended bytes.</p>
+<p><strong>The hosted image does not show.</strong> Check the final HTTPS URL without a login, then check the client's image-blocking policy. API acceptance is not proof of rendering.</p>
+<h2>FAQ</h2>
+<details><summary>Does this prove that all Brevo email products lack CID support?</summary><p>No. This guide describes the checked public transactional endpoint. Product capabilities and schemas can change.</p></details>
+<details><summary>Can I add a <code>contentId</code> property anyway?</summary><p>That would depend on undocumented behavior. Use documented fields or get a supported method confirmed by Brevo.</p></details>
+<details><summary>Do I need Base64 for the hosted image?</summary><p>No. The hosted image uses an HTTPS URL. Base64 is used separately for the ordinary attachment in this example.</p></details>
+<h2>Related guides</h2>
+<p>Compare <a href="/sendgrid-inline-image-base64">SendGrid inline images</a>, review <a href="/image-to-base64-for-api">Base64 API output shapes</a>, and check <a href="/base64-image-not-showing-in-outlook">Outlook rendering behavior</a>.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

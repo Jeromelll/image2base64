@@ -217,7 +217,7 @@ SendGridAPIClient(os.environ['SENDGRID_API_KEY']).send(msg)</code></pre>
         </tbody>
       </table>
     </div>
-    <p>The same restriction drives the platform-specific guides: <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>, <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>, and the low-code equivalents <a href="/power-automate-base64-image-in-email">Power Automate</a> / <a href="/google-apps-script-base64-image-in-email">Apps Script</a> — in every case the fix is CID, not a better data URI.</p>
+    <p>The same restriction drives the platform-specific guides: <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>, <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>, and the low-code equivalents <a href="/power-automate-base64-image-in-email">Power Automate</a> / <a href="/google-apps-script-base64-image-in-email">Apps Script</a>. For other mail APIs, see the <a href="/postmark-cid-inline-image-base64">Postmark CID attachment example</a> and the <a href="/brevo-transactional-base64-attachment-no-cid">Brevo transactional attachment guide</a>.</p>
 
     <h2 id="not-showing">Image not showing? The 4 causes</h2>
     <ol>
@@ -292,6 +292,9 @@ SendGridAPIClient(os.environ['SENDGRID_API_KEY']).send(msg)</code></pre>
         <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
         <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
         <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
         <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
         <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>

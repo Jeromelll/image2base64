@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Jimp getBase64: Convert Images to a Data URI in Node.js</title>
+<meta name="description" content="Use await Jimp.getBase64() to create a full image data URI. Learn when to use raw Base64, how to read it back, and why re-encoding differs from byte encoding." />
+<link rel="canonical" href="https://image2base64.com/jimp-getbase64-image-to-data-uri" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Jimp getBase64: Convert Images to a Data URI in Node.js" />
+<meta property="og:description" content="Use await Jimp.getBase64() to create a full image data URI. Learn when to use raw Base64, how to read it back, and why re-encoding differs from byte encoding." />
+<meta property="og:url" content="https://image2base64.com/jimp-getbase64-image-to-data-uri" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+<h1>Jimp getBase64: image to data URI</h1>
+<p>Jimp can read an image, process it, and export a Base64 data URI. In the <a href="https://github.com/jimp-dev/jimp/blob/main/packages/core/src/index.ts">official core implementation</a> checked on October 8, 2026, <code>getBase64()</code> returns a Promise, so use <code>await</code>. The resolved value already contains the header, such as <code>data:image/png;base64,...</code>.</p>
+<p>For a one-off conversion without installing a library, use the <a href="/">Image to Base64 tool</a>. Jimp is useful when your Node.js workflow also needs to resize or re-encode an image before producing the text output.</p>
+<h2>What getBase64 returns</h2>
+<p><code>await image.getBase64("image/png")</code> returns a complete PNG data URI. That string can be assigned to a browser <code>&lt;img src&gt;</code> or used where the destination explicitly accepts data URIs.</p>
+<p>An API field documented as “Base64 content” may instead expect only the text after the comma. Check the destination's contract before sending it. The <a href="/image-to-base64-for-api">API output-shape guide</a> covers raw Base64 versus a full data URI.</p>
+<h2>Complete Node.js example</h2>
+<p>Install Jimp in your own project if it is not already a dependency, then save this as <code>jimp-data-uri.mjs</code>. Run it with <code>node jimp-data-uri.mjs input.png</code>. The script writes a data URI and a raw Base64 file so you can choose the output your destination needs.</p>
+<pre><code>import { Jimp } from &quot;jimp&quot;;
+import { writeFile } from &quot;node:fs/promises&quot;;
+
+const input = process.argv[2];
+if (!input) throw new Error(&quot;Usage: node jimp-data-uri.mjs input.png&quot;);
+
+const image = await Jimp.read(input);
+// Optional processing before export:
+// image.resize({ w: 320 });
+const dataUri = await image.getBase64(&quot;image/png&quot;);
+const prefix = &quot;data:image/png;base64,&quot;;
+if (!dataUri.startsWith(prefix)) throw new Error(&quot;Unexpected PNG data URI&quot;);
+const rawBase64 = dataUri.slice(prefix.length);
+
+await writeFile(&quot;image.data-uri.txt&quot;, dataUri, &quot;utf8&quot;);
+await writeFile(&quot;image.base64.txt&quot;, rawBase64, &quot;utf8&quot;);
+console.log(`Wrote ${dataUri.length} data-URI characters.`);</code></pre>
+<p>This example exports PNG even if the input is a supported JPEG. Use <code>image/jpeg</code> and the options supported by your installed Jimp version when you want JPEG output. PNG and JPEG differ in transparency and compression; a Base64 string does not erase those differences. See <a href="/resize-image-to-base64">image resizing before Base64</a> when payload size matters.</p>
+<h2>Read a data URI back into Jimp</h2>
+<p>For a trusted data URI produced by the previous script, remove the prefix and decode its Base64 payload into a Buffer. Save the following as <code>jimp-read-data-uri.mjs</code>:</p>
+<pre><code>import { Jimp } from &quot;jimp&quot;;
+import { readFile } from &quot;node:fs/promises&quot;;
+
+const dataUri = (await readFile(&quot;image.data-uri.txt&quot;, &quot;utf8&quot;)).trim();
+const match = /^data:image\/(?:png|jpeg);base64,([A-Za-z0-9+/]+={0,2})$/.exec(dataUri);
+if (!match) throw new Error(&quot;Expected a PNG or JPEG Base64 data URI&quot;);
+const bytes = Buffer.from(match[1], &quot;base64&quot;);
+if (!bytes.length || bytes.toString(&quot;base64&quot;) !== match[1]) {
+  throw new Error(&quot;Invalid Base64 payload&quot;);
+}
+const image = await Jimp.fromBuffer(bytes);
+console.log(image.bitmap.width, image.bitmap.height);</code></pre>
+<p>This is a local-file example. For untrusted uploads, also enforce encoded-byte and decoded-pixel limits before processing. A compressed file can be small while its decoded bitmap is large.</p>
+<h2>Preserve the original bytes when you do not need editing</h2>
+<p>Jimp's <code>getBase64()</code> calls its image encoder. It does not promise byte-for-byte preservation of the source file or its metadata. If you only need Base64 of the original bytes, Node's standard library is enough:</p>
+<pre><code>import { readFile } from &quot;node:fs/promises&quot;;
+const rawBase64 = (await readFile(&quot;input.png&quot;)).toString(&quot;base64&quot;);
+const dataUri = `data:image/png;base64,${rawBase64}`;
+console.log(dataUri);</code></pre>
+<p>Use the MIME type that actually matches the input. For browser-side byte encoding, <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a> shows the FileReader path.</p>
+<h2>Troubleshooting and version differences</h2>
+<p><strong>I see <code>[object Promise]</code>.</strong> Await <code>getBase64()</code>. Do not pass its Promise directly to an <code>&lt;img&gt;</code> or JSON payload.</p>
+<p><strong>My API rejects the string.</strong> Check whether it expects raw Base64 rather than a data URI. Do not encode an already encoded Base64 string again.</p>
+<p><strong>An old example uses a callback.</strong> Match the example to your installed Jimp version. Current named imports and Promise methods should not be combined with an older callback tutorial.</p>
+<p><strong>The output file differs from the input.</strong> That is expected when Jimp decodes and re-encodes the image. Use <code>readFile().toString("base64")</code> when exact original-byte transport is the requirement.</p>
+<h2>Related guides</h2>
+<p>Continue with <a href="/image-to-base64-for-api">API payload formats</a>, <a href="/resize-image-to-base64">resizing an image before encoding</a>, or the <a href="/how-to-convert-image-to-base64">browser conversion walkthrough</a>.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

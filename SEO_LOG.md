@@ -647,3 +647,13 @@ Last updated: 2026-09-07 CST
 - 验证：线上 200/canonical/JSON-LD/首页与 howto footer/llms/sitemap 39 locs/PA 交叉链/gmail 回链全核通过；check_seo fail=0（44 页/39 locs，3 个已知 canonical 合并 WARN）。
 - 附带更正：选词池候选「invalid base64 image data fix」实际早已由 /fix-invalid-base64-image-data 承接（commit 84c801e 早期批次，线上 200+sitemap 在档），0921 建议 rank3 系误报，已同步更正状态文件。
 - 待办：GSC 请求索引新页 1 个（走 gsc_request_indexing.mjs）；python requests+fastapi 姊妹页已批走 8e2b617e 周四槽 09-24（行动清单 A7）。
+
+
+## 2026-10-08 · Postmark、Jimp、Brevo 三篇指定稿上线
+
+- 授权：Jerome 在滴答离线补做会话审阅三篇全文后明确同意建页发布；范围仅三篇，未扩展 A6/A7 旧积压。
+- 页面：/postmark-cid-inline-image-base64、/jimp-getbase64-image-to-data-uri、/brevo-transactional-base64-attachment-no-cid。保留 Postmark ContentID 含 cid:、Jimp async 返回完整 data URI/重新编码、Brevo 当前公开事务 API schema 未暴露 Content-ID 的边界，并在正文链接官方来源。
+- 内链：新页正文指向转换工具与相关指南；首页工具正文及 API/SendGrid 指南补三页反链；sitemap 44→47。新页复用现有 app.js 记录页面浏览，不新增追踪系统。Worker 使用静态资源和扫描路径拒绝规则，没有独立路由白名单，无需修改 worker.js。
+- 验证：SEO 一致性 52 HTML / 47 sitemap URL，FAIL=0，3 个既有 canonical 合并 WARN；5 个示例 JS 语法及邮件载荷 dry-run 通过；无工具组件的文章页 app.js 启动检查通过。没有发送邮件或声称 Jimp 实际编解码通过。
+- 部署：复用已安装 Wrangler 4.142.0，Worker image2base64，Version 352f28fe-378b-4e14-9be0-5617b411117e。7 个改动文件线上 HTTP 200；移除唯一已观察的 Cloudflare Insights 自动注入脚本后，HTML 其余字节与本地完全一致；sitemap XML 逐字一致。
+- 未验收：GSC 新页收录、真实邮件客户端渲染、移动端性能指标；页面上线不等于这些结果。证据：/Users/jerome/Research/outputs/task-6ac62c33/publication/production-readback.json。

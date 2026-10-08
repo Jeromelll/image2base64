@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Postmark Inline Images: Base64 Attachments and CID</title>
+<meta name="description" content="Send inline images with Postmark using raw Base64 attachments and matching CID references. Copy a Node.js example and avoid data URI and double-encoding errors." />
+<link rel="canonical" href="https://image2base64.com/postmark-cid-inline-image-base64" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Postmark Inline Images: Base64 Attachments and CID" />
+<meta property="og:description" content="Send inline images with Postmark using raw Base64 attachments and matching CID references. Copy a Node.js example and avoid data URI and double-encoding errors." />
+<meta property="og:url" content="https://image2base64.com/postmark-cid-inline-image-base64" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can I paste a data URI directly into `HtmlBody`?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "CID attachments are the documented pattern here. Email clients have uneven support for data URIs, so a browser preview is not a mail-client test."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does the Postmark token belong in the browser?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Send through a server you control. A browser-only converter can prepare the Base64 value without holding a mail-service credential."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Will every client show the image inline?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "That requires client testing. A successful API response confirms acceptance by the API, not inbox placement or rendering."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+<h1>Postmark inline images with Base64 and CID</h1>
+<p>To put an image inside a Postmark HTML email, send the image bytes as a Base64 attachment and reference that attachment from the HTML. The attachment is part of the email; the <code>&lt;img&gt;</code> element does not contain the Base64 string itself.</p>
+<p>If you already have an image file, the <a href="/">Image to Base64 tool</a> can give you the raw Base64 value without uploading the file. Select raw Base64 for the API payload. A full <code>data:image/png;base64,...</code> URL belongs in a browser document, not in Postmark's <code>Attachments.Content</code> field.</p>
+<h2>The two values that must match</h2>
+<p><a href="https://postmarkapp.com/developer/user-guide/send-email-with-api/send-a-single-email">Postmark's official inline-image example</a>, checked on October 8, 2026, uses a <code>ContentID</code> such as <code>cid:logo001</code>. The HTML uses the same value: <code>&lt;img src="cid:logo001" alt="Company logo"&gt;</code>.</p>
+<p>The attachment fields describe different things:</p>
+<div class="cmp-scroll"><table class="cmp"><thead><tr><th>Field</th><th>Value</th></tr></thead><tbody>
+<tr><td><code>Name</code></td><td>A filename, such as <code>logo.png</code></td></tr>
+<tr><td><code>Content</code></td><td>Raw Base64 of the image bytes</td></tr>
+<tr><td><code>ContentType</code></td><td>The MIME type, such as <code>image/png</code></td></tr>
+<tr><td><code>ContentID</code></td><td>The CID reference used by the HTML, including <code>cid:</code> in Postmark's documented format</td></tr>
+</tbody></table></div>
+<p>Do not copy a different provider's attachment schema unchanged. For example, <a href="/sendgrid-inline-image-base64">SendGrid inline images</a> use different field names and a different convention for <code>content_id</code>.</p>
+<h2>Build the payload in Node.js</h2>
+<p>Save this as <code>postmark-inline.mjs</code>. It requires Node.js 18 or later and a PNG named <code>logo.png</code>. Running it normally prints a reviewable payload. Passing <code>--send</code> makes an actual API request, so use a verified sender, the intended recipient, and a server token only when you are ready to send.</p>
+<pre><code>import { readFile } from &quot;node:fs/promises&quot;;
+
+const bytes = await readFile(&quot;logo.png&quot;);
+const cid = &quot;cid:logo001&quot;;
+const payload = {
+  From: process.env.EMAIL_FROM || &quot;sender@example.com&quot;,
+  To: process.env.EMAIL_TO || &quot;recipient@example.com&quot;,
+  Subject: &quot;Inline image example&quot;,
+  HtmlBody: `&lt;p&gt;Your image:&lt;/p&gt;&lt;img src=&quot;${cid}&quot; alt=&quot;Company logo&quot;&gt;`,
+  TextBody: &quot;This message includes an image in the HTML version.&quot;,
+  Attachments: [{
+    Name: &quot;logo.png&quot;,
+    Content: bytes.toString(&quot;base64&quot;),
+    ContentType: &quot;image/png&quot;,
+    ContentID: cid
+  }]
+};
+
+if (!process.argv.includes(&quot;--send&quot;)) {
+  console.log(JSON.stringify(payload, null, 2));
+} else {
+  const token = process.env.POSTMARK_SERVER_TOKEN;
+  if (!token || !process.env.EMAIL_FROM || !process.env.EMAIL_TO) {
+    throw new Error(&quot;Set POSTMARK_SERVER_TOKEN, EMAIL_FROM, and EMAIL_TO first.&quot;);
+  }
+  const response = await fetch(&quot;https://api.postmarkapp.com/email&quot;, {
+    method: &quot;POST&quot;,
+    headers: {
+      &quot;Accept&quot;: &quot;application/json&quot;,
+      &quot;Content-Type&quot;: &quot;application/json&quot;,
+      &quot;X-Postmark-Server-Token&quot;: token
+    },
+    body: JSON.stringify(payload)
+  });
+  const result = await response.json();
+  if (!response.ok || result.ErrorCode !== 0) {
+    throw new Error(`Postmark request failed: ${JSON.stringify(result)}`);
+  }
+  console.log(result.MessageID);
+}</code></pre>
+<p>The MIME type must match the file you read. For a JPEG, change the filename and use <code>image/jpeg</code>. Do not relabel JPEG bytes as PNG. Keep real tokens in environment variables rather than the source file, and review the payload before sending.</p>
+<h2>Raw Base64, data URI, and CID are different</h2>
+<p>Raw Base64 is the encoded file content. A data URI adds a media type and prefix, for example <code>data:image/png;base64,...</code>. A CID is a reference to an attachment in a MIME message.</p>
+<p>If your upstream code returns a data URI, remove its header before placing the content in <code>Attachments.Content</code>. If your upstream code already returns raw Base64, use it directly. Encoding that text a second time produces Base64 of the string rather than Base64 of the original image bytes. The <a href="/image-to-base64-for-api">API payload guide</a> explains this boundary in more detail.</p>
+<h2>Troubleshooting an image that does not render</h2>
+<p>Check the CID match first. Check that <code>Content</code> has no <code>data:</code> prefix, that its decoded bytes form the expected file, and that <code>ContentType</code> matches those bytes. Use a small image while debugging so the payload is easy to inspect.</p>
+<p>Client behavior still matters after a valid API request. An accepted message does not prove that every mail client displayed the image. Test the actual clients your recipients use; the <a href="/base64-image-not-showing-in-outlook">Outlook Base64 image guide</a> explains why a data URI inside HTML is a separate compatibility problem.</p>
+<h2>FAQ</h2>
+<details><summary>Can I paste a data URI directly into <code>HtmlBody</code>?</summary><p>CID attachments are the documented pattern here. Email clients have uneven support for data URIs, so a browser preview is not a mail-client test.</p></details>
+<details><summary>Does the Postmark token belong in the browser?</summary><p>No. Send through a server you control. A browser-only converter can prepare the Base64 value without holding a mail-service credential.</p></details>
+<details><summary>Will every client show the image inline?</summary><p>That requires client testing. A successful API response confirms acceptance by the API, not inbox placement or rendering.</p></details>
+<h2>Related guides</h2>
+<p>Use <a href="/sendgrid-inline-image-base64">SendGrid CID attachments</a> for a provider-specific comparison, <a href="/image-to-base64-for-api">image-to-Base64 API payloads</a> for output shapes, and <a href="/base64-image-not-showing-in-outlook">Outlook image troubleshooting</a> for client behavior.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>
