@@ -9,7 +9,7 @@ Live site: https://image2base64.com
 - Convert PNG, JPG, SVG, WebP and GIF images to Base64 data URIs.
 - Decode Base64 image strings back into previewable, downloadable images.
 - Copy ready-to-use raw Base64, data URI, HTML `<img>` and CSS snippets.
-- Run entirely in the browser with the `FileReader` API. No upload, no sign-up.
+- Run entirely in the browser with the `FileReader` API. No upload; optional sign-in.
 
 ## Pages
 
@@ -35,13 +35,7 @@ Then open http://localhost:8000.
 自定义域挂在 Workers domain `image2base64.com`。改完后：
 
 ```sh
-rsync -a --delete \
-  --exclude '.git' --exclude 'dist' --exclude '.claude' --exclude '.wrangler' \
-  --exclude 'worker.js' --exclude 'wrangler.toml' --exclude '.assetsignore' \
-  --exclude 'check_seo_consistency.py' --exclude 'SEO_LOG.md' --exclude 'README.md' \
-  --exclude '_会话交接*' --exclude '诊断_*' --exclude 'GSC提交引导_*' --exclude '*.md' \
-  --exclude '.gitignore' --exclude '.DS_Store' --exclude 'LICENSE' \
-  ./ dist/
+python3 build.py
 npx wrangler deploy
 ```
 

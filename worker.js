@@ -6,6 +6,8 @@
  *  - POST /api/evt accepts small same-origin page-view and interaction events from app.js.
  *  No cookies, no IP storage, no PII, no file contents.
  */
+import { handleAuth } from "./site-auth/handler.js";
+
 const REDIRECTS = new Map([
   ["/jpeg-to-base64", "/jpg-to-base64"],
   ["/jpeg-to-base64/", "/jpg-to-base64"],
@@ -79,6 +81,8 @@ async function logEvent(env, name, page, x1, x2, country, device, referrer) {
 
 export default {
   async fetch(request, env) {
+    const auth = await handleAuth(request, env);
+    if (auth) return auth;
     const url = new URL(request.url);
     const path = url.pathname;
 

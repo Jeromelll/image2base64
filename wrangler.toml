@@ -12,3 +12,10 @@ not_found_handling = "none"
 binding = "DB"
 database_name = "image2base64-events"
 database_id = "d72e81ab-ac22-408a-9353-d0db9d867858"
+
+[vars]
+AUTH_ORIGIN = "https://image2base64.com"
+
+[[kv_namespaces]]
+binding = "AUTH_USERS"
+id = "e5e5553be3424568afc7053576865aa4"

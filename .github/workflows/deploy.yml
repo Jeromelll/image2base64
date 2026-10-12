@@ -19,15 +19,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Prepare dist (rsync repo root -> dist, excluding git/worker/wrangler)
-        # dist/ is gitignored and not a real build output — it is a copy of the
-        # static assets. Reproduce it exactly as documented in README.md.
-        run: |
-          rsync -a --exclude '.git' --exclude 'dist' --exclude '.claude' \
-            --exclude '.wrangler' --exclude 'worker.js' --exclude 'wrangler.toml' \
-            --exclude '.assetsignore' --exclude '.github' --exclude '.gitignore' \
-            --exclude 'LICENSE' --exclude 'README.md' --exclude 'SEO_LOG.md' \
-            --exclude '*.md' --exclude 'check_seo_consistency.py' ./ dist/
+      - name: Test shared OAuth implementation
+        run: node --test site-auth/tests/*.test.mjs
+
+      - name: Check SEO consistency
+        run: python3 check_seo_consistency.py
+
+      - name: Build public assets
+        run: python3 build.py
+
+      - name: Verify Worker bundle without deploying
+        run: npx wrangler@4.129.0 deploy --dry-run
 
       - name: Deploy Worker
         # Only fires once the CLOUDFLARE_API_TOKEN secret is configured in the repo.
