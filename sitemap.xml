@@ -181,5 +181,8 @@
   <url><loc>https://image2base64.com/postmark-cid-inline-image-base64</loc></url>
   <url><loc>https://image2base64.com/jimp-getbase64-image-to-data-uri</loc></url>
   <url><loc>https://image2base64.com/brevo-transactional-base64-attachment-no-cid</loc></url>
+  <url><loc>https://image2base64.com/openai-vision-base64-image</loc></url>
+  <url><loc>https://image2base64.com/cloud-vision-base64-image</loc></url>
+  <url><loc>https://image2base64.com/base64-image-in-html-email</loc></url>
 </urlset>
 

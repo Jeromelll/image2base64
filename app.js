@@ -874,8 +874,8 @@
   // ====================================================================
   function initApiPayloads() {
     var outOpenAI = $("#out-openai");
-    if (!outOpenAI) return;
     var outGcv = $("#out-gcv");
+    if (!outOpenAI && !outGcv) return;
 
     document.addEventListener("i2b64:encoded", function (e) {
       var uri = e.detail && e.detail.dataUri;
@@ -883,16 +883,18 @@
       var comma = uri.indexOf(",");
       var raw = comma >= 0 ? uri.slice(comma + 1) : uri;
 
-      outOpenAI.value = JSON.stringify({
-        model: "gpt-4o",
-        messages: [{
-          role: "user",
-          content: [
-            { type: "text", text: "Describe this image" },
-            { type: "image_url", image_url: { url: uri } }
-          ]
-        }]
-      }, null, 2);
+      if (outOpenAI) {
+        outOpenAI.value = JSON.stringify({
+          model: "gpt-4o",
+          messages: [{
+            role: "user",
+            content: [
+              { type: "text", text: "Describe this image" },
+              { type: "image_url", image_url: { url: uri } }
+            ]
+          }]
+        }, null, 2);
+      }
 
       if (outGcv) {
         outGcv.value = JSON.stringify({

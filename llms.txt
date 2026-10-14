@@ -42,6 +42,9 @@ Core user value: turn an image into a self-contained text string for inline embe
 - [Resize Image to Base64](/resize-image-to-base64): Scale down, then encode.
 - [Online vs. Local Converters](/online-vs-local-base64-converter): When browser-based conversion beats installed tools.
 - [Image to Base64 Alternatives](/image-to-base64-alternatives): Comparison of converter options.
+- [OpenAI Vision Base64 Image](/openai-vision-base64-image): The image_url data URI payload GPT-4o/GPT-4.1 expect, with limits and failure modes.
+- [Cloud Vision Base64 Image](/cloud-vision-base64-image): Raw Base64 (no prefix) in images.annotate's image.content, with size limits and batching.
+- [Base64 Image in HTML Email](/base64-image-in-html-email): Data URI vs CID vs hosted — client support matrix and per-provider working patterns.
 
 ## Troubleshooting
 

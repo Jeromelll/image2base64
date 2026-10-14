@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OpenAI Vision API: Send a Base64 Image (Data URI Payload Template)</title>
+<meta name="description" content="The exact payload shape GPT-4o and GPT-4.1 expect: a full data:image/...;base64 URI inside an image_url content part. Chat Completions and Responses API examples, limits, and common failures." />
+<link rel="canonical" href="https://image2base64.com/openai-vision-base64-image" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="OpenAI Vision API: Send a Base64 Image (Data URI Template)" />
+<meta property="og:description" content="Encode an image in your browser and paste a ready-to-send image_url payload for GPT-4o / GPT-4.1 — no upload, no hosting." />
+<meta property="og:url" content="https://image2base64.com/openai-vision-base64-image" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does the OpenAI API accept Base64 images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Vision-capable models such as GPT-4o and GPT-4.1 accept a Base64 data URI in the image_url.url field of a content part. The string must include the data:image/...;base64, prefix — the API treats it as a URL, so raw Base64 without the prefix fails."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between image_url and input_image?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "They are the same image in two API shapes. Chat Completions uses a content part with type image_url, where the URL lives in image_url.url. The Responses API uses a content part with type input_image, where the data URI sits directly in the image_url field as a plain string. Both accept the same data URI value."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What does the detail parameter do?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "detail controls how much processing the model spends on the image: low is a cheap fixed-size pass, high lets the model tile the image for close inspection, and auto lets the model decide. It is set inside the image_url object next to url."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How large can a Base64 image be for the OpenAI API?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Keep encoded images under roughly 20 MB — Base64 inflates the file by about a third, so a 15 MB photo already produces a 20 MB string. Vision models rarely benefit from more than 1024-2048 px of input, so downscale before encoding."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my Base64 image fail with an invalid image error?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The three usual causes: the data: prefix is missing or doubled, the string contains line breaks inserted by another encoder (raw newlines are invalid inside a JSON string), or the copy got truncated. Encoding in one step and pasting the finished payload avoids all three."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I send multiple images in one message?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Add one image_url content part per image inside the same content array, each with its own data URI. Order matters — the model reads them in array order alongside the text parts."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "OpenAI Vision Base64 Encoder",
+  "url": "https://image2base64.com/openai-vision-base64-image",
+  "description": "Encode an image to the exact image_url data URI payload the OpenAI vision API expects. 100% client-side, no upload.",
+  "operatingSystem": "Web",
+  "applicationCategory": "DeveloperApplication",
+  "applicationSubCategory": "ImageConverter",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "Chat Completions image_url payload template",
+    "Full data URI and raw Base64 outputs",
+    "MIME type detected from the actual file",
+    "100% client-side — no upload"
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+          <a href="/login.html">Log in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>OpenAI Vision API: send an image as Base64</h1>
+      <p class="lede">
+        <strong>Encode the image here, copy the finished payload, paste it into your request.</strong>
+        OpenAI's vision models want the complete data URI — prefix and all — inside an
+        <code>image_url</code> content part. This page builds that string for you.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> The image never leaves your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="drop" class="dropzone">
+          <div class="dz-icon" aria-hidden="true">🤖</div>
+          <h2>Drop an image to build the image_url payload</h2>
+          <p>or paste from your clipboard · everything stays in your browser</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose image</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/*" />
+
+          <div class="dz-samples">
+            <span class="dz-samples-label">No image handy? Try a sample:</span>
+            <button class="sample-chip" type="button" data-sample="photo">🏞️ Sample photo</button>
+          </div>
+        </div>
+
+        <p id="enc-error" class="error" hidden></p>
+
+        <div id="results" class="results" hidden>
+          <div class="result-head">
+            <div class="preview-box"><img id="preview" alt="Preview of the image before Base64 encoding" width="120" height="120" hidden /></div>
+            <dl class="meta">
+              <div><dt>Type</dt><dd id="m-type">—</dd></div>
+              <div><dt>File size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Dimensions</dt><dd id="m-dims">—</dd></div>
+              <div><dt>Data URI size</dt><dd id="m-b64size">—</dd></div>
+            </dl>
+          </div>
+
+          <p id="overhead-note" class="overhead-note" hidden></p>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-openai">Chat Completions payload <span class="muted">(<code>messages</code> content part)</span></label>
+              <button class="copy" type="button" data-copy="#out-openai">Copy</button>
+            </div>
+            <textarea id="out-openai" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-datauri">Full data URI <span class="muted">(paste into <code>input_image</code> or your own template)</span></label>
+              <button class="copy" type="button" data-copy="#out-datauri">Copy</button>
+            </div>
+            <textarea id="out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-raw">Raw Base64 only <span class="muted">(not what OpenAI wants — see below)</span></label>
+              <button class="copy" type="button" data-copy="#out-raw">Copy</button>
+            </div>
+            <textarea id="out-raw" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>The payload shape Chat Completions expects</h2>
+      <p>
+        In the Chat Completions API, an image travels as one content part inside a user message. The part has
+        <code>"type": "image_url"</code>, and its <code>image_url.url</code> value is the
+        <strong>full data URI</strong> — <code>data:image/png;base64,</code> followed by the encoded bytes.
+        The optional <code>detail</code> field sits next to <code>url</code>:
+      </p>
+      <pre><code>{
+  "model": "gpt-4o",
+  "messages": [{
+    "role": "user",
+    "content": [
+      { "type": "text", "text": "What's in this screenshot?" },
+      { "type": "image_url",
+        "image_url": {
+          "url": "data:image/png;base64,iVBORw0KGgo...",
+          "detail": "high"
+        } }
+    ]
+  }]
+}</code></pre>
+      <p>
+        <code>detail</code> controls processing depth: <code>low</code> is a cheap fixed-size pass,
+        <code>high</code> lets the model inspect the image in detail, and <code>auto</code> (the default)
+        lets the model decide. For screenshots with small text, <code>high</code> usually pays for itself.
+      </p>
+
+      <h2>The Responses API uses input_image instead</h2>
+      <p>
+        The Responses API carries the same image under a different part type: <code>"type": "input_image"</code>,
+        with the data URI placed <strong>directly</strong> in the <code>image_url</code> field as a plain string —
+        not nested in an object:
+      </p>
+      <pre><code>{
+  "model": "gpt-4o",
+  "input": [{
+    "role": "user",
+    "content": [
+      { "type": "input_text", "text": "What's in this screenshot?" },
+      { "type": "input_image",
+        "image_url": "data:image/png;base64,iVBORw0KGgo..." }
+    ]
+  }]
+}</code></pre>
+      <p>
+        The data URI value itself is identical in both APIs — only the envelope differs. That is why the tool
+        above outputs the standalone data URI too: copy it into whichever envelope your client library sends.
+      </p>
+
+      <h2>Python and Node.js examples</h2>
+      <p>Python with the standard library only — read the file, encode it, splice the prefix:</p>
+      <pre><code>import base64
+import requests
+
+with open("screenshot.png", "rb") as f:
+    b64 = base64.b64encode(f.read()).decode("utf-8")
+
+resp = requests.post(
+    "https://api.openai.com/v1/chat/completions",
+    headers={"Authorization": f"Bearer {API_KEY}"},
+    json={
+        "model": "gpt-4o",
+        "messages": [{
+            "role": "user",
+            "content": [
+                {"type": "text", "text": "Describe this image"},
+                {"type": "image_url",
+                 "image_url": {"url": f"data:image/png;base64,{b64}"}}
+            ],
+        }],
+    },
+)
+print(resp.json()["choices"][0]["message"]["content"])</code></pre>
+      <p>Node.js — <code>fs.readFileSync</code> with the <code>"base64"</code> encoding does it in one call:</p>
+      <pre><code>import fs from "node:fs";
+
+const b64 = fs.readFileSync("screenshot.png", "base64");
+
+const body = {
+  model: "gpt-4o",
+  messages: [{
+    role: "user",
+    content: [
+      { type: "text", text: "Describe this image" },
+      { type: "image_url",
+        image_url: { url: `data:image/png;base64,${b64}` } },
+    ],
+  }],
+};</code></pre>
+      <p>
+        One subtlety in both languages: the MIME type in the prefix must match the actual bytes. A PNG renamed
+        to <code>.jpg</code> still has PNG bytes, and some client libraries sniff the type from the file
+        extension. This tool detects the type from the file's real signature instead.
+      </p>
+
+      <h2>Size: the 33% overhead and the 20 MB ceiling</h2>
+      <p>
+        Base64 encodes three bytes into four characters, so the string is about a third larger than the file.
+        OpenAI documents a practical ceiling of roughly 20 MB per encoded image — a 15 MB photo is already
+        there before you have written a word of prompt. Since vision models downscale input internally,
+        a 1024-2048 px image carries essentially all the signal the model can use. Run large photos through
+        the <a href="/compress-jpg-to-base64">JPG compressor</a> first, and check the finished size with the
+        <a href="/base64-image-size-calculator">Base64 size calculator</a> before you ship it.
+      </p>
+
+      <h2>Why OpenAI wants the prefix (and Google does not)</h2>
+      <p>
+        OpenAI treats the data URI as a URL — the same field accepts <code>https://</code> image links, so the
+        string has to be a well-formed URI. Google Cloud Vision sits at the other end of the spectrum: its
+        <code>image.content</code> field takes the raw Base64 payload only, and a <code>data:</code> prefix
+        there causes an encoding error. The <a href="/cloud-vision-base64-image">Cloud Vision Base64 guide</a>
+        covers that shape, and the <a href="/image-to-base64-for-api">API payload builder</a> fills both at once.
+      </p>
+
+      <h2>When the image comes back as Base64</h2>
+      <p>
+        Image generation endpoints also speak Base64 — they return the produced image as an
+        <code>image_url</code> containing a data URI. Paste that string into the
+        <a href="/base64-to-image">Base64 to image decoder</a> to preview and save it as a file.
+      </p>
+
+      <h2>Failure modes worth knowing</h2>
+      <ul>
+        <li><strong>Missing or doubled prefix.</strong> Concatenating <code>data:image/png;base64,</code> onto a string that already carries it produces <code>...base64,data:image...</code> — the request fails as an invalid image.</li>
+        <li><strong>Line breaks in the string.</strong> Some encoders (and email-unfriendly MIME contexts) wrap Base64 at 76 characters. Raw newlines are invalid inside a JSON string — either strip them or JSON-escape as <code>\n</code>. This tool emits a single-line string.</li>
+        <li><strong>Hand-rolled JSON assembly.</strong> Building the body with string concatenation invites escaping bugs. Assemble with a JSON serializer (or paste the payload from this tool).</li>
+        <li><strong>Wrong MIME label.</strong> The prefix must name the format the bytes actually are.</li>
+      </ul>
+
+      <h2>Why encode in the browser</h2>
+      <p>
+        Vision pipelines routinely process material you cannot paste into an upload-based web tool: internal
+        dashboards, unreleased designs, contracts, medical images. This page encodes with the browser's
+        <code>FileReader</code> API — there is no upload step, which you can confirm in the Network tab:
+        converting fires zero requests.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>Related tools and guides</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/image-to-base64-for-api"><strong>Base64 for API calls</strong><span>OpenAI and Cloud Vision payloads side by side.</span></a>
+        <a class="sib-card" href="/cloud-vision-base64-image"><strong>Cloud Vision Base64</strong><span>The raw-Base64 shape Google expects.</span></a>
+        <a class="sib-card" href="/compress-jpg-to-base64"><strong>Compress JPG to Base64</strong><span>Shrink photos before encoding.</span></a>
+        <a class="sib-card" href="/base64-to-image"><strong>Base64 to Image</strong><span>Decode returned images into files.</span></a>
+        <a class="sib-card" href="/base64-image-size-calculator"><strong>Base64 Size Calculator</strong><span>Check the payload size before you send.</span></a>
+        <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Universal encoder for any format.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>Does the OpenAI API accept Base64 images?</summary>
+        <p>Yes. Vision-capable models such as GPT-4o and GPT-4.1 accept a Base64 data URI in the <code>image_url.url</code> field of a content part. The string must keep the <code>data:image/...;base64,</code> prefix — the field is read as a URL, so bare Base64 fails there.</p>
+      </details>
+      <details>
+        <summary>What is the difference between image_url and input_image?</summary>
+        <p>Same image, two envelopes. Chat Completions uses a content part with <code>type: "image_url"</code> and the URI in <code>image_url.url</code>; the Responses API uses <code>type: "input_image"</code> with the URI directly in the <code>image_url</code> string field.</p>
+      </details>
+      <details>
+        <summary>What does the detail parameter do?</summary>
+        <p><code>detail: "low"</code> runs a cheap fixed-size pass, <code>"high"</code> lets the model inspect the image closely, <code>"auto"</code> decides for you. It sits inside the <code>image_url</code> object next to <code>url</code>.</p>
+      </details>
+      <details>
+        <summary>How large can the image be?</summary>
+        <p>Keep the encoded string under roughly 20 MB. Base64 adds about 33%, and models rarely use more than 1024-2048 px of input — the <a href="/compress-jpg-to-base64">compressor</a> gets you there in one step.</p>
+      </details>
+      <details>
+        <summary>Why does my image fail with an invalid image error?</summary>
+        <p>Usually a missing or doubled <code>data:</code> prefix, line breaks another encoder inserted into the string, or a truncated copy. Pasting the payload from this tool avoids all three.</p>
+      </details>
+      <details>
+        <summary>Can I send multiple images in one message?</summary>
+        <p>Yes — one <code>image_url</code> content part per image, each with its own data URI, in the same <code>content</code> array. The model reads them in array order.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

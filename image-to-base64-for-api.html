@@ -243,6 +243,12 @@
         prefix automatically.
       </p>
 
+      <p>
+        Need the deep dive per provider? The <a href="/openai-vision-base64-image">OpenAI vision Base64 guide</a>
+        covers <code>image_url</code> vs <code>input_image</code> and the failure modes, and the
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 guide</a> covers the
+        <code>images.annotate</code> body, batching and its 20 MB / 75 MP limits.
+      </p>
       <h3>Step by step</h3>
       <ol>
         <li><strong>Add the image.</strong> Drag it in, pick it, or paste from the clipboard.</li>
@@ -287,6 +293,8 @@
         Email APIs work the other way. See the <a href="/sendgrid-inline-image-base64">SendGrid inline image guide</a>
         for raw Base64 attachments with a <code>content_id</code>, the <a href="/postmark-cid-inline-image-base64">Postmark CID example</a>,
         and the <a href="/brevo-transactional-base64-attachment-no-cid">Brevo transactional attachment guide</a> for the fields its public endpoint documents.
+        For the client-side rendering question across Gmail, Outlook and the rest, the
+        <a href="/base64-image-in-html-email">Base64 image in HTML email guide</a> has the full client matrix.
         For Node.js image processing, <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64</a> returns a complete data URI.
       </p>
     </div>
@@ -401,6 +409,9 @@
         <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
         <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
         <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
       </nav>

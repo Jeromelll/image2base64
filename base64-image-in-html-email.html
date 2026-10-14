@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Base64 Images in HTML Email: What Renders and What Gets Stripped</title>
+<meta name="description" content="A technical guide for HTML email developers: data URI vs CID vs hosted images, a client-by-client support matrix (Gmail, Outlook, Apple Mail, Yahoo), size math, and the working pattern for Postmark, SendGrid, and Brevo." />
+<link rel="canonical" href="https://image2base64.com/base64-image-in-html-email" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Base64 Images in HTML Email: What Renders and What Gets Stripped" />
+<meta property="og:description" content="Data URI vs CID vs hosted images in HTML email — client support matrix, size math, and per-provider working patterns. Written for email developers." />
+<meta property="og:url" content="https://image2base64.com/base64-image-in-html-email" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Do Base64 data URI images work in HTML email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Only in some clients. Apple Mail, Thunderbird and Yahoo Mail render data URIs; Gmail strips them from the HTML entirely, and Outlook on Windows (which renders with the Word engine) does not display them. Treat the data URI as a progressive enhancement, never as the only copy of the image."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does Gmail remove Base64 images from email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Gmail sanitizes inbound HTML and blocks data: URIs in img tags as a security measure — embedded payloads can hide arbitrary content. The result is a blank area where the image was, with no fallback unless you provide alt text or a second rendering path."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the reliable way to embed an image in email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Two proven paths: a hosted image referenced by absolute HTTPS URL (works nearly everywhere, at the cost of a remote request), or a CID inline attachment — raw Base64 in the attachments structure with a Content-ID, referenced from the HTML as cid:name. Both survive Gmail and Outlook."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "When is a Base64 data URI the right choice in email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "When the recipients are known to use permissive clients (Apple Mail, Thunderbird), when no hosting or attachment API is available, or when zero-upload handling matters — internal tools generating mail from images that must not touch a server. Always ship alt text, because a large share of the audience will see it instead."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How much bigger does a Base64 image make the email?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "About a third larger than the binary file, since Base64 encodes three bytes into four characters. A 300 KB logo becomes a 400 KB string inside the HTML — and every recipient downloads that weight on every send. Keep embedded images small and check them with a size calculator first."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Do email signature images work as data URIs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Partially. Gmail enforces a signature size limit of about 10,000 characters, which a small Base64 logo can exceed on its own, and Outlook's desktop signature editor rejects them. Apple Mail signatures handle data URIs fine. The safe cross-client pattern remains a small hosted image."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "TechArticle",
+  "headline": "Base64 Images in HTML Email: What Renders and What Gets Stripped",
+  "url": "https://image2base64.com/base64-image-in-html-email",
+  "description": "Client-by-client support for data URI images in HTML email, and the working CID and hosted-image patterns for transactional APIs.",
+  "proficiencyLevel": "Intermediate",
+  "audience": "HTML email and backend developers",
+  "about": "Embedding images in HTML email with Base64, CID attachments, and hosted URLs"
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+          <a href="/login.html">Log in</a>
+    </nav>
+  </div>
+</header>
+
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+    <h1>Base64 images in HTML email: what renders and what gets stripped</h1>
+    <p>You encoded a logo to a data URI, dropped it into an <code>&lt;img&gt;</code> tag, sent the test email — and half your test inbox shows a blank box. This guide explains <strong>which clients render Base64 data URIs, which strip them, and which of the three embedding paths (data URI, CID attachment, hosted URL) to use where</strong>, with the working pattern for the transactional APIs most developers actually send through.</p>
+
+    <nav>
+      <ul>
+        <li><a href="#three-ways">Three ways an image travels in email</a></li>
+        <li><a href="#matrix">Client-by-client support matrix</a></li>
+        <li><a href="#when-datauri">When the data URI is the right call</a></li>
+        <li><a href="#providers">Working patterns per provider</a></li>
+        <li><a href="#size">Size math and message limits</a></li>
+        <li><a href="#signatures">The signature special case</a></li>
+        <li><a href="#faq">FAQ</a></li>
+      </ul>
+    </nav>
+
+    <h2 id="three-ways">Three ways an image travels in email</h2>
+    <p>Everything that looks like an "embedded image" in email is one of three mechanisms, and mixing them up is the root of most blank-image bugs:</p>
+    <table>
+      <thead>
+        <tr><th>Mechanism</th><th>How it works</th><th>Reliability</th></tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>Hosted URL</strong></td>
+          <td><code>&lt;img src="https://cdn.example.com/logo.png"&gt;</code> — the HTML references a file on your server. The client downloads it when the recipient allows remote images.</td>
+          <td>Highest. Renders in every modern client once images are enabled; you control the bytes, and swapping the file updates all sent mail.</td>
+        </tr>
+        <tr>
+          <td><strong>CID attachment</strong></td>
+          <td>The image rides in the MIME structure as an attachment with a <code>Content-ID</code>; the HTML references it as <code>&lt;img src="cid:logo"&gt;</code>. No external request, no paperclip icon when <code>Content-Disposition</code> is <code>inline</code>.</td>
+          <td>High. Survives Gmail and Outlook desktop. Requires the sending path to support MIME attachments — i.e. an API or library, not a paste-into-editor workflow.</td>
+        </tr>
+        <tr>
+          <td><strong>Data URI</strong></td>
+          <td>The bytes sit inside the HTML itself: <code>&lt;img src="data:image/png;base64,iVBOR..."&gt;</code>. Fully self-contained, zero requests, zero server involvement.</td>
+          <td>Partial. Rendered by Apple Mail, Thunderbird and Yahoo Mail; stripped by Gmail; not rendered by Outlook on Windows. Works where it works, and silently disappears where it does not.</td>
+        </tr>
+      </tbody>
+    </table>
+    <p>The data URI's privacy property is real and worth having: the image is processed and embedded without ever touching a server. The rest of this guide is about where that property survives delivery.</p>
+
+    <h2 id="matrix">Client-by-client support matrix</h2>
+    <p>Client behavior is consistent enough to plan around, and two clients cause essentially all the pain:</p>
+    <table>
+      <thead>
+        <tr><th>Client</th><th>Data URI in <code>&lt;img&gt;</code></th><th>What actually happens</th></tr>
+      </thead>
+      <tbody>
+        <tr><td><strong>Gmail</strong> (web, Android, iOS)</td><td>❌ Stripped</td><td>The sanitizer removes data URIs from <code>src</code> before rendering — the image area is blank. No workaround in the HTML itself.</td></tr>
+        <tr><td><strong>Outlook</strong> (Windows desktop)</td><td>❌ Not rendered</td><td>The Word rendering engine does not display data URIs in message bodies. Blank box or broken-image glyph.</td></tr>
+        <tr><td><strong>Outlook.com</strong> / new Outlook</td><td>⚠️ Inconsistent</td><td>Behavior varies by version and sanitize path; do not rely on it.</td></tr>
+        <tr><td><strong>Apple Mail</strong> (macOS, iOS)</td><td>✅ Renders</td><td>Data URIs display normally, including in signatures.</td></tr>
+        <tr><td><strong>Thunderbird</strong></td><td>✅ Renders</td><td>Displays data URI images in message bodies.</td></tr>
+        <tr><td><strong>Yahoo Mail</strong></td><td>✅ Generally renders</td><td>Data URIs display, though image blocking on remote content does not apply — the URI is already in the message.</td></tr>
+      </tbody>
+    </table>
+    <p>Two consequences follow from the two red rows. First, <strong>a data URI must never be the only copy of an image</strong> in anything sent to unknown recipients — always ship meaningful <code>alt</code> text. Second, if the audience is Gmail-and-Outlook-heavy (which is most B2B audiences), choose hosted or CID from the start instead of debugging stripped images afterwards.</p>
+
+    <h2 id="when-datauri">When the data URI is actually the right call</h2>
+    <p>The matrix is not an argument against data URIs — it is an argument for matching the mechanism to the audience:</p>
+    <ul>
+      <li><strong>Known-permissive audiences.</strong> Internal tools, admin dashboards, or workflows where you know recipients live in Apple Mail or Thunderbird render fine.</li>
+      <li><strong>Zero-upload requirements.</strong> A tool that turns a user's screenshot into a draft email can embed it as a data URI without uploading the image anywhere — the property this site's converters are built around. The image only travels with the mail itself.</li>
+      <li><strong>Self-contained archives.</strong> A rendered-to-HTML receipt or report that must stay intact as a single file, offline, years later, has no better option. The same logic as <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.</li>
+      <li><strong>Progressive enhancement.</strong> Sending both a data URI and a hosted fallback is possible (nested or conditional markup is fragile), so in practice: pick per audience, and keep <code>alt</code> text honest.</li>
+    </ul>
+
+    <h2 id="providers">Working patterns per provider</h2>
+    <p>Transactional APIs give you the MIME level, which is where CID attachments live. Each of these has a dedicated guide with full payloads:</p>
+    <ul>
+      <li><strong>SendGrid</strong> — raw Base64 in the <code>attachments</code> array, <code>content_id</code> you choose, <code>disposition: "inline"</code>, and <code>cid:</code> in the HTML. Data URIs in the HTML get stripped. → <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a></li>
+      <li><strong>Postmark</strong> — same shape: <code>Attachments[].Content</code> is raw Base64 and <code>Attachments[].ContentID</code> follows the <code>cid:</code> format that the HTML references. → <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a></li>
+      <li><strong>Brevo</strong> — the public transactional <code>/smtp/email</code> schema documents attachments as Base64 but exposes no Content-ID field, so inline-via-CID is not available on that endpoint today; for inline visuals use a hosted URL. → <a href="/brevo-transactional-base64-attachment-no-cid">Brevo attachments without CID</a></li>
+      <li><strong>Power Automate</strong> — the <code>Compose</code> + <code>base64()</code> pattern builds the string, but the Office 365 connector's mail target still strips data URIs, so the result needs the attachment path. → <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a></li>
+      <li><strong>Google Apps Script</strong> — GmailApp rejects data URIs in HTML bodies; decode to a blob and pass it via <code>inlineImages</code> with a <code>cid:</code> reference. → <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a></li>
+      <li><strong>Excel VBA / Outlook automation</strong> — Outlook object model needs the hidden-attachment CID pattern, since Word-engine rendering rejects data URIs. → <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a></li>
+    </ul>
+    <p>The mechanism behind every bullet is the same one: <strong>when the target is Gmail or Outlook, move the image out of the HTML and into the MIME structure</strong> (CID) or onto a server (hosted URL).</p>
+
+    <h2 id="size">Size math and message limits</h2>
+    <p>Base64 encodes three bytes into four characters — about a 33% overhead — and in email that weight lands on every recipient, in every mailbox, on every send:</p>
+    <ul>
+      <li>A 200 KB hero image becomes a ~270 KB string inside the HTML. Five images and the message body alone approaches a megabyte before any text.</li>
+      <li>Mail providers cap message size (commonly in the 25 MB range, lower per recipient server), and a bloated HTML body eats that budget before attachments are counted.</li>
+      <li>Gmail signatures have their own, much tighter ceiling of roughly 10,000 characters — see <a href="#signatures">the signature section</a>.</li>
+      <li>Downscale to the rendered size first (a 1200 px logo shown at 120 px wastes 99% of its bytes), then encode. The <a href="/resize-image-to-base64">resize guide</a> and the <a href="/base64-image-size-calculator">Base64 size calculator</a> handle both halves.</li>
+    </ul>
+
+    <h2 id="signatures">The signature special case</h2>
+    <p>Signatures deserve their own caution because they fail differently from campaigns:</p>
+    <ul>
+      <li><strong>Gmail</strong> caps the whole signature near 10,000 characters. A small Base64 logo alone can run 8,000+ characters, so pasting a data URI signature either fails to save or silently truncates. Gmail's editor accepts uploaded or hosted HTTPS images instead. → <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a></li>
+      <li><strong>Outlook desktop</strong> builds signatures through the Word engine and does not render data URIs there; the reliable path is a small hosted image in the signature HTML. → <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a></li>
+      <li><strong>Apple Mail</strong> handles data URI signatures well — one of the few places the self-contained form genuinely shines. → <a href="/base64-image-email-signature">Base64 image in email signature</a></li>
+    </ul>
+
+    <h2 id="faq">Frequently asked questions</h2>
+    <details>
+      <summary>Do Base64 data URI images work in HTML email?</summary>
+      <p>Only in some clients. Apple Mail, Thunderbird and Yahoo Mail render them; Gmail strips them from the HTML and Outlook on Windows does not display them. Treat a data URI as a progressive enhancement for a known-permissive audience, with real <code>alt</code> text behind it.</p>
+    </details>
+    <details>
+      <summary>Why does Gmail remove Base64 images?</summary>
+      <p>Gmail sanitizes inbound HTML and blocks <code>data:</code> URIs in <code>img</code> tags as a security measure, so the image area renders blank. There is no markup-level workaround — the image has to arrive by another mechanism.</p>
+    </details>
+    <details>
+      <summary>What is the reliable way to embed an image in email?</summary>
+      <p>A hosted HTTPS image (works everywhere images are enabled) or a CID inline attachment (raw Base64 in the MIME structure referenced as <code>cid:name</code>). Both survive Gmail and Outlook desktop.</p>
+    </details>
+    <details>
+      <summary>When is a data URI the right choice?</summary>
+      <p>When recipients are known to use permissive clients, when no hosting or attachment API is available, or when zero-upload handling is the point — internal tooling that must not send user images to any server. Always ship alt text.</p>
+    </details>
+    <details>
+      <summary>How much bigger does Base64 make the email?</summary>
+      <p>About a third. A 200 KB image becomes a ~270 KB string that every recipient downloads on every send. Downscale to rendered size, encode, and verify with a <a href="/base64-image-size-calculator">size calculator</a>.</p>
+    </details>
+    <details>
+      <summary>Do signature images work as data URIs?</summary>
+      <p>Apple Mail: yes. Gmail: the ~10,000-character signature limit usually rejects them first. Outlook desktop: the Word engine does not render them. Cross-client safe means a small hosted image.</p>
+    </details>
+    <details>
+      <summary>Where can I encode an image without uploading it?</summary>
+      <p>The <a href="/">image to Base64 converter</a> and the <a href="/data-uri-generator">data URI generator</a> on this site run entirely in the browser — the file is read locally with the FileReader API and never leaves the device.</p>
+    </details>
+  </article>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Google Cloud Vision API: Base64 Image Payload for images.annotate</title>
+<meta name="description" content="Cloud Vision takes raw Base64 only — no data: prefix — in the image.content field of an images.annotate request. Exact request body, Python example, 20 MB and 75 MP limits explained." />
+<link rel="canonical" href="https://image2base64.com/cloud-vision-base64-image" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Google Cloud Vision API: Base64 Image Payload (images.annotate)" />
+<meta property="og:description" content="Encode an image in your browser and copy the images.annotate request body with raw Base64 in image.content — no upload, no prefix guesswork." />
+<meta property="og:url" content="https://image2base64.com/cloud-vision-base64-image" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "How do I send a Base64 image to Google Cloud Vision?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "POST to the images:annotate endpoint with a requests array. Each request carries the image under image.content as raw Base64 and a features array naming the detections you want, such as TEXT_DETECTION or LABEL_DETECTION."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does Cloud Vision want the data: prefix or raw Base64?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Raw Base64 only. The content field is a bytes field that JSON transports as Base64, so a data:image/...;base64, prefix there is not valid bytes and the request fails with a payload error. This is the opposite of the OpenAI API, which wants the full data URI."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What are the image size limits for Cloud Vision?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Google documents a 20 MB cap per image request and a maximum of 75 megapixels. Because Base64 inflates bytes by about a third, the encoded string eats into the cap — for large files Google recommends a Cloud Storage URI in source.imageUri instead of inline content."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What happens if I pass both content and source?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The content field wins. The Image proto documents that when both the inline bytes (content) and a URI (source.imageUri) are present, the API uses the inline bytes and ignores the source."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I annotate several images in one request?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. The requests array accepts multiple entries, each with its own image and features list. Keep an eye on the total body size — every inline Base64 payload counts against the request limit."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which feature types can I request?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The features array names what you want per image: TEXT_DETECTION and DOCUMENT_TEXT_DETECTION for OCR, LABEL_DETECTION for scene labels, FACE_DETECTION, OBJECT_LOCALIZATION, LOGO_DETECTION, SAFE_SEARCH_DETECTION and others. Each feature gets its own entry in the array."
+      }
+    }
+  ]
+}
+</script>
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Cloud Vision Base64 Encoder",
+  "url": "https://image2base64.com/cloud-vision-base64-image",
+  "description": "Encode an image and copy the images.annotate request body with raw Base64 in image.content. 100% client-side, no upload.",
+  "operatingSystem": "Web",
+  "applicationCategory": "DeveloperApplication",
+  "applicationSubCategory": "ImageConverter",
+  "offers": {
+    "@type": "Offer",
+    "price": "0",
+    "priceCurrency": "USD"
+  },
+  "featureList": [
+    "images.annotate request body template (raw Base64)",
+    "Single-line Base64 without the data: prefix",
+    "MIME type detected from the actual file",
+    "100% client-side — no upload"
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+          <a href="/login.html">Log in</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Google Cloud Vision: send an image as Base64</h1>
+      <p class="lede">
+        <strong>Drop the image, copy the <code>images.annotate</code> body, send it.</strong>
+        Cloud Vision takes the raw Base64 payload only — no <code>data:</code> prefix — in the
+        <code>image.content</code> field. The tool below emits exactly that string.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> The image never leaves your device.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="drop" class="dropzone">
+          <div class="dz-icon" aria-hidden="true">👁️</div>
+          <h2>Drop an image to build the annotate payload</h2>
+          <p>or paste from your clipboard · everything stays in your browser</p>
+          <button id="pick" class="btn btn-primary" type="button">Choose image</button>
+          <input id="file" class="visually-hidden" type="file" accept="image/*" />
+
+          <div class="dz-samples">
+            <span class="dz-samples-label">No image handy? Try a sample:</span>
+            <button class="sample-chip" type="button" data-sample="photo">🏞️ Sample photo</button>
+          </div>
+        </div>
+
+        <p id="enc-error" class="error" hidden></p>
+
+        <div id="results" class="results" hidden>
+          <div class="result-head">
+            <div class="preview-box"><img id="preview" alt="Preview of the image before Base64 encoding" width="120" height="120" hidden /></div>
+            <dl class="meta">
+              <div><dt>Type</dt><dd id="m-type">—</dd></div>
+              <div><dt>File size</dt><dd id="m-size">—</dd></div>
+              <div><dt>Dimensions</dt><dd id="m-dims">—</dd></div>
+              <div><dt>Base64 size</dt><dd id="m-b64size">—</dd></div>
+            </dl>
+          </div>
+
+          <p id="overhead-note" class="overhead-note" hidden></p>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-gcv">images.annotate body <span class="muted">(raw Base64 in <code>image.content</code>)</span></label>
+              <button class="copy" type="button" data-copy="#out-gcv">Copy</button>
+            </div>
+            <textarea id="out-gcv" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-datauri">Full data URI <span class="muted">(not what Cloud Vision wants — see below)</span></label>
+              <button class="copy" type="button" data-copy="#out-datauri">Copy</button>
+            </div>
+            <textarea id="out-datauri" class="out" readonly spellcheck="false"></textarea>
+          </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-raw">Raw Base64 only <span class="muted">(this is the <code>content</code> value)</span></label>
+              <button class="copy" type="button" data-copy="#out-raw">Copy</button>
+            </div>
+            <textarea id="out-raw" class="out short" readonly spellcheck="false"></textarea>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h2>The images.annotate request body</h2>
+      <p>
+        The REST endpoint is <code>POST https://vision.googleapis.com/v1/images:annotate</code>, authenticated
+        with an API key (<code>?key=YOUR_API_KEY</code>) or an OAuth bearer token. The body is a
+        <code>requests</code> array; each entry pairs an image with the detections you want:
+      </p>
+      <pre><code>{
+  "requests": [{
+    "image": { "content": "iVBORw0KGgoAAAANS..." },
+    "features": [
+      { "type": "TEXT_DETECTION" },
+      { "type": "LABEL_DETECTION", "maxResults": 5 }
+    ]
+  }]
+}</code></pre>
+      <p>
+        Each <code>features</code> entry names one detection: <code>TEXT_DETECTION</code> /
+        <code>DOCUMENT_TEXT_DETECTION</code> for OCR, <code>LABEL_DETECTION</code> for scene labels,
+        <code>FACE_DETECTION</code>, <code>OBJECT_LOCALIZATION</code>, <code>LOGO_DETECTION</code>,
+        <code>SAFE_SEARCH_DETECTION</code>, and so on. One image can carry several features in a single request.
+      </p>
+
+      <h2>Raw Base64 only — the prefix causes the error</h2>
+      <p>
+        The <code>content</code> field is a <em>bytes</em> field in the Image proto. JSON has no native bytes
+        type, so the API uses Base64 as the transport encoding — which means the string you paste must be
+        nothing but Base64. A <code>data:image/png;base64,</code> prefix is not valid bytes, and the request
+        fails with a payload/encoding error instead of a helpful hint about the prefix.
+      </p>
+      <p>
+        This is the opposite of the OpenAI vision API, where the value must be a complete data URI. If you feed
+        both APIs from the same pipeline, split the string at the first comma and keep the right half for
+        Cloud Vision — or let the <a href="/image-to-base64-for-api">API payload builder</a> emit both shapes
+        from one encode.
+      </p>
+
+      <h2>Python example</h2>
+      <p>Standard library plus <code>requests</code> — encode the file, post the body:</p>
+      <pre><code>import base64
+import requests
+
+with open("receipt.png", "rb") as f:
+    b64 = base64.b64encode(f.read()).decode("utf-8")
+
+resp = requests.post(
+    "https://vision.googleapis.com/v1/images:annotate",
+    params={"key": API_KEY},
+    json={
+        "requests": [{
+            "image": {"content": b64},
+            "features": [{"type": "DOCUMENT_TEXT_DETECTION"}],
+        }]
+    },
+)
+annotation = resp.json()["responses"][0]
+print(annotation.get("fullTextAnnotation", {}).get("text", ""))</code></pre>
+      <p>
+        The official <code>google-cloud-vision</code> client library wraps the same call — pass the bytes and
+        it handles the Base64 transport for you. The prefix pitfall only bites when you build the JSON by hand.
+      </p>
+
+      <h2>Limits: 20 MB, 75 megapixels, and when to use a URI instead</h2>
+      <p>
+        Google's documentation caps image requests at <strong>20 MB</strong> and <strong>75 megapixels</strong>.
+        Base64 works against you twice: the string is about a third larger than the file, and it all counts
+        against the request body. For anything large, Google recommends a different route — put the file in a
+        Cloud Storage bucket (or any reachable HTTPS URL) and pass
+        <code>"source": { "imageUri": "gs://bucket/receipt.png" }</code> instead of <code>content</code>.
+      </p>
+      <p>
+        If both fields are present, <code>content</code> takes precedence and the API ignores the
+        <code>source</code> — worth knowing when a config merge leaves both populated.
+      </p>
+
+      <h2>Batching several images</h2>
+      <p>
+        One call can carry multiple <code>requests</code> entries — the response mirrors them in order as a
+        <code>responses</code> array. Two practical notes: inline Base64 for every image multiplies the body
+        size, and a single malformed entry fails its own response rather than the whole batch, so check each
+        element for an <code>error</code> key instead of assuming the array is uniform.
+      </p>
+
+      <h2>Where the encoded string usually breaks</h2>
+      <ul>
+        <li><strong>A leftover prefix.</strong> Copying the full data URI from a browser devtools panel and pasting it into <code>content</code> — the <code>data:</code> head must go.</li>
+        <li><strong>Wrapped lines.</strong> Some tools emit Base64 with line breaks; raw newlines are invalid inside a JSON string. This tool emits a single line.</li>
+        <li><strong>A quoted-inside-quoted body.</strong> Assemble JSON with a serializer, not string concatenation, so the Base64 characters (<code>+/=</code>) land unescaped and intact.</li>
+        <li><strong>Size creep.</strong> A 4 MB scan becomes a 5.3 MB string; two of them plus a verbose features list pushes the request over the cap. The <a href="/compress-jpg-to-base64">compressor</a> and the <a href="/base64-image-size-calculator">size calculator</a> keep you honest.</li>
+      </ul>
+
+      <h2>Why encode in the browser</h2>
+      <p>
+        Documents run through OCR are exactly the material that should not be pasted into an upload-based
+        converter: invoices, contracts, ID scans, internal reports. This page encodes with the browser's
+        <code>FileReader</code> API — no upload step exists, which you can verify in the Network tab: converting
+        fires zero requests.
+      </p>
+    </div>
+  </section>
+
+  <section id="tools" class="siblings">
+    <div class="wrap">
+      <h2>Related tools and guides</h2>
+      <div class="sib-grid">
+        <a class="sib-card" href="/image-to-base64-for-api"><strong>Base64 for API calls</strong><span>OpenAI and Cloud Vision payloads side by side.</span></a>
+        <a class="sib-card" href="/openai-vision-base64-image"><strong>OpenAI Vision Base64</strong><span>The data URI shape GPT-4o expects.</span></a>
+        <a class="sib-card" href="/compress-jpg-to-base64"><strong>Compress JPG to Base64</strong><span>Shrink scans before encoding.</span></a>
+        <a class="sib-card" href="/base64-image-size-calculator"><strong>Base64 Size Calculator</strong><span>Check the string size against the cap.</span></a>
+        <a class="sib-card" href="/base64-to-image"><strong>Base64 to Image</strong><span>Preview payloads found in logs.</span></a>
+        <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Universal encoder for any format.</span></a>
+      </div>
+    </div>
+  </section>
+
+  <section id="faq" class="faq-section">
+    <div class="wrap">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>How do I send a Base64 image to Google Cloud Vision?</summary>
+        <p>POST to <code>images:annotate</code> with a <code>requests</code> array; each entry carries the image under <code>image.content</code> as raw Base64 and names its detections in <code>features</code>.</p>
+      </details>
+      <details>
+        <summary>Does Cloud Vision want the data: prefix or raw Base64?</summary>
+        <p>Raw Base64 only — <code>content</code> is a bytes field, so a <code>data:</code> prefix is invalid there. OpenAI is the opposite: it wants the full data URI.</p>
+      </details>
+      <details>
+        <summary>What are the image size limits?</summary>
+        <p>20 MB per image request and 75 megapixels, per Google's documentation. Base64 adds about a third to the byte count; for large files use <code>source.imageUri</code> with a Cloud Storage or HTTPS URI.</p>
+      </details>
+      <details>
+        <summary>What happens if I pass both content and source?</summary>
+        <p><code>content</code> wins — the Image proto documents that inline bytes take precedence and the source is ignored.</p>
+      </details>
+      <details>
+        <summary>Can I annotate several images in one request?</summary>
+        <p>Yes — multiple entries in the <code>requests</code> array, answered in order by <code>responses</code>. Every inline payload counts against the body size, and each entry can fail independently, so check for per-entry <code>error</code> keys.</p>
+      </details>
+      <details>
+        <summary>Which feature types can I request?</summary>
+        <p>OCR (<code>TEXT_DETECTION</code>, <code>DOCUMENT_TEXT_DETECTION</code>), <code>LABEL_DETECTION</code>, <code>FACE_DETECTION</code>, <code>OBJECT_LOCALIZATION</code>, <code>LOGO_DETECTION</code>, <code>SAFE_SEARCH_DETECTION</code> and more — one entry per feature in the array.</p>
+      </details>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Base64Img</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Base64Img · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

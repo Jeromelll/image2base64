@@ -1,5 +1,22 @@
 # Image2Base64 SEO 日志
 
+## 2026-10-14 — 上线 AI API 双页 + HTML 邮件指南（gtm.help 三条建议落地两条）
+
+- 来源：gtm.help 增长邮件（10/13）三条建议，Jerome「按他们的建议来实施改进吧」。实施 #1（AI API Base64 载荷内容）与 #2（HTML 邮件零上传指南）；#3（目录提交）复盘点料待拍板（见 Research/image2base64/SEO/外链提交包刷新_20261014.md）。
+- 新建三页：
+  - `openai-vision-base64-image.html` — Chat Completions `image_url`（data URI 全串 + detail 参数）与 Responses API `input_image` 两种信封、Python/Node 示例、~20MB 与 33% 膨胀、四类失败模式（前缀缺失/重复、换行、手工拼 JSON、MIME 标签错）。工具挂 `#out-openai`。
+  - `cloud-vision-base64-image.html` — `images:annotate` 请求体、`image.content` 裸 Base64（bytes 字段语义，data: 前缀必炸）、content vs source 优先级、20MB/75MP 上限与 imageUri 替代、批量请求逐条 error 检查。工具挂 `#out-gcv`。
+  - `base64-image-in-html-email.html` — 邮件内嵌三机制对比表（hosted/CID/data URI）、六客户端 data URI 支持矩阵（Gmail 剥离、Outlook Win 桌面不渲染、Apple Mail/Thunderbird/Yahoo 渲染）、按 provider 六链接（SendGrid/Postmark/Brevo/Power Automate/Apps Script/VBA 全互链）、体积数学、签名特例。纯指南页（article.guide）。
+- 事实依据：OpenAI 官方 images-vision 指南（data URI+detail+20MB）、Cloud Vision supported-files（20MB/75MP/建议 GCS）与 ImageAnnotator proto（content 优先于 source）、邮件客户端矩阵交叉核验（与站内 outlook/gmail 页既有口径一致，无冲突）。
+- `app.js`：initApiPayloads 守卫改为 `!outOpenAI && !outGcv`（原实现无 `#out-openai` 即 return，GCV 专属页填不上）。node --check 通过。
+- 内链：全站 55 页 footer Guides +3（旧版 footer 沿 SendGrid 行锚点插入；10/08 三页那批 footer 既有 Jimp 行，沿 Jimp 行锚点插入——两代 footer 共存，未回填历史链接）；api 页正文加 OpenAI/GCV 深读句 + email hub 交叉句；三新页互链 + 导流 compress/size-calculator/base64-to-image。
+- 枢纽同步：sitemap 47→50 loc；llms.txt Guides 节 +3 行。
+- 部署：build.py → wrangler@4 deploy Version `df93b39c-810f-4bbf-aa8b-75a9584935e4`；验收走 contabo 服务器 curl（本机 fake-ip 代理 DNS 劫持，curl 不可用）：三新页 200、canonical 自指、H1 唯一、JSON-LD 各 2 块、sitemap 50 loc 含 3 新条、app.js 新守卫已上线、旧页 footer 抽查 jpg-to-base64 含新链接。
+- 门禁：check_seo_consistency fail=0 warn=3（canonical 合并，已知）。
+- GSC：三 URL Indexing requested 已由 gsc_request_indexing.mjs 经 research-Chrome CDP 完成（03:49:47Z / 03:50:15Z / 03:50:36Z）。
+- 提交：git commit + push main（`feat: add OpenAI vision, Cloud Vision, and HTML email Base64 guides`）。
+
+
 ## 2026-09-24 — 上线 /excel-vba-base64-image-outlook-email + /sendgrid-inline-image-base64
 
 - 来源：ffc17c37 选词雷达 0924 轮（Jerome「按你建议来」批准两单）。两词根 SERP 当日实测：excel vba=2012 MrExcel 老论坛帖占顶零专门页；sendgrid=Twilio 官方指南占顶零专门工具页。
