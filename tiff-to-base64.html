@@ -46,7 +46,7 @@
       "name": "Can browsers display a Base64 TIFF inline?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Only some. Safari renders TIFF images natively; Chrome, Firefox and Edge currently do not. The Base64 string itself is always complete and correct — but if you inline it into a web page, visitors on Chrome or Firefox will see a broken image. Convert the TIFF to PNG or JPG first if the data URI is meant for a website."
+        "text": "Base64 preserves the original TIFF bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding."
       }
     },
     {
@@ -62,7 +62,7 @@
       "name": "Is the TIFF to Base64 conversion private?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. Everything happens in your browser with the FileReader API. The TIFF is never uploaded to any server."
+        "text": "The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there."
       }
     }
   ]
@@ -75,7 +75,7 @@
   "@type": "SoftwareApplication",
   "name": "TIFF to Base64 Converter",
   "url": "https://image2base64.com/tiff-to-base64",
-  "description": "Free TIFF to Base64 Converter — 100% client-side, no upload, no server. Convert instantly in your browser with drag & drop and copy-paste output.",
+  "description": "Free TIFF to Base64 Converter — 100% client-side, local encoding; no file upload for conversion. Convert instantly in your browser with drag & drop and copy-paste output.",
   "operatingSystem": "Web",
   "applicationCategory": "UtilitiesApplication",
   "applicationSubCategory": "ImageConverter",
@@ -86,7 +86,7 @@
   },
   "featureList": [
     "100% client-side",
-    "No upload — files never leave your browser",
+    "No file upload for conversion",
     "Copy as Base64 or data URI",
     "Drag & drop",
     "Handles .tif and .tiff"
@@ -120,7 +120,7 @@
         Drop in a <strong>TIFF / TIF</strong> file and instantly get its Base64 string and data URI —
         ready to paste into JSON, an API payload, or a document template. One click to copy.
       </p>
-      <p class="trust"><strong>100% client-side.</strong> Your scan or photo never leaves your device.</p>
+      <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
     </div>
   </section>
 
@@ -172,7 +172,7 @@
 
           <div class="field">
             <div class="field-head">
-              <label for="out-html">HTML <code>&lt;img&gt;</code> snippet <span class="muted">(see FAQ — Chrome can't render TIFF)</span></label>
+              <label for="out-html">HTML <code>&lt;img&gt;</code> snippet <span class="muted">(display support varies; see FAQ)</span></label>
               <button class="copy" type="button" data-copy="#out-html">Copy</button>
             </div>
             <textarea id="out-html" class="out short" readonly spellcheck="false"></textarea>
@@ -210,29 +210,14 @@
 }</code></pre>
 
       <h3>Mind the 33% — and the browser caveat</h3>
-      <p>
-        Base64 inflates data by about <strong>33%</strong>, and TIFFs are rarely small to begin with: a single
-        600&nbsp;dpi A4 scan easily passes 10&nbsp;MB, which becomes ~13.9&nbsp;MB of text. If the destination is a
-        web page, also note that <strong>Chrome, Firefox and Edge cannot render TIFF images at all</strong> — only
-        Safari can. For web use, convert to <a href="/png-to-base64">PNG</a> or <a href="/jpg-to-base64">JPG</a>
-        first, then encode. Reserve TIFF Base64 for APIs, fixtures and document pipelines.
-      </p>
+      <p>Base64 preserves the original TIFF bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding.</p>
 
 
       <h3>Endian signatures</h3>
-      <p>
-        TIFF files are either big-endian or little-endian. The Base64 body starts with <code>TU0AKg</code>
-        (<code>MM\0*</code>) for Motorola/big-endian or <code>SUkq</code> (<code>II*</code>) for Intel/little-endian.
-        Multi-page TIFFs encode the whole file, but browsers that can preview TIFF (Safari only) typically show
-        the first page.
-      </p>
+      <p>Encoding preserves the entire TIFF file, including its byte order and any additional pages. A preview is not proof that every page was displayed; inspect multi-page files with a suitable TIFF viewer.</p>
 
       <h3>Private by design</h3>
-      <p>
-        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server. Scans
-        and medical or legal documents stay on your machine. Check your Network tab and you'll see the file never
-        goes anywhere.
-      </p>
+      <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
     </div>
   </section>
 
@@ -269,7 +254,7 @@
       </details>
       <details>
         <summary>Can browsers display a Base64 TIFF inline?</summary>
-        <p>Only Safari renders TIFF natively; Chrome, Firefox and Edge do not. The Base64 string is always complete and correct — but for web pages, convert the TIFF to PNG or JPG first.</p>
+        <p>Base64 preserves the original TIFF bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding.</p>
       </details>
       <details>
         <summary>Should I encode a TIFF as Base64?</summary>
@@ -277,7 +262,7 @@
       </details>
       <details>
         <summary>Is the conversion private?</summary>
-        <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The TIFF is never uploaded to any server.</p>
+        <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
       </details>
     </div>
   </section>
@@ -288,7 +273,7 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
-        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+        <p>Local image conversion. No account required. <a href="/privacy">Privacy and optional sign-in</a>.</p>
       </div>
       <nav class="footer-nav" aria-label="Converters">
         <span class="head">Converters</span>

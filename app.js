@@ -1,5 +1,6 @@
 // Base64 Tools — image ⇄ base64, 100% client-side.
-// No uploads, no network calls. Wires up whichever widgets exist on the page.
+// File conversion stays local. Usage events can make network requests.
+// Wires up whichever widgets exist on the page.
 
 (function () {
   "use strict";
@@ -135,6 +136,9 @@
     var outHtml = $("#out-html");
     var outCss = $("#out-css");
     var outLink = $("#out-link");    // optional: favicon <link rel="icon"> snippet
+    var outVision = $("#out-vision"); // textarea: Cloud Vision payload (raw base64 version)
+    // NOTE: #out-openai is filled by initApiPayloads() via the i2b64:encoded event
+    // (full chat-completion JSON). Do not write it here to avoid a double fill.
     var errBox = $("#enc-error");
 
     // The format this page is tuned for, e.g. "png" / "jpeg". Empty = any image.
@@ -143,6 +147,16 @@
     // Last encoded data URI, so the opt-in credit toggle can rebuild the
     // HTML snippet without re-reading the file.
     var lastDataUri = null;
+    var readVersion = 0;
+    function clearEncodedResult() {
+      lastDataUri = null;
+      if (results) results.hidden = true;
+      if (preview) { preview.removeAttribute("src"); preview.hidden = true; }
+      [outData, outRaw, outHtml, outCss, outLink, outVision].forEach(function (el) { if (el) el.value = ""; });
+      [metaName, metaType, metaSize, metaLen, metaB64Size, metaDims].forEach(function (el) { if (el) el.textContent = ""; });
+      if (overheadNote) { overheadNote.textContent = ""; overheadNote.hidden = true; }
+      document.dispatchEvent(new CustomEvent("i2b64:reset"));
+    }
 
     // HTML <img> snippet builder. The credit link is strictly opt-in:
     // default off, only appended when the visitor ticks the checkbox.
@@ -171,6 +185,8 @@
     function handleFile(file) {
       showError("");
       if (!file) return;
+      var version = ++readVersion;
+      clearEncodedResult();
       // Some OS/browsers leave File.type empty for HEIC/HEIF (and occasionally
       // TIFF/BMP). Encoding only needs bytes, so fall back to the extension.
       var nameLower = (file.name || "").toLowerCase();
@@ -196,6 +212,7 @@
       }
       var reader = new FileReader();
       reader.onload = function (e) {
+        if (version !== readVersion) return;
         var dataUri = e.target.result;            // data:image/png;base64,AAAA...
         var comma = dataUri.indexOf(",");
         var raw = comma >= 0 ? dataUri.slice(comma + 1) : dataUri;
@@ -214,6 +231,7 @@
         if (outHtml) outHtml.value = buildHtmlSnippet(dataUri);
         if (outCss) outCss.value = "background-image: url(" + dataUri + ");";
         if (outLink) outLink.value = '<link rel="icon" type="' + (effectiveType || file.type || "image/png") + '" href="' + dataUri + '" />';
+        if (outVision) outVision.value = JSON.stringify({"requests":[{"image":{"content":raw},"features":[{"type":"LABEL_DETECTION","maxResults":3}]}]});
 
         if (preview) { preview.src = dataUri; preview.hidden = false; }
         if (metaName) metaName.textContent = file.name || "(pasted image)";
@@ -250,7 +268,7 @@
         document.dispatchEvent(new CustomEvent("i2b64:encoded", { detail: { dataUri: dataUri, mime: effectiveType || file.type || "" } }));
         track("convert", effectiveType || file.type || "image", sizeBucket(file.size));
       };
-      reader.onerror = function () { showError("Sorry — the file could not be read. Try another image."); };
+      reader.onerror = function () { if (version === readVersion) showError("Sorry — the file could not be read. Try another image."); };
       reader.readAsDataURL(file);
     }
 
@@ -875,7 +893,11 @@
   function initApiPayloads() {
     var outOpenAI = $("#out-openai");
     var outGcv = $("#out-gcv");
-    if (!outOpenAI && !outGcv) return;
+    var outResponses = $("#out-responses");
+    if (!outOpenAI && !outGcv && !outResponses) return;
+    document.addEventListener("i2b64:reset", function () {
+      [outOpenAI, outGcv, outResponses].forEach(function (el) { if (el) el.value = ""; });
+    });
 
     document.addEventListener("i2b64:encoded", function (e) {
       var uri = e.detail && e.detail.dataUri;
@@ -896,6 +918,15 @@
         }, null, 2);
       }
 
+      if (outResponses) {
+        outResponses.value = JSON.stringify({
+          model: "gpt-4.1",
+          input: [{ role: "user", content: [
+            { type: "input_text", text: "Describe this image" },
+            { type: "input_image", image_url: uri }
+          ] }]
+        }, null, 2);
+      }
       if (outGcv) {
         outGcv.value = JSON.stringify({
           requests: [{

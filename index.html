@@ -276,6 +276,15 @@
             </div>
             <textarea id="out-css" class="out short" readonly spellcheck="false"></textarea>
           </div>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-vision">Cloud Vision payload <span class="badge">纯 base64 版</span></label>
+              <button class="copy" type="button" data-copy="#out-vision">Copy</button>
+            </div>
+            <textarea id="out-vision" class="out" readonly spellcheck="false"></textarea>
+            <p class="hint warn">⚠️ content 不要带 data: 前缀，只填纯 base64 字符串，否则 API 报 400。</p>
+          </div>
         </div>
       </div>
     </div>

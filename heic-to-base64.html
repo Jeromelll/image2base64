@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>HEIC to Base64 Converter — Encode iPhone Photos Locally</title>
-<meta name="description" content="Convert HEIC photos to a Base64 data URI in your browser. No upload, no server, no account. Copy the raw string, an HTML img tag, or a CSS background rule." />
+<meta name="description" content="Convert HEIC photos to a Base64 data URI in your browser. Local encoding; no file upload for conversion, no account. Copy the raw string, an HTML img tag, or a CSS background rule." />
 <link rel="canonical" href="https://image2base64.com/heic-to-base64" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -17,7 +17,7 @@
 <meta property="og:type" content="website" />
 <meta property="og:site_name" content="Image to Base64 Converter" />
 <meta property="og:title" content="HEIC to Base64 Converter — Encode iPhone Photos Locally" />
-<meta property="og:description" content="Convert HEIC photos to Base64 in your browser. No upload, no server. Copy raw Base64, data URI, HTML or CSS." />
+<meta property="og:description" content="Convert HEIC photos to Base64 in your browser. Local encoding; no file upload for conversion. Copy raw Base64, data URI, HTML or CSS." />
 <meta property="og:url" content="https://image2base64.com/heic-to-base64" />
 <meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
 <meta property="og:image:width" content="1200" />
@@ -38,7 +38,7 @@
       "name": "Is my HEIC uploaded anywhere?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "No. The file is read locally with FileReader and encoded in memory. There is no server-side conversion step and no storage."
+        "text": "The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there."
       }
     },
     {
@@ -54,7 +54,7 @@
       "name": "Why is there no preview for HEIC?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Chrome, Edge, and Firefox cannot render HEIC, so this tool does not fake a thumbnail. Encoding is a byte-for-byte read and does not require the browser to decode the image. Safari can show a preview because it decodes HEIC natively."
+        "text": "Base64 preserves the original HEIC bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding."
       }
     },
     {
@@ -83,7 +83,7 @@
   "@type": "SoftwareApplication",
   "name": "HEIC to Base64 Converter",
   "url": "https://image2base64.com/heic-to-base64",
-  "description": "Free HEIC to Base64 Converter — 100% client-side, no upload, no server. Encode iPhone photos locally and copy a data URI, HTML img tag, or CSS background.",
+  "description": "Free HEIC to Base64 Converter — 100% client-side, local encoding; no file upload for conversion. Encode iPhone photos locally and copy a data URI, HTML img tag, or CSS background.",
   "operatingSystem": "Web",
   "applicationCategory": "UtilitiesApplication",
   "applicationSubCategory": "ImageConverter",
@@ -94,7 +94,7 @@
   },
   "featureList": [
     "100% client-side",
-    "No upload — files never leave your browser",
+    "No file upload for conversion",
     "Copy as Base64 or data URI",
     "Drag & drop",
     "Handles .heic and .heif"
@@ -126,9 +126,9 @@
         <p class="lead-note" style="margin-top:-8px;color:var(--muted,#667)">Also covers <strong>.heif</strong> — same family, one page.</p>
       <p class="lede">
         Drop a <strong>.heic</strong> or <strong>.heif</strong> file and get a Base64 string you can paste into HTML, CSS, JSON, or an email template.
-        Everything runs in your browser with the <code>FileReader</code> API — the photo is never uploaded.
+        The selected file is encoded locally with <code>FileReader</code>; this conversion does not upload the photo.
       </p>
-      <p class="trust"><strong>100% client-side.</strong> Your iPhone photo never leaves your device.</p>
+      <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
     </div>
   </section>
 
@@ -180,7 +180,7 @@
 
           <div class="field">
             <div class="field-head">
-              <label for="out-html">HTML <code>&lt;img&gt;</code> snippet <span class="muted">(see FAQ — Chrome can't render HEIC)</span></label>
+              <label for="out-html">HTML <code>&lt;img&gt;</code> snippet <span class="muted">(display support varies; see FAQ)</span></label>
               <button class="copy" type="button" data-copy="#out-html">Copy</button>
             </div>
             <textarea id="out-html" class="out short" readonly spellcheck="false"></textarea>
@@ -205,26 +205,12 @@
   <section id="guide" class="content-section">
     <div class="wrap prose">
       <h2>What is HEIC (and why it needs converting)</h2>
-      <p>
-        HEIC is the container Apple uses by default for photos taken on iPhone and iPad. It is efficient — the same
-        picture usually takes roughly half the space of a JPEG — but that efficiency comes from a codec most tools
-        outside Apple's ecosystem cannot render. Chrome on Windows, most email clients, and many CMS upload pipelines
-        cannot display a <code>.heic</code> file at all.
-      </p>
-      <p>
-        Base64 sidesteps the compatibility question entirely. A Base64 string is just text: ASCII characters that
-        describe the file byte for byte. Once a photo is encoded, nothing downstream has to understand HEIC, decode a
-        codec, or fetch a separate asset. The text <em>is</em> the image. You are not converting HEIC to another image
-        format — you are turning it into transportable text.
-      </p>
+      <p>HEIC stores images in a container that requires a compatible decoder to display. Encoding its bytes as Base64 changes how they are transported, not the image format.</p>
+      <p>Base64 preserves the original HEIC bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding.</p>
 
       <h2>How to convert a HEIC photo to Base64</h2>
       <h3>Step 1 — Pick the photo</h3>
-      <p>
-        Drag your <code>.heic</code> file onto the drop zone, or click to browse. Files are read with
-        <code>FileReader.readAsDataURL()</code>, which means the bytes are base64-encoded locally in memory. Nothing
-        is sent anywhere.
-      </p>
+      <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
       <h3>Step 2 — Choose the output shape</h3>
       <div class="cmp-scroll">
         <table class="cmp">
@@ -246,13 +232,7 @@
       </p>
 
       <h2>Why no preview shows for HEIC (and why that's fine)</h2>
-      <p>
-        Chrome, Edge, and Firefox cannot render HEIC, so the tool cannot draw a thumbnail the way our PNG or JPG
-        converters do. We deliberately do not fake one. Encoding a file to Base64 is a byte-for-byte read — it never
-        requires the browser to decode the image, which is exactly why a HEIC converter can work in Chrome while a
-        HEIC <em>editor</em> cannot. The same trade-off applies to our <a href="/tiff-to-base64">TIFF to Base64</a> converter.
-        Safari can show a preview because it decodes HEIC natively.
-      </p>
+      <p>Base64 preserves the original HEIC bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding.</p>
 
       <h2>How big does Base64 make a HEIC photo?</h2>
       <p>Base64 maps every 3 bytes of binary into 4 characters, so the encoded text is always about <strong>33% larger</strong> than the file itself, plus a short <code>data:</code> prefix.</p>
@@ -329,7 +309,7 @@
       <h2>Frequently asked questions</h2>
       <details>
         <summary>Is my HEIC uploaded anywhere?</summary>
-        <p>No. The file is read locally with <code>FileReader</code> and encoded in memory. There is no server-side conversion step and no storage.</p>
+        <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
       </details>
       <details>
         <summary>What MIME type does HEIC use?</summary>
@@ -337,7 +317,7 @@
       </details>
       <details>
         <summary>Why is there no preview for HEIC?</summary>
-        <p>Chrome, Edge, and Firefox cannot render HEIC, so this tool does not fake a thumbnail. Encoding does not require decoding. Safari can show a preview because it decodes HEIC natively.</p>
+        <p>Base64 preserves the original HEIC bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding.</p>
       </details>
       <details>
         <summary>Can I convert several photos at once?</summary>
@@ -349,7 +329,7 @@
       </details>
       <details>
         <summary>Does it work on iPhone and iPad?</summary>
-        <p>Yes — it runs in mobile Safari and Chrome. Safari can show a preview; Chrome typically cannot, since only Safari decodes HEIC natively.</p>
+        <p>Base64 preserves the original HEIC bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding.</p>
       </details>
       <details>
         <summary>Does the EXIF data stay in the string?</summary>
@@ -364,7 +344,7 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
-        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+        <p>Local image conversion. No account required. <a href="/privacy">Privacy and optional sign-in</a>.</p>
       </div>
       <nav class="footer-nav" aria-label="Converters">
         <span class="head">Converters</span>

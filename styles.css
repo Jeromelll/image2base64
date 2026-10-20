@@ -189,3 +189,9 @@ article.guide{max-width:840px}
 .calc-warn{color:#b8860b;font-weight:700}
 .calc-bad{color:#b4233a;font-weight:700}
 .calc-big{font-size:1.6rem;font-weight:800;color:var(--brand-dark);font-variant-numeric:tabular-nums}
+
+/* P1 output-box helpers (2026-10-16): badges + hints under the new API payload fields */
+.badge{display:inline-block;font-size:.68rem;font-weight:700;color:var(--brand-dark);background:rgba(91,108,255,.1);border:1px solid rgba(91,108,255,.35);border-radius:999px;padding:.1em .7em;margin-left:.5em;vertical-align:middle;white-space:nowrap}
+.hint{font-size:.8rem;color:var(--muted);margin:.5em 0 0}
+.hint.warn{color:#b4233a;font-weight:600}
+

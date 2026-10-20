@@ -54,7 +54,7 @@
       "name": "Does Base64 work for every AI vision API?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Most accept it in one of two shapes: a full data URI (OpenAI, Anthropic source.data) or raw Base64 without the prefix (Google Cloud Vision, many self-hosted model servers). The rule of thumb: OpenAI wants the whole data URI, Google wants only the payload. This page generates both."
+        "text": "Accepted fields and image formats vary by provider and endpoint. Check its current documentation; raw Base64 and full data URIs are not interchangeable."
       }
     },
     {
@@ -62,7 +62,7 @@
       "name": "How large can a Base64 image be in an API request?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Request bodies are typically capped between 4 MB and 20 MB depending on the API, and Base64 inflates the image by about 33%. Resize the image to the resolution the model actually uses (often 1024-2048 px is plenty) before encoding — the compressor on this site does that in one step."
+        "text": "Image size and request limits vary by API and model. Base64 adds about 33% to the file size. Check the receiving API’s current limits before sending."
       }
     },
     {
@@ -70,7 +70,7 @@
       "name": "Is it safe to convert sensitive images to Base64 here?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Yes. The image is read and encoded entirely in your browser with the FileReader API. Nothing is uploaded to any server, so proprietary screenshots, internal documents and medical images never leave your device."
+        "text": "The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there."
       }
     },
     {
@@ -78,7 +78,7 @@
       "name": "Why does my Base64 image show up broken in the API response?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "The three usual causes are a truncated copy, a missing or doubled data: prefix, and JSON escaping problems when the string is assembled by hand. Pasting the payload straight from this tool avoids all three."
+        "text": "The three usual causes are a truncated copy, a missing or doubled data: prefix, and JSON escaping problems when the string is assembled by hand. Check the complete copied payload and the receiving API’s supported formats and size limits."
       }
     }
   ]
@@ -101,7 +101,7 @@
     "priceCurrency": "USD"
   },
   "featureList": [
-    "OpenAI vision payload template (image_url data URI)",
+    "OpenAI Chat Completions payload template (image_url data URI)",
     "Google Cloud Vision payload template (raw Base64)",
     "Raw Base64 and data URI outputs",
     "100% client-side — no upload"
@@ -135,7 +135,7 @@
         This page outputs the exact payload shapes that OpenAI vision models and Google Cloud Vision
         expect — no guesswork about prefixes, no hosting, no upload.
       </p>
-      <p class="trust"><strong>100% client-side.</strong> Sensitive images never leave your device.</p>
+      <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
     </div>
   </section>
 
@@ -145,7 +145,7 @@
         <div id="drop" class="dropzone">
           <div class="dz-icon" aria-hidden="true">🔌</div>
           <h2>Drop an image to build your API payload</h2>
-          <p>or paste from your clipboard · everything stays in your browser</p>
+          <p>or paste from your clipboard · file encoding happens locally</p>
           <button id="pick" class="btn btn-primary" type="button">Choose image</button>
           <input id="file" class="visually-hidden" type="file" accept="image/*" />
 
@@ -172,7 +172,7 @@
 
           <div class="field">
             <div class="field-head">
-              <label for="out-openai">OpenAI vision payload <span class="muted">(GPT-4o / GPT-4.1 — paste into <code>messages</code>)</span></label>
+              <label for="out-openai">OpenAI Chat Completions payload <span class="muted">(complete request body)</span></label>
               <button class="copy" type="button" data-copy="#out-openai">Copy</button>
             </div>
             <textarea id="out-openai" class="out" readonly spellcheck="false"></textarea>
@@ -180,7 +180,16 @@
 
           <div class="field">
             <div class="field-head">
-              <label for="out-gcv">Google Cloud Vision payload <span class="muted">(paste into <code>requests</code>)</span></label>
+              <label for="out-responses">OpenAI Responses payload <span class="muted">(complete request body)</span></label>
+              <button class="copy" type="button" data-copy="#out-responses">Copy</button>
+            </div>
+            <textarea id="out-responses" class="out" readonly spellcheck="false"></textarea>
+          </div>
+          <p class="muted">Encoding preserves the original image format; it does not make every format compatible with an API. Check the receiving API’s supported formats. This page only generates JSON locally. Sending it to an API shares the image with that provider. Advertising and usage requests are separate; see <a href="/privacy">Privacy</a>.</p>
+
+          <div class="field">
+            <div class="field-head">
+              <label for="out-gcv">Google Cloud Vision payload <span class="muted">(complete request body)</span></label>
               <button class="copy" type="button" data-copy="#out-gcv">Copy</button>
             </div>
             <textarea id="out-gcv" class="out" readonly spellcheck="false"></textarea>
@@ -237,41 +246,29 @@
   }]
 }</code></pre>
       <p>
-        This page reads your image once and fills both templates for you, with the correct MIME type detected
-        from the actual file — PNG, JPEG, WebP, GIF and SVG all get their proper <code>data:image/…</code>
-        prefix automatically.
+        This page reads your image once and fills the templates for you, with the correct MIME type detected
+        from browser-provided file metadata — the output uses a <code>data:image/…</code>
+        prefix. This does not validate the image bytes or guarantee API support.
       </p>
 
       <p>
         Need the deep dive per provider? The <a href="/openai-vision-base64-image">OpenAI vision Base64 guide</a>
         covers <code>image_url</code> vs <code>input_image</code> and the failure modes, and the
         <a href="/cloud-vision-base64-image">Cloud Vision Base64 guide</a> covers the
-        <code>images.annotate</code> body, batching and its 20 MB / 75 MP limits.
+        <code>images.annotate</code> body and batching. Verify current service limits before sending.
       </p>
       <h3>Step by step</h3>
       <ol>
         <li><strong>Add the image.</strong> Drag it in, pick it, or paste from the clipboard.</li>
-        <li><strong>Copy the payload for your API.</strong> OpenAI and Cloud Vision templates are filled in automatically; the full data URI and raw Base64 outputs cover every other API.</li>
-        <li><strong>Send it.</strong> The payload is valid JSON with the image already escaped — no manual string assembly, no truncation.</li>
+        <li><strong>Copy the payload for your API.</strong> OpenAI and Cloud Vision templates are filled in automatically; check the required fields before using the data URI or raw Base64 with another API.</li>
+        <li><strong>Send it.</strong> The payload is valid JSON with the image already escaped — check the complete copy, supported image format, and request limits before sending.</li>
       </ol>
 
       <h3>Mind the request size</h3>
-      <p>
-        Base64 inflates bytes by about 33%, and vision APIs cap request bodies (typically 4-20 MB). A phone
-        photo at 4 MB becomes a 5.3 MB string before you have added a single prompt token. Models rarely
-        benefit from more than 1024-2048 px of input, so
-        <a href="/compress-jpg-to-base64">compress the image first</a> — resize to the resolution the model
-        actually sees and the payload shrinks by an order of magnitude.
-      </p>
+      <p>Image size and request limits vary by API and model. Base64 adds about 33% to the file size. Check the receiving API’s current limits before sending.</p>
 
       <h3>Why in-browser conversion matters for API work</h3>
-      <p>
-        Vision pipelines often handle images that cannot be pasted into a random web tool: internal
-        screenshots, unreleased product photos, medical scans, documents under NDA. Upload-based converters
-        put those bytes on someone else's server. This page encodes with the browser's
-        <code>FileReader</code> API instead — there is no upload step at all, which you can verify in the
-        Network tab: converting fires zero requests.
-      </p>
+      <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
 
       <h3>Debugging payloads that come back the other way</h3>
       <p>
@@ -326,19 +323,19 @@
       </details>
       <details>
         <summary>How large can a Base64 image be in an API request?</summary>
-        <p>Request bodies are typically capped between 4 MB and 20 MB depending on the API, and Base64 adds about 33%. Resize to what the model actually sees — the <a href="/compress-jpg-to-base64">compressor</a> handles it in one step.</p>
+        <p>Image size and request limits vary by API and model. Base64 adds about 33% to the file size. Check the receiving API’s current limits before sending.</p>
       </details>
       <details>
         <summary>Is it safe to convert sensitive images here?</summary>
-        <p>Yes. The image is read and encoded entirely in your browser with the FileReader API. Nothing is uploaded, so NDA'd screenshots and internal documents never leave your device.</p>
+        <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
       </details>
       <details>
         <summary>Why does my Base64 image show up broken in the API response?</summary>
-        <p>Usually a truncated copy, a missing or doubled <code>data:</code> prefix, or hand-rolled JSON escaping. Pasting the payload straight from this tool avoids all three.</p>
+        <p>Usually a truncated copy, a missing or doubled <code>data:</code> prefix, or hand-rolled JSON escaping. Check the complete copied payload and the receiving API’s supported formats and size limits.</p>
       </details>
       <details>
         <summary>Which other APIs accept Base64 images?</summary>
-        <p>Most do, in one of the two shapes above: full data URI (OpenAI, Anthropic's source.data) or raw payload (Cloud Vision, most self-hosted model servers). When in doubt, the API's error message will name the field it rejected.</p>
+        <p>Accepted fields and image formats vary by provider and endpoint. Check its current documentation; raw Base64 and full data URIs are not interchangeable.</p>
       </details>
     </div>
   </section>
@@ -349,7 +346,7 @@
     <div class="footer-inner">
       <div class="footer-brand">
         <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
-        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+        <p>Local image conversion. No account required. <a href="/privacy">Privacy and optional sign-in</a>.</p>
       </div>
       <nav class="footer-nav" aria-label="Converters">
         <span class="head">Converters</span>
