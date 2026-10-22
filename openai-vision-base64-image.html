@@ -54,7 +54,7 @@
       "name": "What does the detail parameter do?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "detail controls how much processing the model spends on the image: low is a cheap fixed-size pass, high lets the model tile the image for close inspection, and auto lets the model decide. It is set inside the image_url object next to url."
+        "text": "The detail parameter controls image-processing detail where supported. Accepted values and behavior depend on the model and endpoint. In Chat Completions it belongs inside the image_url object; in Responses it belongs on the input_image content part. Check the current model documentation before copying an example."
       }
     },
     {
@@ -62,7 +62,7 @@
       "name": "How large can a Base64 image be for the OpenAI API?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "Keep encoded images under roughly 20 MB — Base64 inflates the file by about a third, so a 15 MB photo already produces a 20 MB string. Vision models rarely benefit from more than 1024-2048 px of input, so downscale before encoding."
+        "text": "Base64 adds roughly one-third to the binary file size, before JSON overhead. Supported formats, request limits and image-detail handling depend on the model and endpoint. Check the current OpenAI image-input requirements for your combination; do not treat one encoded-size limit or pixel dimension as universal."
       }
     },
     {
@@ -250,8 +250,9 @@
       </p>
 
       <h2>Python and Node.js examples</h2>
-      <p>Python with the standard library only — read the file, encode it, splice the prefix:</p>
+      <p>Python: use the standard-library <code>base64</code> module to encode the file and the third-party <code>requests</code> package to send it. Install <code>requests</code> in your project environment, and set <code>OPENAI_API_KEY</code> as an environment variable. Do not put API keys in client-side code.</p>
       <pre><code>import base64
+import os
 import requests
 
 with open("screenshot.png", "rb") as f:
@@ -259,7 +260,7 @@ with open("screenshot.png", "rb") as f:
 
 resp = requests.post(
     "https://api.openai.com/v1/chat/completions",
-    headers={"Authorization": f"Bearer {API_KEY}"},
+    headers={"Authorization": f"Bearer {os.environ['OPENAI_API_KEY']}"},
     json={
         "model": "gpt-4o",
         "messages": [{
@@ -271,7 +272,9 @@ resp = requests.post(
             ],
         }],
     },
+    timeout=30,
 )
+resp.raise_for_status()
 print(resp.json()["choices"][0]["message"]["content"])</code></pre>
       <p>Node.js — <code>fs.readFileSync</code> with the <code>"base64"</code> encoding does it in one call:</p>
       <pre><code>import fs from "node:fs";
@@ -295,14 +298,15 @@ const body = {
         extension. This tool detects the type from the file's real signature instead.
       </p>
 
-      <h2>Size: the 33% overhead and the 20 MB ceiling</h2>
+      <h2>Size: Base64 overhead and model-specific limits</h2>
       <p>
-        Base64 encodes three bytes into four characters, so the string is about a third larger than the file.
-        OpenAI documents a practical ceiling of roughly 20 MB per encoded image — a 15 MB photo is already
-        there before you have written a word of prompt. Since vision models downscale input internally,
-        a 1024-2048 px image carries essentially all the signal the model can use. Run large photos through
-        the <a href="/compress-jpg-to-base64">JPG compressor</a> first, and check the finished size with the
-        <a href="/base64-image-size-calculator">Base64 size calculator</a> before you ship it.
+        Base64 adds roughly one-third to the binary file size, before JSON overhead.
+        File formats, request limits and image-detail handling depend on the model and endpoint.
+        Check the <a href="https://developers.openai.com/api/docs/guides/images-vision">current OpenAI image-input requirements</a>
+        for that combination; do not treat one pixel dimension or encoded-size limit as universal.
+        Resize deliberately for your task and preserve legible text when OCR matters.
+        Use the <a href="/compress-jpg-to-base64">JPG compressor</a> when appropriate, and measure the final
+        payload with the <a href="/base64-image-size-calculator">Base64 size calculator</a> before sending it.
       </p>
 
       <h2>Why OpenAI wants the prefix (and Google does not)</h2>
@@ -316,8 +320,13 @@ const body = {
 
       <h2>When the image comes back as Base64</h2>
       <p>
-        Image generation endpoints also speak Base64 — they return the produced image as an
-        <code>image_url</code> containing a data URI. Paste that string into the
+        Image generation is an output workflow, not the same schema as vision input.
+        With GPT Image on the Images API, read the Base64 payload from <code>data[0].b64_json</code>.
+        When using the image-generation tool in the Responses API, read <code>result</code> from the
+        <code>image_generation_call</code> output. Decode that string to bytes, or add a
+        <code>data:image/&lt;format&gt;;base64,</code> prefix only when displaying it as a data URL.
+        Check the <a href="https://developers.openai.com/api/docs/guides/image-generation">selected endpoint's response schema</a>
+        rather than expecting an <code>image_url</code> output field. Paste the raw Base64 into the
         <a href="/base64-to-image">Base64 to image decoder</a> to preview and save it as a file.
       </p>
 
@@ -366,11 +375,11 @@ const body = {
       </details>
       <details>
         <summary>What does the detail parameter do?</summary>
-        <p><code>detail: "low"</code> runs a cheap fixed-size pass, <code>"high"</code> lets the model inspect the image closely, <code>"auto"</code> decides for you. It sits inside the <code>image_url</code> object next to <code>url</code>.</p>
+        <p>The detail parameter controls image-processing detail where supported. Accepted values and behavior depend on the model and endpoint. In Chat Completions it belongs inside the image_url object; in Responses it belongs on the input_image content part. Check the current model documentation before copying an example.</p>
       </details>
       <details>
         <summary>How large can the image be?</summary>
-        <p>Keep the encoded string under roughly 20 MB. Base64 adds about 33%, and models rarely use more than 1024-2048 px of input — the <a href="/compress-jpg-to-base64">compressor</a> gets you there in one step.</p>
+        <p>Base64 adds roughly one-third to the binary file size, before JSON overhead. Supported formats, request limits and image-detail handling depend on the model and endpoint. Check the current OpenAI image-input requirements for your combination; do not treat one encoded-size limit or pixel dimension as universal.</p>
       </details>
       <details>
         <summary>Why does my image fail with an invalid image error?</summary>
