@@ -1,0 +1,326 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Remove Metadata from Photos Online — Free EXIF Remover (No Upload)</title>
+<meta name="description" content="Strip EXIF metadata from photos in your browser: GPS location, camera model, timestamps and more. Choose what to keep or wipe everything. 100% local — your photos are never uploaded." />
+<link rel="canonical" href="https://image2base64.com/remove-photo-metadata" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image2Base64" />
+<meta property="og:title" content="Remove Metadata from Photos — Free EXIF Remover (No Upload)" />
+<meta property="og:description" content="Wipe GPS, camera and timestamp metadata from photos right in your browser. Selective or full removal, nothing uploaded." />
+<meta property="og:url" content="https://image2base64.com/remove-photo-metadata" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Is my photo uploaded when I remove metadata here?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The cleaning runs entirely inside your browser tab. The photo is read from disk, rewritten in memory, and saved back through a normal download — there is no upload step. You can confirm this in your browser's Network tab: no image request is ever sent."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Which metadata gets removed?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In full-strip mode: the EXIF block (GPS coordinates, camera make and model, lens, timestamps, orientation, exposure settings), XMP tags, IPTC/Photoshop data, embedded comments, the MakerNote vendor blob, and the multi-picture thumbnail set that some cameras append. In GPS-only mode everything else is preserved and just the location data is deleted."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does removing metadata lower image quality?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. For JPEG, PNG and WebP the pixels are copied byte-for-byte and only metadata chunks are dropped or rewritten, so quality is identical. The one exception is iPhone HEIC photos opened in a browser that cannot decode HEIC — those are re-encoded to JPEG, which is a real format conversion."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I remove metadata from many photos at once?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Select or drop up to 20 files at a time and each one is processed and downloaded individually. There is no queue on a server — everything happens on your device."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does stripping EXIF prove a photo is authentic or unedited?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No — and the reverse matters more here: anyone can strip EXIF, so the absence of metadata does not prove tampering either. Treat metadata removal as a privacy step, not as verification."
+      }
+    }
+  ]
+}
+</script>
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "SoftwareApplication",
+  "name": "Image2Base64 — Photo Metadata Remover",
+  "url": "https://image2base64.com/remove-photo-metadata",
+  "description": "Remove EXIF, GPS and camera metadata from photos entirely in the browser.",
+  "operatingSystem": "Web",
+  "applicationCategory": "UtilitiesApplication",
+  "offers": { "@type": "Offer", "price": "0", "priceCurrency": "USD" },
+  "featureList": ["Full or GPS-only metadata removal", "Selective keep by category", "Up to 20 photos at a time", "No upload — runs in the browser"]
+}
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body data-exif-mode="full">
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · No upload · Runs in your browser</span>
+      <h1>Remove Metadata from Photos</h1>
+      <p class="lede">
+        Drop in a photo and get back a clean copy with the <strong>GPS location</strong>,
+        <strong>camera details</strong> and <strong>timestamps</strong> stripped out — or keep exactly
+        the fields you want. One click to download.
+      </p>
+      <p class="trust"><strong>100% client-side.</strong> The photo never leaves your device.</p>
+      <p class="trust">Just want to <em>see</em> what's inside first? Use the <a href="/exif-viewer">EXIF viewer</a>.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div class="exif-mode-row" role="radiogroup" aria-label="Removal mode">
+          <label class="exif-mode-card"><input type="radio" name="exif-mode" value="all" data-exif-mode-radio checked /><span><strong>Strip everything</strong><small>GPS, camera, dates, comments — a fully clean file</small></span></label>
+          <label class="exif-mode-card"><input type="radio" name="exif-mode" value="gps" data-exif-mode-radio /><span><strong>Remove GPS only</strong><small>Delete location, keep camera &amp; dates</small></span></label>
+          <label class="exif-mode-card"><input type="radio" name="exif-mode" value="custom" data-exif-mode-radio /><span><strong>Choose what to keep</strong><small>Pick categories to preserve</small></span></label>
+        </div>
+        <div id="exif-selective" class="exif-selective" hidden>
+          <span class="muted" style="flex-basis:100%">Keep:</span>
+          <label><input type="checkbox" value="gps" data-exif-keep /> GPS location</label>
+          <label><input type="checkbox" value="camera" data-exif-keep checked /> Camera &amp; lens</label>
+          <label><input type="checkbox" value="time" data-exif-keep checked /> Dates &amp; times</label>
+          <label><input type="checkbox" value="image" data-exif-keep checked /> Shooting settings</label>
+          <label><input type="checkbox" value="rights" data-exif-keep /> Artist &amp; copyright</label>
+        </div>
+        <div id="exif-drop" class="dropzone">
+          <div class="dz-icon" aria-hidden="true">🧹</div>
+          <h2>Drop photos here</h2>
+          <p>up to 20 at a time · JPEG, PNG, WebP (HEIC in Safari)</p>
+          <button id="exif-pick" class="btn btn-primary" type="button">Choose photos</button>
+          <input id="exif-file" class="visually-hidden" type="file" accept="image/*" multiple />
+        </div>
+        <p id="exif-error" class="error" hidden></p>
+        <div id="exif-results"></div>
+        <div class="privacy-strip">🔒 Nothing is uploaded — cleaning happens in this tab</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="wrap prose">
+      <h2>What metadata hides inside a photo?</h2>
+      <p>
+        Every photo from a phone or camera carries a hidden block of <strong>EXIF metadata</strong> written at
+        capture time. The risky ones:
+      </p>
+      <ul>
+        <li><strong>GPS coordinates.</strong> Precision down to a few meters — enough to place a photo at a specific home, school or hotel room.</li>
+        <li><strong>Device identity.</strong> Camera make, model, lens and even serial-number-bearing vendor blobs can identify whose device took the shot.</li>
+        <li><strong>Timestamps.</strong> Exactly when the photo was taken and edited.</li>
+        <li><strong>Editing software.</strong> Which app touched the file last.</li>
+        <li><strong>Embedded thumbnails.</strong> Some cameras store a smaller preview inside the file — occasionally of a frame you didn't intend to share.</li>
+      </ul>
+      <p>
+        None of this is visible in the picture itself, which is exactly why it keeps leaking. Marketplaces,
+        forums and classified-ad sites usually keep the original file you attach — metadata included.
+      </p>
+
+      <h2>What this remover actually does</h2>
+      <p>
+        The tool reads the file structure directly: for a JPEG it walks the marker segments and drops the
+        EXIF APP1 segment, XMP, IPTC/Photoshop data, comments and multi-picture blocks; for PNG it removes
+        the <code>eXIf</code> chunk and known metadata text chunks; for WebP it deletes the EXIF/XMP chunks
+        and clears the container flags. The compressed pixel data is copied <strong>byte-for-byte</strong>, so
+        the output looks identical and has identical quality. In GPS-only mode the EXIF block is rebuilt
+        without the location entries, keeping everything else intact.
+      </p>
+      <p>
+        If you'd rather keep some context, the <em>choose what to keep</em> mode lets you retain dates or
+        shooting settings while still deleting the coordinates and device identifiers.
+      </p>
+
+      <h2>How it compares to phone built-ins</h2>
+      <p>
+        iPhones strip some metadata when sharing through AirDrop or Messages ("remove location" options in
+        the share sheet), but emailing a file, uploading to cloud drives, or sending "Actual Photo" copies
+        generally keeps EXIF intact. Android's behavior varies by vendor and app. A browser tool gives you a
+        file that is clean <em>before</em> you pick the channel — one habit that works everywhere.
+      </p>
+
+      <h2>Supported formats and limits</h2>
+      <ul>
+        <li><strong>JPEG</strong> — full support, pixels untouched.</li>
+        <li><strong>PNG</strong> — eXIf and metadata text chunks removed, image chunks untouched.</li>
+        <li><strong>WebP</strong> — EXIF/XMP chunks removed, container flags cleared.</li>
+        <li><strong>HEIC (iPhone)</strong> — works in Safari, which can decode HEIC locally; other browsers will re-encode to JPEG or ask you to convert first. See the <a href="/remove-metadata-from-photo-iphone">iPhone-specific guide</a>.</li>
+        <li>Process up to 20 images per batch; each browser has its own memory ceiling for very large files.</li>
+      </ul>
+      <p>
+        Curious what a file contains before deciding what to strip? Inspect it with the
+        <a href="/exif-viewer">online EXIF viewer</a>, or remove just the coordinates with the
+        <a href="/remove-gps-from-photo">GPS removal tool</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="faq-section">
+    <div class="wrap prose">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>Is my photo uploaded when I remove metadata here?</summary>
+        <p>No. The cleaning runs entirely inside your browser tab — the file is read from disk, rewritten in memory, and saved through a normal download. Open your Network tab and watch: no image request is sent.</p>
+      </details>
+      <details>
+        <summary>Which metadata gets removed?</summary>
+        <p>Full strip: EXIF (GPS, camera, lens, timestamps, orientation, settings), XMP, IPTC, comments, MakerNote blobs and multi-picture thumbnails. GPS-only mode deletes just the location entries and preserves the rest.</p>
+      </details>
+      <details>
+        <summary>Does removing metadata lower image quality?</summary>
+        <p>Not for JPEG, PNG or WebP — pixels are copied byte-for-byte. The only exception is HEIC in a browser that can't decode it natively, which re-encodes to JPEG (a real conversion, clearly labeled in the tool).</p>
+      </details>
+      <details>
+        <summary>Can I process many photos at once?</summary>
+        <p>Yes — drop up to 20 files; each is processed locally and downloaded individually.</p>
+      </details>
+      <details>
+        <summary>Does a stripped photo prove it's unedited?</summary>
+        <p>No. Metadata removal is a privacy step, not verification — anyone can strip a file, so a clean file says nothing about authenticity either way.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="siblings">
+    <div class="wrap">
+      <h2>More photo privacy &amp; Base64 tools</h2>
+      <p class="muted">One focused tool per job. All free, all client-side.</p>
+      <div class="sib-grid">
+        <a class="sib-card" href="/exif-viewer"><strong>EXIF Viewer</strong><span>See every metadata field before you decide what to strip.</span></a>
+        <a class="sib-card" href="/remove-gps-from-photo"><strong>Remove GPS from Photo</strong><span>Delete only the location, keep camera and dates.</span></a>
+        <a class="sib-card" href="/remove-metadata-from-photo-iphone"><strong>Remove Metadata on iPhone</strong><span>HEIC-aware guide and tool for iOS photos.</span></a>
+        <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Encode an image to a data URI, locally.</span></a>
+        <a class="sib-card" href="/compress-jpg-to-base64"><strong>Compress JPG to Base64</strong><span>Shrink, then encode a photo.</span></a>
+        <a class="sib-card" href="/base64-to-image"><strong>Base64 to Image</strong><span>Decode a string back into a file.</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script src="exif.js"></script>
+</body>
+</html>

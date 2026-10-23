@@ -674,3 +674,34 @@ Last updated: 2026-09-07 CST
 - 验证：SEO 一致性 52 HTML / 47 sitemap URL，FAIL=0，3 个既有 canonical 合并 WARN；5 个示例 JS 语法及邮件载荷 dry-run 通过；无工具组件的文章页 app.js 启动检查通过。没有发送邮件或声称 Jimp 实际编解码通过。
 - 部署：复用已安装 Wrangler 4.142.0，Worker image2base64，Version 352f28fe-378b-4e14-9be0-5617b411117e。7 个改动文件线上 HTTP 200；移除唯一已观察的 Cloudflare Insights 自动注入脚本后，HTML 其余字节与本地完全一致；sitemap XML 逐字一致。
 - 未验收：GSC 新页收录、真实邮件客户端渲染、移动端性能指标；页面上线不等于这些结果。证据：/Users/jerome/Research/outputs/task-6ac62c33/publication/production-readback.json。
+
+## 2026-10-20 · gtm.help 三建议收尾核对 + 三新页 GSC 请求索引 + 首页补卡
+
+- 触发：gtm.help 结案邮件（10-19）给三条建议——①AI API Base64 payload 指南（~3h）②HTML email 开发者指南（~4h）③隐私工具目录提交（~5h），附 $49 优惠码。核对结论：①②已被 10-14 批次覆盖（/openai-vision-base64-image、/cloud-vision-base64-image、/base64-image-in-html-email，commit cb53944，此前已上线 200）；③与 09-08 Tier1 批次重合且 09-11 起执行 I2B64 零新增外链政策，不为邮件恢复扩池。优惠码不使用。
+- 缺口补齐（本次施工）：
+  - GSC 请求索引 ×3：/cloud-vision-base64-image、/base64-image-in-html-email、/openai-vision-base64-image（首跑超时未确认，重跑成功），均回执 Indexing requested（走 gsc_request_indexing.mjs，CDP 9333）。
+  - 首页「More Base64 converters」补 3 张指南卡（紧挨 /image-to-base64-for-api），sib-card 24→27。
+  - 部署注意：本地 main 落后远端 10-15「品牌统一」14 个提交（cb53944..43f51db），首次部署 5f7a3aa7 曾把旧 footer（Base64Img + login 链）带回线上，随即 rebase（0a5f338）重部署 3de39cba 覆盖，线上已核：27 卡、© 2026 Image2Base64、无 login.html，check_seo fail=0（55 页/50 locs/3 warn 既有 canonical 合并）。
+- 存量目录外链复核（维护，未新增）：SaasHub 13、sitelike 54、Product Hunt 33、Launchstag 17、DEV.to 两文各 2、GitHub 三 PR 7/25/13——均含本站链接，存活；quicktoolhub.io、toolpod.dev 两 roundup 仍文在无本站链（与台账「失效」一致）；**Startup Fame 域名已 parked 出售（HugeDomains），渠道实际失效**，listing URL 无从谈起。
+- 未动（需 Jerome 本人或明确授权）：Fazier 免费档提交（徽章线上完好）、BetaList 提交、Uneed 编辑器收尾、Show HN——均见交接_Tier1与外链未完成_20260908.md。
+
+## 2026-10-23 · 照片隐私工具线一期上线（4 新页 + 首页区块）
+
+- 依据：2026-10-22 三方向评估（EXIF 元数据方向 KD 31.8，第 9 名为 DR 4 新站 aimetadatacleaner.com——新站可进的最强盘面证据；base64 主业词簇全线下跌不投入；压缩方向留作二期）。
+- 上线内容（commit 本次）：
+  - `/remove-photo-metadata`：主工具页（全清 / 仅删 GPS / 按组保留三模式，批量 20 张，JPEG/PNG/WebP，HEIC 走能力探测）。
+  - `/exif-viewer`：只读查看器（字段分组 + GPS 十进制 + Google Maps 链接 + JSON 导出）。
+  - `/remove-gps-from-photo`：单一职责删 GPS（保留其余 EXIF）。
+  - `/remove-metadata-from-photo-iphone`：iPhone 场景页（HEIC 说明 + iOS 分享行为 + 关定位步骤）。
+  - 首页新增「Photo privacy tools」区块（3 卡 + iPhone 链接）；footer Guides 补 4 链接；sitemap +4。
+  - 新文件 `exif.js`：EXIF 核心库（JPEG APP1 重写、PNG eXIf/tEXt、WebP EXIF/XMP+VP8X flags），纯函数核心 + DOM 薄封装，不动 app.js。
+- 验证：
+  - Node 单测 42 项全 PASS（/tmp/exifkit_tests，fixture 为程序构造的带 GPS EXIF 的 JPEG/PNG/WebP）：解析、GPS 十进制（37.5637,-122.2184）、全清后无 EXIF、仅删 GPS 后相机/日期/ISO 保留、按组保留、clean 文件 passthrough 字节一致、PNG chunk 链完整、WebP VP8X flags 清除、RIFF size 一致。
+  - 无头 Chrome DOM 管线：主工具页 3 格式各渲染 1 行 + 3 个下载链接（photo1_clean.jpg）；viewer 页 entries + Maps 链接 + JSON 导出 + 坐标全通过。
+  - 无外发：本地 http.server 日志仅含页面资源与同源 POST /api/evt（12 次，501 为 server 不支持，无碍）；exif.js 唯一网络调用 = /api/evt sendBeacon（与 app.js 既有 track 一致）。
+  - check_seo_consistency：59 页 / 54 locs / FAIL=0（3 个既有 canonical 合并 WARN 不变）；build.py 82 assets。
+- 未验收 / 边界：
+  - Safari 真机 HEIC decode 路径未实测（无真机环境；代码按 createImageBitmap 能力探测分支，失败有明确文案）。
+  - 「三浏览器 × 20 张」矩阵未跑，覆盖为 Chrome headless 功能路径 + Node 单测。
+  - GSC 请求索引 ×4 待 Jerome 手动（见 GSC提交引导_4新页_20261023.md）。
+  - 观察期指标（8-12 周）：非品牌曝光 ≥500/月、任一目标词进前 30；12 周无词进前 50 且曝光 <300 → 停 C 转 B（compress image to X kb，KD 31.7）。

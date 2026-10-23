@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>EXIF Viewer — See What's Inside Your Photos (Online, No Upload)</title>
+<meta name="description" content="Check a photo's EXIF data online: GPS coordinates with a map link, camera and lens, timestamps, exposure settings. Read-only inspection in your browser — the file is never uploaded." />
+<link rel="canonical" href="https://image2base64.com/exif-viewer" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image2Base64" />
+<meta property="og:title" content="EXIF Viewer — Check Photo Metadata Online" />
+<meta property="og:description" content="Inspect GPS, camera, lens and timestamp metadata in any photo. Read-only, in-browser, no upload." />
+<meta property="og:url" content="https://image2base64.com/exif-viewer" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does the EXIF viewer upload my photo?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The viewer parses the file in your browser's memory and displays the fields on the page. Nothing is transmitted — you can watch the Network tab stay empty while you inspect a file."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I check where a photo was taken?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Drop the photo in and look at the GPS entries. If coordinates exist, the viewer converts them to decimal degrees and shows an 'open in Google Maps' link that pins the exact capture spot. If there is no GPS group, the photo carries no location data."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What is the difference between EXIF and metadata?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Metadata is the umbrella term for all data-about-the-file. EXIF is the most common metadata standard, written by cameras and phones: exposure settings, timestamps, GPS, orientation and a MakerNote block. Photos can also carry XMP (Adobe tags) and IPTC (caption, credit) blocks — the viewer surfaces what the file actually contains."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why does my screenshot have no EXIF data?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Screenshots, images saved from social apps, and files processed by image libraries usually lose the original EXIF block in transit or at creation. A file with no EXIF simply shows 'no metadata found' — that is normal, not an error."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I export the metadata?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes — one click copies everything the viewer found as JSON, so you can paste it into documentation, a bug report, or an analysis script."
+      }
+    }
+  ]
+}
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body data-exif-mode="viewer">
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · Read-only · Runs in your browser</span>
+      <h1>EXIF Data Viewer</h1>
+      <p class="lede">
+        Drop in a photo to see its hidden metadata: <strong>where it was taken</strong> (with a map link),
+        <strong>which camera and lens</strong>, <strong>when</strong>, and every shooting setting.
+        Copy the whole lot as JSON with one click.
+      </p>
+      <p class="trust"><strong>Read-only.</strong> The file is inspected in your browser — nothing is uploaded.</p>
+      <p class="trust">Found something you want gone? Switch to the <a href="/remove-photo-metadata">metadata remover</a>.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="exif-drop" class="dropzone">
+          <div class="dz-icon" aria-hidden="true">🔍</div>
+          <h2>Drop a photo to inspect</h2>
+          <p>or paste from clipboard · JPEG, PNG, WebP (HEIC in Safari)</p>
+          <button id="exif-pick" class="btn btn-primary" type="button">Choose a photo</button>
+          <input id="exif-file" class="visually-hidden" type="file" accept="image/*" />
+        </div>
+        <p id="exif-error" class="error" hidden></p>
+        <div id="exif-results"></div>
+        <div class="privacy-strip">🔒 Inspection only — no upload, no changes to your file</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="wrap prose">
+      <h2>What each field means</h2>
+      <p>
+        A phone photo typically carries dozens of entries. The ones worth understanding:
+      </p>
+      <ul>
+        <li><strong>GPS latitude / longitude.</strong> The capture spot in degrees-minutes-seconds, also shown as decimal plus a map link. Absent when the camera had location turned off or the file was already cleaned.</li>
+        <li><strong>Camera make / model / lens.</strong> What shot the picture — useful for verifying your own archive, identifying a leaked file's source device, or checking gear settings behind a shot you admire.</li>
+        <li><strong>Date taken vs. file modified.</strong> The first is burned in at capture; the second changes every time the file is saved. If they diverge wildly, the file has been re-saved or edited after the fact.</li>
+        <li><strong>Exposure, ISO, aperture, focal length.</strong> The recipe of the shot. Landscape shooters compare focal lengths; low-light shooters compare ISO ceilings.</li>
+        <li><strong>MakerNote.</strong> A vendor-specific blob (Canon, Apple, Sony…) that can hold serial numbers and scene data. It rarely matters to you but can identify the device.</li>
+        <li><strong>Orientation.</strong> Why some photos display rotated in one app and upright in another — the pixels are stored one way and a flag tells the viewer to rotate.</li>
+      </ul>
+
+      <h2>Why check metadata before sharing?</h2>
+      <p>
+        The classic scenario: a marketplace listing photo that quietly includes the coordinates of your
+        living room. Or a photographer submitting a mock-up whose EXIF names the client's studio. Checking
+        first costs two seconds and tells you exactly what you're about to hand over. If the GPS group is
+        present and the photo is going to strangers, either strip everything with the
+        <a href="/remove-photo-metadata">metadata remover</a> or delete just the location with the
+        <a href="/remove-gps-from-photo">GPS removal tool</a>.
+      </p>
+
+      <h2>Formats the viewer reads</h2>
+      <p>
+        JPEG files carry EXIF in an APP1 segment; PNG files in an <code>eXIf</code> chunk; WebP files in an
+        EXIF chunk of the RIFF container. HEIC photos from iPhones decode in Safari. If a file contains no
+        metadata block at all, the viewer says so plainly — screenshots and re-saved downloads usually fall
+        in this group. For a deeper format-by-format tour, see the main
+        <a href="/remove-photo-metadata">metadata removal guide</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="faq-section">
+    <div class="wrap prose">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>Does the EXIF viewer upload my photo?</summary>
+        <p>No — parsing happens in your browser's memory and results render on the page. The Network tab stays empty.</p>
+      </details>
+      <details>
+        <summary>How do I check where a photo was taken?</summary>
+        <p>Drop the file in; if a GPS group exists you'll see coordinates and an "open in Google Maps" link. No GPS group means no location data.</p>
+      </details>
+      <details>
+        <summary>What's the difference between EXIF and metadata?</summary>
+        <p>EXIF is the camera-written metadata standard (settings, timestamps, GPS). Files may also carry XMP and IPTC blocks — the viewer shows whatever the file actually contains.</p>
+      </details>
+      <details>
+        <summary>Why does my screenshot have no EXIF?</summary>
+        <p>Screenshots and re-saved downloads typically never had the original block, or lost it in transit. "No metadata found" is normal for them.</p>
+      </details>
+      <details>
+        <summary>Can I export what the viewer finds?</summary>
+        <p>Yes — "Copy as JSON" puts every discovered field on your clipboard.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="siblings">
+    <div class="wrap">
+      <h2>Related photo tools</h2>
+      <p class="muted">Inspect first, then clean up. All client-side.</p>
+      <div class="sib-grid">
+        <a class="sib-card" href="/remove-photo-metadata"><strong>Metadata Remover</strong><span>Strip GPS, camera and timestamps from photos.</span></a>
+        <a class="sib-card" href="/remove-gps-from-photo"><strong>Remove GPS from Photo</strong><span>Delete only the coordinates, keep the rest.</span></a>
+        <a class="sib-card" href="/remove-metadata-from-photo-iphone"><strong>Remove Metadata on iPhone</strong><span>HEIC-aware tool and guide for iOS photos.</span></a>
+        <a class="sib-card" href="/"><strong>Image to Base64</strong><span>Encode any image to a data URI locally.</span></a>
+        <a class="sib-card" href="/heic-to-base64"><strong>HEIC to Base64</strong><span>Encode iPhone photos in the browser.</span></a>
+        <a class="sib-card" href="/base64-image-size-calculator"><strong>Base64 Size Calculator</strong><span>Predict data URI size before encoding.</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script src="exif.js"></script>
+</body>
+</html>

@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Remove Photo Metadata on iPhone — Strip EXIF Before You Share (Free)</title>
+<meta name="description" content="Strip EXIF and GPS metadata from iPhone photos in Safari — HEIC-aware, no app install, no upload. Plus how iOS handles metadata in AirDrop, Mail and Messages, and how to turn off camera location." />
+<link rel="canonical" href="https://image2base64.com/remove-metadata-from-photo-iphone" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="stylesheet" href="styles.css" />
+
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Image2Base64" />
+<meta property="og:title" content="Remove Photo Metadata on iPhone — Strip EXIF Before Sharing" />
+<meta property="og:description" content="Clean GPS and camera metadata from iPhone photos right in Safari. HEIC-aware, nothing uploaded, no app needed." />
+<meta property="og:url" content="https://image2base64.com/remove-metadata-from-photo-iphone" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does iPhone automatically remove metadata when sharing?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Partially. AirDrop, Messages and Mail strip location when you tap Options and choose 'Remove Location' — iOS 15 and later can do this per share. But 'Save to Files', cloud drives, many third-party apps, and sending as a document preserve the full EXIF. The only setting-free guarantee is a file that is clean before you share it."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can this tool read iPhone HEIC photos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "In Safari, yes — Safari decodes HEIC natively, so the tool reads the metadata and produces a clean copy. In Chrome or Firefox on a Mac, HEIC files are re-encoded to JPEG (a real conversion, clearly labeled), and on platforms where the browser cannot decode HEIC at all you'll be asked to convert the photo first."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "How do I stop my iPhone from geotagging photos?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Settings → Privacy & Security → Location Services → Camera → Never. New photos will carry no GPS block. Existing photos keep their old coordinates until cleaned."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "What metadata does an iPhone photo contain?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Typically: GPS coordinates (if location access is on), the device model via Apple's MakerNote, capture and modification timestamps, lens and exposure data, orientation, and sometimes an embedded thumbnail. You can inspect any photo first with the EXIF viewer."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is my photo uploaded when I use this page on iOS?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. The cleaning runs inside Safari on your device. The photo goes from your library to browser memory to the download folder — no network transfer of image data happens at any point."
+      }
+    }
+  ]
+}
+</script>
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body data-exif-mode="full">
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+    <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free · HEIC-aware · No app install</span>
+      <h1>Remove Photo Metadata on iPhone</h1>
+      <p class="lede">
+        Strip the <strong>GPS coordinates</strong>, <strong>device details</strong> and <strong>timestamps</strong>
+        from iPhone photos right in Safari — including HEIC shots. Open this page, pick photos from your
+        library, download the clean copies.
+      </p>
+      <p class="trust"><strong>No upload.</strong> Everything runs inside Safari on your device.</p>
+      <p class="trust">Not on an iPhone? The general <a href="/remove-photo-metadata">metadata remover</a> covers all platforms.</p>
+    </div>
+  </section>
+
+  <section id="tool" class="tool-section">
+    <div class="wrap">
+      <div class="tool">
+        <div id="exif-drop" class="dropzone">
+          <div class="dz-icon" aria-hidden="true">📱</div>
+          <h2>Drop iPhone photos here</h2>
+          <p>HEIC and JPEG · up to 20 at a time · works in Safari</p>
+          <button id="exif-pick" class="btn btn-primary" type="button">Choose photos</button>
+          <input id="exif-file" class="visually-hidden" type="file" accept="image/*" multiple />
+        </div>
+        <p id="exif-error" class="error" hidden></p>
+        <div id="exif-results"></div>
+        <div class="privacy-strip">🔒 Processed on your device — no image data leaves it</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="wrap prose">
+      <h2>When does iOS strip metadata — and when it doesn't</h2>
+      <p>
+        Apple gives you partial protection, and it depends entirely on the channel:
+      </p>
+      <ul>
+        <li><strong>AirDrop &amp; Messages:</strong> iOS 15+ offers "Options → Remove Location" in the share sheet. Location is handled, but other EXIF (device model, timestamps) may still travel.</li>
+        <li><strong>Mail (as attachment):</strong> the file is attached as-is — full EXIF travels with it unless you use the same Options menu.</li>
+        <li><strong>"Save to Files", cloud drives, third-party apps:</strong> the original bytes are copied, metadata included.</li>
+        <li><strong>Sending "as document" in messengers:</strong> preserves everything.</li>
+      </ul>
+      <p>
+        The pattern: iOS protects the casual path and preserves the power-user path. A pre-cleaned file is
+        the only version that behaves the same everywhere.
+      </p>
+
+      <h2>Using this tool on iOS, step by step</h2>
+      <ol>
+        <li>Open this page in <strong>Safari</strong> (Chrome and Firefox cannot decode HEIC on iOS).</li>
+        <li>Tap <em>Choose photos</em> and pick from your photo library — HEIC shots work directly.</li>
+        <li>Each photo shows what was found and what was removed; tap <em>Download clean copy</em>.</li>
+        <li>The cleaned file lands in the Files app / Downloads; share that copy.</li>
+      </ol>
+      <p>
+        On a Mac, Safari handles HEIC the same way. Chrome or Firefox will re-encode HEIC shots to JPEG —
+        that conversion is real (slight quality change, different container) and the tool labels it clearly
+        when it happens. JPEG and PNG files are byte-identical in quality everywhere.
+      </p>
+
+      <h2>Turn off iPhone geotagging at the source</h2>
+      <p>
+        Cleaning fixes existing photos; this setting fixes future ones. Go to
+        <strong>Settings → Privacy &amp; Security → Location Services → Camera → Never</strong>. From then
+        on, new shots carry no coordinates. Trade-off: the Photos app can no longer group your library by
+        place, and some third-party camera apps lose location features. Check any photo afterwards with the
+        <a href="/exif-viewer">EXIF viewer</a> to confirm no GPS group appears.
+      </p>
+      <p>
+        For everything else the metadata contains — and a tool that strips all of it on any device — see the
+        main <a href="/remove-photo-metadata">photo metadata removal guide</a>, or remove just the location
+        with the <a href="/remove-gps-from-photo">GPS-specific tool</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="faq-section">
+    <div class="wrap prose">
+      <h2>Frequently asked questions</h2>
+      <details>
+        <summary>Does iPhone automatically remove metadata when sharing?</summary>
+        <p>AirDrop/Messages offer per-share location removal; Mail attachments, Files, cloud drives and document-style sends preserve the full EXIF. A pre-cleaned file is safe on every channel.</p>
+      </details>
+      <details>
+        <summary>Can this tool read HEIC photos?</summary>
+        <p>In Safari, yes — natively. On desktop Chrome/Firefox HEIC is re-encoded to JPEG (labeled in the tool). JPEG/PNG files are untouched byte-for-byte.</p>
+      </details>
+      <details>
+        <summary>How do I stop geotagging on iPhone?</summary>
+        <p>Settings → Privacy &amp; Security → Location Services → Camera → Never. New shots get no GPS block; old ones still need cleaning.</p>
+      </details>
+      <details>
+        <summary>What's inside an iPhone photo's metadata?</summary>
+        <p>GPS (if enabled), Apple's MakerNote with device info, timestamps, lens/exposure data, orientation, sometimes a thumbnail. Inspect any file with the EXIF viewer to see yours.</p>
+      </details>
+      <details>
+        <summary>Is the photo uploaded?</summary>
+        <p>No — the whole pipeline runs in Safari on your device.</p>
+      </details>
+    </div>
+  </section>
+
+  <section class="siblings">
+    <div class="wrap">
+      <h2>Related photo tools</h2>
+      <p class="muted">iOS-friendly, all client-side.</p>
+      <div class="sib-grid">
+        <a class="sib-card" href="/remove-photo-metadata"><strong>Metadata Remover</strong><span>The full tool for any device.</span></a>
+        <a class="sib-card" href="/remove-gps-from-photo"><strong>Remove GPS from Photo</strong><span>Strip location only, keep the rest.</span></a>
+        <a class="sib-card" href="/exif-viewer"><strong>EXIF Viewer</strong><span>See what your photos carry.</span></a>
+        <a class="sib-card" href="/heic-to-base64"><strong>HEIC to Base64</strong><span>Encode iPhone photos locally.</span></a>
+        <a class="sib-card" href="/"><strong>Image to Base64</strong><span>The main converter.</span></a>
+        <a class="sib-card" href="/base64-image-email-signature"><strong>Base64 in Email Signature</strong><span>Inline a logo without hosting.</span></a>
+      </div>
+    </div>
+  </section>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+<script src="exif.js"></script>
+</body>
+</html>
