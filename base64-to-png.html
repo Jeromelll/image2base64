@@ -46,6 +46,22 @@
     },
     {
       "@type": "Question",
+      "name": "Why do I see 'The input contains characters that are not valid Base64'?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The decoder only accepts a raw Base64 body or a full data:image/...;base64, URI. Spaces, line breaks, and URL-safe -/_ characters are handled automatically, but surrounding quotes, an HTML tag like <img src=\"...\">, a plain URL, or a percent-encoded string will trigger this error. Paste just the Base64 payload (or the complete data URI) and try again."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why do I see 'The Base64 string is incomplete or malformed'?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The pasted string is missing padding, was cut off mid-character, or mixes Base64 with other text. Copy the full payload end-to-end (including any trailing = padding), or paste a complete data URI, then decode again."
+      }
+    },
+    {
+      "@type": "Question",
       "name": "Does this decoder keep transparency?",
       "acceptedAnswer": {
         "@type": "Answer",
@@ -329,6 +345,14 @@ $b64 = $b64 -replace '^data:image/png;base64,', ''
       <details>
         <summary>How do I convert a Base64 string to a PNG?</summary>
         <p>Paste the Base64 string or full data URI into the box and click <em>Convert to PNG</em>. The source image is detected automatically and exported as a real .png file.</p>
+      </details>
+      <details>
+        <summary>Why do I see “The input contains characters that are not valid Base64”?</summary>
+        <p>The decoder only accepts a raw Base64 body or a full <code>data:image/...;base64,</code> URI. Spaces, line breaks, and URL-safe <code>-</code>/<code>_</code> characters are handled automatically, but surrounding quotes, an HTML tag like <code>&lt;img src="..."&gt;</code>, a plain URL, or an encoded <code>%2F</code>-style string will trigger this error. Paste just the Base64 payload (or the complete data URI) and try again. See also <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>.</p>
+      </details>
+      <details>
+        <summary>Why do I see “The Base64 string is incomplete or malformed”?</summary>
+        <p>The pasted string is missing padding, was cut off mid-character, or mixes Base64 with other text. Copy the full payload end-to-end (including any trailing <code>=</code> padding), or paste a complete data URI, then decode again.</p>
       </details>
       <details>
         <summary>Does this decoder keep transparency?</summary>

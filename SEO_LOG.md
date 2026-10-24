@@ -1,3 +1,9 @@
+## 2026-10-24 — 用户行为周报：/base64-to-png 补 decode 报错 FAQ
+
+- 依据：D1 W0(10-17~10-24) error Top 为 decode「not valid Base64」×5；W-1 亦有 incomplete/malformed ×4。本周 /base64-to-png PV=18（次席工具页）原 FAQ 无此条。
+- 改动：`base64-to-png.html` 增补两条 FAQ（invalid Base64 / incomplete or malformed）及对应 FAQPage JSON-LD；链到 `/fix-invalid-base64-image-data`。
+- 未改 JS 逻辑。部署走 GitHub Actions wrangler deploy。
+
 # Image2Base64 SEO 日志
 
 ## 2026-10-14 — 上线 AI API 双页 + HTML 邮件指南（gtm.help 三条建议落地两条）
