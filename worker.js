@@ -27,7 +27,7 @@ const BLOCKED_EXACT = new Set([
 ]);
 
 // Only these client event names are accepted.
-const EVENT_NAMES = new Set(["page_view", "convert", "copy", "decode", "download", "error", "sample", "compress", "calc", "credit", "extract"]);
+const EVENT_NAMES = new Set(["page_view", "convert", "copy", "decode", "download", "error", "sample", "compress", "calc", "credit", "extract", "exif_open", "exif_start", "exif_fail", "exif_done", "exif_copy_json", "exif_download"]);
 
 // Scanner/bot filters (2026-09-10): headless vulnerability scanners execute app.js
 // and flood page_view events with dictionary paths (.env, wp-*, php...), which

@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Compress Image to 100 KB Online — Free, No Upload</title>
+<meta name="description" content="Compress JPEG, PNG, or WebP images to 100 KB or a custom size. The image is processed in your browser and downloaded as JPEG; nothing is uploaded." />
+<link rel="canonical" href="https://image2base64.com/compress-image-to-100kb" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<style>
+.compress-controls{display:flex;justify-content:center;align-items:end;gap:12px;flex-wrap:wrap;margin-top:18px}
+.compress-controls label{display:grid;gap:4px;text-align:left;font-size:.86rem;font-weight:600;color:var(--ink-soft)}
+.compress-controls input{width:140px;padding:.65em .75em;border:1px solid var(--line);border-radius:8px;font:inherit}
+.compress-controls button:disabled{opacity:.65;cursor:wait}
+.compress-note{max-width:680px;margin:14px auto 0;color:var(--ink-soft);font-size:.9rem}
+.result-actions{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;margin-top:16px}
+.status{margin:14px 0 0;text-align:center;color:var(--ink-soft)}
+</style>
+</head>
+<body>
+<header class="site-header"><div class="wrap header-inner">
+  <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+  <nav class="nav" aria-label="Primary"><a href="/">Converter</a><a href="/about">About</a><a href="/contact">Contact</a><a href="/privacy">Privacy</a></nav>
+</div></header>
+<main>
+  <section class="hero"><div class="wrap">
+    <span class="eyebrow">Free · No upload · Runs in your browser</span>
+    <h1>Compress Image to 100 KB</h1>
+    <p class="lede">Shrink a JPEG, PNG, or WebP image to 100 KB, or enter your own target size. The result is a JPEG file.</p>
+    <p class="trust"><strong>100% client-side.</strong> Your image never leaves your device.</p>
+  </div></section>
+  <section id="tool" class="tool-section"><div class="wrap"><div class="tool">
+    <div id="drop" class="dropzone">
+      <div class="dz-icon" aria-hidden="true">🗜️</div>
+      <h2>Choose an image to compress</h2>
+      <p>JPEG, PNG, or WebP · up to 15 MB</p>
+      <button id="pick" class="btn btn-primary" type="button">Choose image</button>
+      <input id="file" class="visually-hidden" type="file" accept="image/jpeg,image/png,image/webp" />
+    </div>
+    <div class="compress-controls">
+      <label for="target">Target size (KB)<input id="target" type="number" min="1" max="10240" step="1" value="100" inputmode="numeric" /></label>
+      <button id="compress" class="btn btn-primary" type="button" disabled>Compress image</button>
+    </div>
+    <p class="compress-note">PNG and WebP files are converted to JPEG. Transparent areas become white. Target KB uses decimal units (1 KB = 1,000 bytes). Compression may reduce image quality or dimensions; some images cannot reach every target size.</p>
+    <p id="error" class="error" role="alert" hidden></p>
+    <p id="status" class="status" aria-live="polite"></p>
+    <section id="results" class="results" aria-labelledby="result-title" hidden>
+      <h2 id="result-title">Compressed image</h2>
+      <div class="result-head">
+        <div class="preview-box"><img id="preview" alt="Preview of the compressed JPEG" width="120" height="120" /></div>
+        <dl class="meta">
+          <div><dt>Original size</dt><dd id="original-size">—</dd></div>
+          <div><dt>Compressed size</dt><dd id="output-size">—</dd></div>
+          <div><dt>Dimensions</dt><dd id="dimensions">—</dd></div>
+          <div><dt>Target</dt><dd id="target-size">—</dd></div>
+        </dl>
+      </div>
+      <div class="result-actions"><a id="download" class="btn btn-primary" download="compressed-image.jpg">Download JPEG</a><button id="retry" class="btn btn-ghost" type="button">Try again</button></div>
+    </section>
+  </div></div></section>
+  <section class="content-section"><div class="wrap prose">
+    <h2>How this image compressor works</h2>
+    <p>Your image is decoded and compressed on this device. The tool adjusts JPEG quality and, when needed, image dimensions until the downloaded file is at or below the selected byte limit. The displayed file size is checked before success is shown.</p>
+    <p>Compression uses JPEG, which is lossy and does not preserve transparency. Transparent pixels are filled with white. Animated WebP files become a single still image. Very small targets or complex images may not be achievable; choose a larger target and retry.</p>
+  </div></section>
+</main>
+<footer class="site-footer"><div class="wrap"><div class="footer-inner"><div class="footer-brand"><a class="brand" href="/"><span class="dot"></span>Image2Base64</a><p>Free, private, client-side image tools. No upload, no sign-up.</p></div><nav class="footer-nav" aria-label="Converters"><span class="head">Converters</span><a href="/">Image to Base64</a><a href="/compress-jpg-to-base64">Compress JPG to Base64</a><a href="/compress-png-to-base64">Compress PNG to Base64</a></nav><nav class="footer-nav" aria-label="Photo privacy"><span class="head">Photo privacy</span><a href="/remove-photo-metadata">Remove photo metadata</a><a href="/exif-viewer">EXIF viewer</a></nav><nav class="footer-nav" aria-label="About"><span class="head">About</span><a href="/about">About</a><a href="/privacy">Privacy</a><a href="/contact">Contact</a></nav></div><div class="copyright">© Image2Base64</div></div></footer>
+<script src="compress-image.js" defer></script>
+</body>
+</html>

@@ -4,7 +4,7 @@
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
 <title>Remove Metadata from Photos Online — Free EXIF Remover (No Upload)</title>
-<meta name="description" content="Strip EXIF metadata from photos in your browser: GPS location, camera model, timestamps and more. Choose what to keep or wipe everything. 100% local — your photos are never uploaded." />
+<meta name="description" content="Remove photo EXIF metadata in your browser: GPS location, camera model, timestamps and more. Choose what to keep; photo orientation is preserved. 100% local — your photos are never uploaded." />
 <link rel="canonical" href="https://image2base64.com/remove-photo-metadata" />
 <meta name="robots" content="index, follow" />
 <meta name="theme-color" content="#5365ff" />
@@ -42,7 +42,7 @@
       "name": "Which metadata gets removed?",
       "acceptedAnswer": {
         "@type": "Answer",
-        "text": "In full-strip mode: the EXIF block (GPS coordinates, camera make and model, lens, timestamps, orientation, exposure settings), XMP tags, IPTC/Photoshop data, embedded comments, the MakerNote vendor blob, and the multi-picture thumbnail set that some cameras append. In GPS-only mode everything else is preserved and just the location data is deleted."
+        "text": "In full-strip mode: EXIF data except the orientation flag (kept so the photo displays the right way up), XMP tags, IPTC/Photoshop data, embedded comments, the MakerNote vendor blob, and the multi-picture thumbnail set that some cameras append. In GPS-only mode camera/date EXIF is preserved, while GPS entries and XMP/EXIF text chunks that could duplicate location data are removed."
       }
     },
     {
@@ -120,7 +120,7 @@
     <div class="wrap">
       <div class="tool">
         <div class="exif-mode-row" role="radiogroup" aria-label="Removal mode">
-          <label class="exif-mode-card"><input type="radio" name="exif-mode" value="all" data-exif-mode-radio checked /><span><strong>Strip everything</strong><small>GPS, camera, dates, comments — a fully clean file</small></span></label>
+          <label class="exif-mode-card"><input type="radio" name="exif-mode" value="all" data-exif-mode-radio checked /><span><strong>Remove private metadata</strong><small>GPS, camera, dates, comments — photo orientation stays intact</small></span></label>
           <label class="exif-mode-card"><input type="radio" name="exif-mode" value="gps" data-exif-mode-radio /><span><strong>Remove GPS only</strong><small>Delete location, keep camera &amp; dates</small></span></label>
           <label class="exif-mode-card"><input type="radio" name="exif-mode" value="custom" data-exif-mode-radio /><span><strong>Choose what to keep</strong><small>Pick categories to preserve</small></span></label>
         </div>
@@ -212,7 +212,7 @@
       </details>
       <details>
         <summary>Which metadata gets removed?</summary>
-        <p>Full strip: EXIF (GPS, camera, lens, timestamps, orientation, settings), XMP, IPTC, comments, MakerNote blobs and multi-picture thumbnails. GPS-only mode deletes just the location entries and preserves the rest.</p>
+        <p>Full strip removes EXIF data except the orientation flag (kept so the photo displays the right way up), XMP, IPTC, comments, MakerNote blobs and multi-picture thumbnails. GPS-only mode preserves camera/date EXIF; it also removes XMP/EXIF text chunks that could duplicate location data.</p>
       </details>
       <details>
         <summary>Does removing metadata lower image quality?</summary>

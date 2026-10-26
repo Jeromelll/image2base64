@@ -75,10 +75,10 @@
   var TYPE_SIZE = { 1: 1, 2: 1, 3: 2, 4: 4, 5: 8, 6: 1, 7: 1, 8: 2, 9: 4, 10: 8, 11: 4, 12: 8 };
 
   function parseIfd(r, dv, ifdOffset, tiffBase, u8) {
-    if (ifdOffset <= 0 || tiffBase + ifdOffset + 2 > dv.byteLength) return null;
+    if (ifdOffset <= 0 || tiffBase + ifdOffset + 6 > dv.byteLength) return null;
     var p = tiffBase + ifdOffset;
     var count = r.u16(p);
-    if (count > 512 || p + 2 + count * 12 > dv.byteLength) return null;
+    if (count > 512 || p + 2 + count * 12 + 4 > dv.byteLength) return null;
     var entries = [];
     for (var e = 0; e < count; e++) {
       var ep = p + 2 + e * 12;
@@ -359,28 +359,34 @@
   }
 
   // ---------- TIFF rebuild (selective strip) ----------
-  // groups: [{id:"ifd0"|"exif", entries:[{tag,type,count,data(Uint8Array)]}]
+  // groups: {ifd0, exif, gps}, each with TIFF entries.
   // Returns Uint8Array of a fresh TIFF blob (header..values), pointers resolved.
   function serializeTiff(little, groups) {
     var entriesOf = function (g) { return g ? g.entries : []; };
-    var ifd0 = groups.ifd0, exif = groups.exif;
+    var ifd0 = groups.ifd0, exif = groups.exif, gps = groups.gps;
     var headerSize = 8;
     var ifd0Size = 2 + entriesOf(ifd0).length * 12 + 4;
     var exifSize = exif && exif.entries.length ? 2 + exif.entries.length * 12 + 4 : 0;
-    var valueBase = headerSize + ifd0Size + exifSize;
+    var gpsSize = gps && gps.entries.length ? 2 + gps.entries.length * 12 + 4 : 0;
+    var exifAbs = exifSize ? headerSize + ifd0Size : 0;
+    var gpsAbs = gpsSize ? headerSize + ifd0Size + exifSize : 0;
+    var valueBase = headerSize + ifd0Size + exifSize + gpsSize;
 
     // pass 1: compute value offsets for every entry
-    function prep(g) {
-      if (!g) return;
-      var off = 0;
+    function prep(g, start) {
+      if (!g) return start;
+      var off = start;
       g.entries.forEach(function (en) {
-        en._valOff = valueBase + off;
+        en._valOff = off;
         off += en.data.length + (en.data.length & 1);
       });
-      g._valueSize = off;
+      g._valueSize = off - start;
+      return off;
     }
-    prep(ifd0); prep(exif);
-    var total = valueBase + (ifd0 ? ifd0._valueSize : 0) + (exif ? exif._valueSize : 0);
+    var valueEnd = prep(ifd0, valueBase);
+    valueEnd = prep(exif, valueEnd);
+    valueEnd = prep(gps, valueEnd);
+    var total = valueEnd;
 
     var buf = new Uint8Array(total);
     var dv = new DataView(buf.buffer);
@@ -389,13 +395,15 @@
     buf[0] = little ? 0x49 : 0x4d; buf[1] = little ? 0x49 : 0x4d;
     w16(2, 42); w32(4, 8);
 
-    function writeIfd(g, base, nextIfdOffset, exifIfdAbs) {
+    function writeIfd(g, base, nextIfdOffset) {
       if (!g) return;
       w16(base, g.entries.length);
       var p = base + 2;
       g.entries.forEach(function (en) {
         w16(p, en.tag); w16(p + 2, en.type); w32(p + 4, en.count);
-        if (en._pointerTarget !== undefined) { w32(p + 8, en._pointerTarget); }
+        if (en.tag === 0x8769 && exifAbs) { w32(p + 8, exifAbs); }
+        else if (en.tag === 0x8825 && gpsAbs) { w32(p + 8, gpsAbs); }
+        else if (en._pointerTarget !== undefined) { w32(p + 8, en._pointerTarget); }
         else if (en.data.length <= 4) {
           for (var i = 0; i < en.data.length; i++) buf[p + 8 + i] = en.data[i];
         } else { w32(p + 8, en._valOff); }
@@ -412,13 +420,9 @@
       });
     }
 
-    var exifAbs = exif && exif.entries.length ? headerSize + ifd0Size : 0;
-    // resolve ExifIFDPointer inside IFD0
-    if (exifAbs && ifd0) {
-      ifd0.entries.forEach(function (en) { if (en.tag === 0x8769) en._pointerTarget = exifAbs; });
-    }
     writeIfd(ifd0, headerSize, 0);
     if (exifAbs) writeIfd(exif, exifAbs, 0);
+    if (gpsAbs) writeIfd(gps, gpsAbs, 0);
     return buf;
   }
 
@@ -428,6 +432,7 @@
   function stripJpeg(u8, mode, keepGroups) {
     var scan = scanJpeg(u8);
     if (scan.error) throw new Error(scan.error);
+    if (scan.segments.filter(function (seg) { return seg.marker === 0xda; }).length > 1) throw new Error("jpeg_multiple_scans");
     var parts = [u8.slice(0, 2)];
     var removed = [];
     var sosDataEnd = -1;
@@ -437,7 +442,13 @@
       var drop = false;
       if (seg.marker === 0xda) sosDataEnd = seg.lenOffset + 2 + seg.dataLen;
       if (mode === "all") {
-        if (seg.marker === 0xe1) { drop = true; removed.push(segStartsWith(u8, seg, "Exif") ? "EXIF" : "XMP"); }
+        if (seg.marker === 0xe1 && segStartsWith(u8, seg, "Exif\0\0")) {
+          var orientationExif = rebuildExifApp1(u8, seg, mode, keepGroups, removed);
+          if (orientationExif) parts.push(orientationExif);
+          else { drop = true; removed.push("EXIF"); }
+          continue;
+        }
+        if (seg.marker === 0xe1) { drop = true; removed.push("XMP"); }
         else if (seg.marker === 0xe2 && segStartsWith(u8, seg, "MPF\0")) { drop = true; removed.push("MPF (multi-picture)"); }
         else if (seg.marker === 0xed) { drop = true; removed.push("IPTC/Photoshop"); }
         else if (seg.marker === 0xfe) { drop = true; removed.push("Comment"); }
@@ -469,15 +480,20 @@
     var parsed = parseExifBlob(u8, tiffBase);
     if (!parsed) return null;
     var r = parsed.reader;
-    var ifd0Entries = [], exifEntries = [];
+    var ifd0Entries = [], exifEntries = [], gpsEntries = [];
     var hadGps = !!parsed.gpsIfd;
     var removedCount = 0;
 
     parsed.ifd0.entries.forEach(function (en) {
-      if (en.tag === 0x8825) { removedCount++; return; } // GPS pointer — always dropped
+      if (mode === "all" && en.tag !== 0x0112) { removedCount++; return; }
       if (en.tag === 0x8769) {
         // keep the pointer only when some EXIF sub-IFD entries survive (serializeTiff resolves its value)
         if (parsed.exifIfd && filteredExifEntries(parsed.exifIfd, r, mode, keepGroups).length) { ifd0Entries.push(cloneEntry(en)); return; }
+        removedCount++;
+        return;
+      }
+      if (en.tag === 0x8825) {
+        if (mode === "custom" && keepGroups.gps && parsed.gpsIfd) { ifd0Entries.push(cloneEntry(en)); return; }
         removedCount++;
         return;
       }
@@ -485,14 +501,16 @@
       ifd0Entries.push(cloneEntry(en));
     });
     if (parsed.exifIfd) exifEntries = filteredExifEntries(parsed.exifIfd, r, mode, keepGroups);
+    if (mode === "custom" && keepGroups.gps && parsed.gpsIfd) gpsEntries = parsed.gpsIfd.entries.map(cloneEntry);
     removedCount += parsed.ifd0.entries.length + (parsed.exifIfd ? parsed.exifIfd.entries.length : 0) - ifd0Entries.length - exifEntries.length;
     // count GPS tags too
-    if (parsed.gpsIfd) removedCount += parsed.gpsIfd.entries.length;
+    if (parsed.gpsIfd) removedCount += parsed.gpsIfd.entries.length - gpsEntries.length;
 
-    if (hadGps) removed.push("GPS location");
+    if (mode === "all" && removedCount) removed.push("EXIF");
+    if (hadGps && !gpsEntries.length) removed.push("GPS location");
     if (removedCount && mode === "gps") { /* GPS note already pushed */ }
 
-    var tiff = serializeTiff(r.little, { ifd0: { entries: ifd0Entries }, exif: { entries: exifEntries } });
+    var tiff = serializeTiff(r.little, { ifd0: { entries: ifd0Entries }, exif: { entries: exifEntries }, gps: { entries: gpsEntries } });
     if (!ifd0Entries.length && !exifEntries.length) return null;
 
     // FFE1 | len(2, big-endian, incl. len bytes) | "Exif\0\0" | TIFF
@@ -510,6 +528,7 @@
   function filteredExifEntries(exifIfd, r, mode, keepGroups) {
     var out = [];
     exifIfd.entries.forEach(function (en) {
+      if (mode === "all") return;
       if (mode === "custom" && !keepGroups[groupOf("exif", en.tag)]) return;
       out.push(cloneEntry(en));
     });
@@ -517,7 +536,7 @@
   }
 
   // ---------- strip: PNG ----------
-  function stripPng(u8, mode) {
+  function stripPng(u8, mode, keepGroups) {
     var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
     var parts = [u8.slice(0, 8)];
     var removed = [];
@@ -525,12 +544,24 @@
     while (i + 8 <= u8.length) {
       var clen = dv.getUint32(i);
       var t = String.fromCharCode(u8[i + 4], u8[i + 5], u8[i + 6], u8[i + 7]);
+      if (clen > u8.length - i - 12) throw new Error("png_truncated");
       var total = 12 + clen;
       var drop = false;
-      if (t === "eXIf") { drop = true; removed.push("EXIF"); }
+      if (t === "eXIf") {
+        var chunkRemoved = [];
+        var keptTiff = rebuildExifTiff(u8, i + 8, mode, keepGroups, chunkRemoved);
+        drop = true;
+        if (keptTiff) parts.push(makePngChunk("eXIf", keptTiff));
+        else removed.push("EXIF");
+        removed = removed.concat(chunkRemoved);
+      }
       else if (t === "tEXt" || t === "iTXt" || t === "zTXt") {
         var kw = textKeyword(u8, { dataOffset: i + 8, dataLen: clen });
-        if (mode === "all" && PNG_TEXT_META.some(function (m) { return kw.indexOf(m) !== -1; })) { drop = true; removed.push(t + " (" + kw + ")"); }
+        if (kw.indexOf("xml:com.adobe.xmp") !== -1 || kw.indexOf("exif") !== -1 ||
+            (mode === "all" && PNG_TEXT_META.some(function (m) { return kw.indexOf(m) !== -1; }))) {
+          drop = true;
+          removed.push(t + " (" + kw + ")");
+        }
       }
       if (!drop) parts.push(u8.slice(i, i + total));
       i += total;
@@ -544,22 +575,50 @@
     return { data: out, removed: dedupe(removed) };
   }
 
+  function rebuildExifTiff(u8, tiffBase, mode, keepGroups, removed) {
+    var seg = { dataOffset: tiffBase - 6 };
+    var app1 = rebuildExifApp1(u8, seg, mode, keepGroups, removed);
+    return app1 ? app1.slice(10) : null;
+  }
+
+  function makePngChunk(type, data) {
+    var out = new Uint8Array(12 + data.length);
+    var dv = new DataView(out.buffer);
+    dv.setUint32(0, data.length, false);
+    for (var i = 0; i < 4; i++) out[4 + i] = type.charCodeAt(i);
+    out.set(data, 8);
+    dv.setUint32(8 + data.length, crc32(out, 4, 4 + data.length), false);
+    return out;
+  }
+
   // ---------- strip: WebP ----------
-  function stripWebp(u8, mode) {
+  function stripWebp(u8, mode, keepGroups) {
     var dv = new DataView(u8.buffer, u8.byteOffset, u8.byteLength);
+    if (u8.length < 12 || dv.getUint32(4, true) + 8 > u8.length) throw new Error("webp_truncated");
     var parts = [];
     var removed = [];
     var i = 12;
     while (i + 8 <= u8.length) {
       var t = String.fromCharCode(u8[i], u8[i + 1], u8[i + 2], u8[i + 3]);
       var clen = dv.getUint32(i + 4, true);
+      if (clen > u8.length - i - 8) throw new Error("webp_truncated");
       var total = 8 + clen + (clen & 1);
       var drop = false;
-      if (t === "EXIF") { drop = true; removed.push("EXIF"); }
+      if (t === "EXIF") {
+        var webpTiffBase = i + 8;
+        var prefixedExif = clen >= 6 && segStartsWith(u8, { dataOffset: i + 8, dataLen: clen }, "Exif\0\0");
+        if (prefixedExif) webpTiffBase += 6;
+        var chunkRemovedWebp = [];
+        var keptWebpTiff = rebuildExifTiff(u8, webpTiffBase, mode, keepGroups, chunkRemovedWebp);
+        drop = true;
+        if (keptWebpTiff) parts.push(makeWebpChunk("EXIF", keptWebpTiff));
+        else removed.push("EXIF");
+        removed = removed.concat(chunkRemovedWebp);
+      }
       else if (t === "XMP ") { drop = true; removed.push("XMP"); }
       else if (t === "VP8X") {
         var chunk = u8.slice(i, i + 8 + clen);
-        chunk[8 + 0] = chunk[8 + 0] & ~0x08 & ~0x04; // clear EXIF & XMP flags
+        chunk[8 + 0] = chunk[8 + 0] & ~0x04;
         parts.push(chunk);
         i += total;
         continue;
@@ -567,6 +626,13 @@
       if (!drop) parts.push(u8.slice(i, i + total));
       i += total;
     }
+    var hasExif = parts.some(function (part) { return part.length >= 4 && String.fromCharCode(part[0], part[1], part[2], part[3]) === "EXIF"; });
+    parts.forEach(function (part) {
+      if (part.length >= 9 && String.fromCharCode(part[0], part[1], part[2], part[3]) === "VP8X") {
+        part[8] = hasExif ? part[8] | 0x08 : part[8] & ~0x08;
+        part[8] &= ~0x04;
+      }
+    });
     var body = 0;
     for (var p = 0; p < parts.length; p++) body += parts[p].length;
     var out = new Uint8Array(12 + body);
@@ -576,6 +642,14 @@
     for (p = 0; p < parts.length; p++) { out.set(parts[p], o); o += parts[p].length; }
     new DataView(out.buffer).setUint32(4, out.length - 8, true);
     return { data: out, removed: dedupe(removed) };
+  }
+
+  function makeWebpChunk(type, data) {
+    var out = new Uint8Array(8 + data.length + (data.length & 1));
+    for (var i = 0; i < 4; i++) out[i] = type.charCodeAt(i);
+    new DataView(out.buffer).setUint32(4, data.length, true);
+    out.set(data, 8);
+    return out;
   }
 
   function dedupe(arr) {
@@ -590,8 +664,8 @@
     var format = detectFormat(u8);
     var result;
     if (format === "jpeg") result = stripJpeg(u8, mode, keepGroups);
-    else if (format === "png") result = stripPng(u8, mode);
-    else if (format === "webp") result = stripWebp(u8, mode);
+    else if (format === "png") result = stripPng(u8, mode, keepGroups);
+    else if (format === "webp") result = stripWebp(u8, mode, keepGroups);
     else throw new Error("unsupported_format");
     return result;
   }
@@ -630,6 +704,9 @@
     jpeg_bad_segment: "This JPEG contains a damaged section and can't be processed safely.",
     jpeg_no_eoi: "This JPEG is missing its end marker — it may be truncated.",
     jpeg_unterminated: "Couldn't find the end of this JPEG.",
+    jpeg_multiple_scans: "This progressive JPEG uses multiple scans and can't be cleaned safely in this browser tool.",
+    png_truncated: "This PNG contains a truncated chunk and can't be processed safely.",
+    webp_truncated: "This WebP contains a truncated chunk and can't be processed safely.",
     encode_failed: "Re-encoding failed. Try a different file.",
     not_jpeg: "This doesn't look like a JPEG file."
   };

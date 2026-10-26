@@ -711,3 +711,15 @@ Last updated: 2026-09-07 CST
   - 「三浏览器 × 20 张」矩阵未跑，覆盖为 Chrome headless 功能路径 + Node 单测。
   - GSC 请求索引 ×4 待 Jerome 手动（见 GSC提交引导_4新页_20261023.md）。
   - 观察期指标（8-12 周）：非品牌曝光 ≥500/月、任一目标词进前 30；12 周无词进前 50 且曝光 <300 → 停 C 转 B（compress image to X kb，KD 31.7）。
+
+## 2026-10-26 · 相邻图片工具候选（已验证，待生产发布授权）
+
+- 保留现有 Base64 页面；首页增加照片隐私/压缩入口，并提前显示隐私工具区块。
+- EXIF：保留 Orientation 防止方向丢失；修复 PNG/WebP GPS-only/custom 模式、重建 EXIF 后旧块残留、PNG XMP/EXIF 文本位置残留及解析边界；多扫描渐进 JPEG 明确拒绝，避免输出损坏。
+- 新增 `/compress-image-to-100kb`，可自定义目标；JPEG/PNG/WebP 在本机转 JPEG，透明区域变白、动画变静态；以 1 KB=1000 字节检查真实输出大小，失败不显示成功。没有扩大 Base64 页面簇。
+- 接入现有 EXIF 事件白名单；没有发送文件名、图片内容或 GPS 数据。真实生产入库尚未验证。
+- 保留远端 main `8fdcbc6` 已有全站页脚、FAQ 和 IndexNow 文件。
+- 验证：34 tests pass；SEO 60 HTML / 55 sitemap、0 FAIL、3 个既有 canonical 合并 WARN；build 与 Wrangler dry-run 通过；Chrome 真图解码、压缩下载字节、非法图/重试、390px 布局通过。证据：`/Users/jerome/webcafe/verification/image2base64-20261026/`。
+- 线上只读：EXIF 四页 200；HTTP 主域/www 首页及内页均 301 到 HTTPS 主域。www 跳转会丢查询参数，主域保留；Cloudflare zone API 返回 403，未改云端规则。
+- 用户提供的 151 总点击与 URL 查询 395 点击口径矛盾，不能作为同窗品牌占比证据；本轮未复核 KD、月搜量、广告收益或未来排名。产品 B 已在本轮完成，不新增两周计时器。
+- 未推送/部署，等待本次生产发布授权；Safari/HEIC 真机与跨浏览器矩阵未覆盖。
