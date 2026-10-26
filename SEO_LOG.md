@@ -712,7 +712,7 @@ Last updated: 2026-09-07 CST
   - GSC 请求索引 ×4 待 Jerome 手动（见 GSC提交引导_4新页_20261023.md）。
   - 观察期指标（8-12 周）：非品牌曝光 ≥500/月、任一目标词进前 30；12 周无词进前 50 且曝光 <300 → 停 C 转 B（compress image to X kb，KD 31.7）。
 
-## 2026-10-26 · 相邻图片工具候选（已验证，待生产发布授权）
+## 2026-10-26 · 相邻图片工具上线（已授权并完成线上验收）
 
 - 保留现有 Base64 页面；首页增加照片隐私/压缩入口，并提前显示隐私工具区块。
 - EXIF：保留 Orientation 防止方向丢失；修复 PNG/WebP GPS-only/custom 模式、重建 EXIF 后旧块残留、PNG XMP/EXIF 文本位置残留及解析边界；多扫描渐进 JPEG 明确拒绝，避免输出损坏。
@@ -722,4 +722,6 @@ Last updated: 2026-09-07 CST
 - 验证：34 tests pass；SEO 60 HTML / 55 sitemap、0 FAIL、3 个既有 canonical 合并 WARN；build 与 Wrangler dry-run 通过；Chrome 真图解码、压缩下载字节、非法图/重试、390px 布局通过。证据：`/Users/jerome/webcafe/verification/image2base64-20261026/`。
 - 线上只读：EXIF 四页 200；HTTP 主域/www 首页及内页均 301 到 HTTPS 主域。www 跳转会丢查询参数，主域保留；Cloudflare zone API 返回 403，未改云端规则。
 - 用户提供的 151 总点击与 URL 查询 395 点击口径矛盾，不能作为同窗品牌占比证据；本轮未复核 KD、月搜量、广告收益或未来排名。产品 B 已在本轮完成，不新增两周计时器。
-- 未推送/部署，等待本次生产发布授权；Safari/HEIC 真机与跨浏览器矩阵未覆盖。
+- 用户确认“发布并完成线上验收”后，提交 `e06721a79033758c5475288b2f3728a736148c70` 已通过 GitHub Actions `40281898944` 发布，Deploy Worker 步骤确实执行；生产 Worker 版本 `527db467-a2ca-4dc3-8710-395c48d39c18`。
+- 线上 10/10 页面/资源返回 200，剥离 Cloudflare 注入脚本后与构建产物一致；压缩下载实测 1 KB 目标为 986 字节，错误/重试及 390px 布局通过。EXIF 三格式真实上传下载后均可解码，Orientation 保留，测试私密字段无残留；viewer 通过，页面错误为零。测试拦截外部广告及统计请求，未污染生产统计。
+- HTTP 主域/www 的新压缩页均直接 301 至 HTTPS 主域。Safari/HEIC 真机、跨浏览器矩阵、真实统计数据库入库与搜索效果未验收。
