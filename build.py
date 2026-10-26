@@ -30,4 +30,8 @@ assert not any(
     or path.name.endswith(".test.mjs")
     for path in OUT.rglob("*")
 )
+# Bing IndexNow key must be a public root asset, body = key only.
+INDEXNOW_KEY = "90f183e7c09545009a6183a505313600"
+indexnow = (OUT / f"{INDEXNOW_KEY}.txt").read_text(encoding="utf-8")
+assert indexnow in {INDEXNOW_KEY, INDEXNOW_KEY + "\n"}
 print(f"Built {len(list(OUT.iterdir()))} public assets")
