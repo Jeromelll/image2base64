@@ -1,3 +1,18 @@
+## 2026-11-02 — 上线 4 篇 API 附件上传场景页（Trello / Freshdesk / SharePoint / OneDrive）
+
+- 来源：当日选词雷达「按你建议来」批准；草稿见 Research/image2base64/SEO/内容草稿/2026-11-02_*.md，流水线报告 内容流水线_2026-11-02.md。
+- 新建四页（均为场景 + 模板，article.guide，正文含 curl / Node 18+ / Python 三套可复制代码 + FAQ JSON-LD 3 条）：
+  - `/trello-api-upload-attachment-base64-multipart` — Trello 附件端点只收 multipart file part（或 url 链接），base64 正文 → 400 `Error parsing body` 或文本附件；含 mimeType 字段坑与 key/token 调用。
+  - `/freshdesk-api-attachments-base64-not-supported` — v2 附件仅 multipart（六端点），无 base64 JSON 字段；`attachments[]` 字段名、key:X 认证、20MB 上限、attachment_ids 只引用不上传。
+  - `/sharepoint-rest-api-upload-base64-image-corrupted` — `Files/add` 把请求体按字节写入，base64 文本 → 201 + 坏图（`iVBOR` 前缀可验）；含 digest、`--data-binary`、jQuery transformRequest 坑、2GB REST 上限。
+  - `/onedrive-graph-api-upload-base64-not-decoded` — Graph `PUT /content` 不解码 Content-Transfer-Encoding（OneDrive 团队官方答复），文件 +37% 且打不开；简单上传上限 250MB、upload session 分片规则。
+- 事实依据（2026-11-02）：Atlassian Trello REST 文档 + SO 41746008/51426026 + trello/api-docs#119；Freshdesk 官方 API 文档（multipart-only、20MB、key:X）；Microsoft Learn「files with REST」+ SE 76832/SO 57040396；Microsoft Q&A（Ryan Gregg）+ GitHub onedrive-api-docs#378 + Graph driveitem-put-content（250MB）。
+- 内链：四页均 ≥1 条正文锚文本指向工具页 `/` + 2–3 条内容页；SharePoint ↔ OneDrive 同批互链；全站 59 个内容页 footer Guides +4（沿 discord.js 行锚点插入）。
+- 枢纽同步：sitemap 55→59 loc；llms.txt Troubleshooting +4 行。
+- 部署：python3 build.py → rsync dist → wrangler@4 deploy Version `32bf7208-226e-496b-8102-17674bfe9628`（本机 fake-ip 代理需 HTTPS_PROXY=http://127.0.0.1:7897）。
+- 验收：四 URL 200、H1 唯一、各 7 个 H2、title 50–59 字符、meta 142–153 字符；旧页 footer 抽查（base64-image-in-html-email / slack）含新链接；线上 sitemap 59 loc 含四新条；llms.txt 已含新条。
+- 门禁：check_seo_consistency.py → fail=0 warn=3（jpg/jpeg 与 image-to-base64 canonical 合并，已知）。
+
 ## 2026-10-24 — 用户行为周报：/base64-to-png 补 decode 报错 FAQ
 
 - 依据：D1 W0(10-17~10-24) error Top 为 decode「not valid Base64」×5；W-1 亦有 incomplete/malformed ×4。本周 /base64-to-png PV=18（次席工具页）原 FAQ 无此条。

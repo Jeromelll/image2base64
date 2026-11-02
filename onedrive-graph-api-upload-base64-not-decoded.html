@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>OneDrive Graph API: Base64 Uploads Are Not Decoded</title>
+<meta name="description" content="Graph stores what you PUT to OneDrive as-is — Base64 stays text, 37% larger and unopenable. Decode first; copy curl, Node.js and Python byte uploads." />
+<link rel="canonical" href="https://image2base64.com/onedrive-graph-api-upload-base64-not-decoded" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="OneDrive Graph API: Base64 Uploads Are Not Decoded" />
+<meta property="og:description" content="Graph stores what you PUT to OneDrive as-is — Base64 stays text, 37% larger and unopenable. Decode first; copy curl, Node.js and Python byte uploads." />
+<meta property="og:url" content="https://image2base64.com/onedrive-graph-api-upload-base64-not-decoded" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does Graph decode Base64 if I set Content-Transfer-Encoding: base64?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. A OneDrive team engineer confirmed the header is ignored and the encoded data is stored as-is. Decode on your side."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why is my uploaded file about 37% bigger than the original?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Because the stored content is the Base64 text, which encodes every 3 bytes as 4 characters. That size delta is the reliable fingerprint of an undecoded upload."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Is this the same for upload sessions?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Session chunks are raw byte ranges of the file; there is no Base64 mode anywhere in the upload path."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+<h1>OneDrive via Microsoft Graph: your Base64 upload is not decoded</h1>
+<p>You upload an image to OneDrive through Microsoft Graph — <code>PUT /drives/{drive-id}/items/{item-id}:/logo.png:/content</code> with your Base64 string in the body — and the API answers <code>201 Created</code>. The file appears in OneDrive with the right name. But it is about 37% bigger than the original image, preview shows nothing, and nothing can open it.</p>
+<p>You found the one cloud-storage API in this series that documents its own behavior in a Microsoft engineer's own words: <strong>Graph ignores transfer encodings and stores the request stream exactly as received.</strong> Your Base64 text did not become an image; it became a text file with an image's name.</p>
+<h2>The symptom: the file lands, ~37% larger, and will not open</h2>
+<p>The mismatch has two measurable fingerprints:</p>
+<ul>
+<li><strong>Size.</strong> Base64 encodes 3 bytes into 4 characters, so the stored file is ~1.33x the original (4/3 = 1.333...). An originally 300 KB PNG lands as ~400 KB. That +37% is the tell.</li>
+<li><strong>Content.</strong> Open the file in a text editor: you will see <code>iVBOR</code> (or <code>/9j/</code> for JPEG) instead of binary garbage. Those are Base64 alphabet characters — the encoded text, stored verbatim.</li>
+</ul>
+<p>On the multipart variant the same trap hides one level deeper: developers set <code>Content-Transfer-Encoding: base64</code> on a part and assume the service will decode. A OneDrive team engineer confirmed it does not — the header is ignored (described as looking like a bug on their side), and the encoded data is stored raw, so the file uploads "successfully" but cannot be previewed.</p>
+<h2>The root cause: Graph stores the stream, it does not decode it</h2>
+<p>The simple-upload contract is minimal: the body of the PUT <strong>is</strong> the file content. The <a href="https://learn.microsoft.com/en-us/graph/api/driveitem-put-content">documented request body</a> is "the binary stream of the file to be uploaded". There is no negotiation of encoding, no <code>Content-Transfer-Encoding</code> handling, no auto-detection of Base64. Whatever byte sequence arrives becomes the stored file, byte for byte.</p>
+<p>That design is why the failure is silent. The request is well-formed; the server has no schema to know your text was supposed to decode into something else. This is the same class of behavior as <a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint's Files/add endpoint</a> — if you support both Microsoft surfaces, the fix is identical on each: decode once client-side, send raw bytes.</p>
+<p>Two Graph-specific details worth knowing:</p>
+<ul>
+<li><strong>Simple upload is capped at 250 MB.</strong> Graph's current documentation for <code>PUT /content</code> supports files up to 250 MB; larger files go through an upload session (<code>POST /createUploadSession</code>) with PUTs of raw byte ranges — at most 60 MiB per request, sizes a multiple of 320 KiB. The session approach never accepts Base64 either.</li>
+<li><strong>The path syntax matters.</strong> <code>root:/folder/file.png:/content</code> addresses the item by path; <code>items/{item-id}:/file.png:/content</code> by ID. Both take the same raw-byte body.</li>
+</ul>
+<h2>Copy-paste fixes</h2>
+<p>The fix pattern: <strong>decode once on your side, then PUT the raw bytes.</strong></p>
+<h3>curl: PUT with --upload-file</h3>
+<pre><code>curl -s -X PUT \
+  "https://graph.microsoft.com/v1.0/drives/${DRIVE_ID}/root:/logos/logo.png:/content" \
+  -H "Authorization: Bearer ${GRAPH_TOKEN}" \
+  -H "Content-Type: application/octet-stream" \
+  --upload-file logo.png</code></pre>
+<p><code>--upload-file</code> (<code>-T</code>) sends the file bytes as the PUT body, untouched. Do not wrap the file in JSON, do not Base64 it again, do not add transfer-encoding headers.</p>
+<h3>Node.js 18+</h3>
+<pre><code>// node onedrive-upload.mjs
+import { readFile } from "node:fs/promises";
+
+const token = process.env.GRAPH_TOKEN;
+const driveId = process.env.DRIVE_ID;
+if (!token || !driveId) throw new Error("Set GRAPH_TOKEN and DRIVE_ID");
+
+const bytes = await readFile("logo.png");
+
+const res = await fetch(
+  `https://graph.microsoft.com/v1.0/drives/${driveId}/root:/logos/logo.png:/content`,
+  {
+    method: "PUT",
+    headers: {
+      Authorization: `Bearer ${token}`,
+      "Content-Type": "application/octet-stream",
+    },
+    body: bytes,                    // raw bytes — the body IS the file
+  }
+);
+if (!res.ok) throw new Error(`Graph ${res.status}: ${await res.text()}`);
+const item = await res.json();
+console.log(item.id, item.size);    // size should match logo.png exactly</code></pre>
+<p>The body must be the <code>Buffer</code> itself. <code>body: bytes.toString("base64")</code> re-creates the bug; <code>body: JSON.stringify({ content: ... })</code> creates a JSON file whose name ends in <code>.png</code>.</p>
+<h3>Python: requests</h3>
+<pre><code>import requests
+
+token = "YOUR_GRAPH_TOKEN"
+drive_id = "YOUR_DRIVE_ID"
+
+with open("logo.png", "rb") as f:
+    r = requests.put(
+        f"https://graph.microsoft.com/v1.0/drives/{drive_id}/root:/logos/logo.png:/content",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Content-Type": "application/octet-stream",
+        },
+        data=f,                      # raw bytes, streamed
+        timeout=120,
+    )
+r.raise_for_status()
+print(r.json()["size"])              # equals the on-disk size in bytes</code></pre>
+<p><code>data=f</code> streams the bytes; <code>json=</code> or a Base64 string produces exactly the corrupted-file behavior this page describes.</p>
+<h2>Start from a Base64 string</h2>
+<p>If the image reaches your code as Base64 — from the <a href="/">Image to Base64 tool</a>, a webhook, or a message queue — decode it before the PUT:</p>
+<pre><code>import base64
+
+image_bytes = base64.b64decode(raw_base64)   # decode exactly once
+# ...then PUT image_bytes as the request body</code></pre>
+<p>Node:</p>
+<pre><code>const bytes = Buffer.from(rawBase64, "base64");
+// PUT `bytes` as body</code></pre>
+<p>Strip a <code>data:image/png;base64,</code> prefix first — everything before the first comma is metadata. If the decoded file still will not open or Graph rejects it, the string itself may be damaged (whitespace, wrong padding, double encoding); <a href="/fix-invalid-base64-image-data">fixing invalid Base64 image data</a> is the diagnostic checklist. And if what you actually need is to <em>hand an image to a model</em>, the payload shapes differ again — the <a href="/image-to-base64-for-api">API payload guide</a> shows where Base64 text <em>is</em> the right format.</p>
+<h2>Pitfalls and a pre-flight checklist</h2>
+<ul>
+<li><strong><code>201 Created</code> is not content validation.</strong> Check <code>item.size</code> against the on-disk file — if it is ~1.33x bigger, you uploaded the encoded text.</li>
+<li><strong>No <code>Content-Transfer-Encoding</code>.</strong> Graph does not honor it on simple or multipart uploads; do not set it.</li>
+<li><strong>250 MB ceiling on simple PUT.</strong> Bigger files: <code>createUploadSession</code>, then PUT raw-byte ranges (at most 60 MiB per request, multiples of 320 KiB, 5-10 MiB recommended). Each chunk is raw bytes too.</li>
+<li><strong>Body must be bytes.</strong> Not a JSON envelope, not a string of Base64, not a form-data wrapper on the simple endpoint.</li>
+<li><strong>Path conflicts:</strong> uploading to a path that already exists overwrites it (check <code>@microsoft.graph.conflictBehavior</code> semantics if you need rename/fail behavior).</li>
+<li><strong>Verify by download:</strong> GET the file's <code>/content</code> and hash both sides (<code>certutil -hashfile logo.png MD5</code> / <code>md5 logo.png</code>) — matching hashes are the only real proof.</li>
+</ul>
+<h2>FAQ</h2>
+<h3>Does Graph decode Base64 if I set Content-Transfer-Encoding: base64?</h3>
+<p>No. A OneDrive team engineer confirmed the header is ignored and the encoded data is stored as-is. Decode on your side.</p>
+<h3>Why is my uploaded file about 37% bigger than the original?</h3>
+<p>Because the stored content is the Base64 text, which encodes every 3 bytes as 4 characters. That size delta is the reliable fingerprint of an undecoded upload.</p>
+<h3>Is this the same for upload sessions?</h3>
+<p>Yes. Session chunks are raw byte ranges of the file; there is no Base64 mode anywhere in the upload path.</p>
+
+<h2>Related guides</h2>
+<p>The SharePoint REST equivalent — <a href="/sharepoint-rest-api-upload-base64-image-corrupted">Files/add returning 201 with a broken image</a> — shares the fix. For string diagnostics use <a href="/fix-invalid-base64-image-data">invalid Base64 image data</a>, and for APIs that do take Base64 in JSON see the <a href="/image-to-base64-for-api">API payload guide</a>.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Photo privacy">
+        <span class="head">Photo privacy</span>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

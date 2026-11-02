@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SharePoint REST Upload: Corrupted Images from Base64 Bodies</title>
+<meta name="description" content="SharePoint's Files/add REST endpoint writes your body as raw bytes. Sending Base64 stores text. Copy curl, Node.js and Python fixes that send real bytes." />
+<link rel="canonical" href="https://image2base64.com/sharepoint-rest-api-upload-base64-image-corrupted" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="SharePoint REST Upload: Corrupted Images from Base64 Bodies" />
+<meta property="og:description" content="SharePoint's Files/add REST endpoint writes your body as raw bytes. Sending Base64 stores text. Copy curl, Node.js and Python fixes that send real bytes." />
+<meta property="og:url" content="https://image2base64.com/sharepoint-rest-api-upload-base64-image-corrupted" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Why does SharePoint return 201 if the content is garbage?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Because the request was valid — the body was stored, as-is. The endpoint has no schema for file contents; it cannot know that iVBOR... text was supposed to be a PNG. This is why 'it returned 201' is not a test."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does adding Content-Transfer-Encoding: base64 help?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Unlike MIME email, REST file endpoints here ignore that header. The bytes you send are the bytes stored."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I upload Base64 through Microsoft Graph instead?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No — Graph has the same behavior on its OneDrive endpoints: it stores exactly what you PUT. The fix pattern is identical: decode, then send bytes."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+<h1>SharePoint REST uploads: why Base64 bodies become corrupted images</h1>
+<p>You upload an image to a SharePoint document library through the classic REST endpoint — <code>POST /_api/web/GetFolderByServerRelativeUrl('...')/Files/add(url='logo.png',overwrite=true)</code> — and SharePoint answers <code>201 Created</code>. Everything looks fine until someone opens the file: the image is broken, or it opens in a text editor as a wall of Base64 characters.</p>
+<p>This is the signature of a body-encoding mismatch: <strong>you sent Base64 text, and SharePoint wrote exactly that text into the file.</strong> The <code>Files/add</code> endpoint does not decode Base64 — whatever bytes arrive in the request body become the file, byte for byte.</p>
+<h2>The symptom: 201 Created, broken file</h2>
+<p>The failure mode is uniquely misleading. The upload <em>succeeds</em>:</p>
+<ul>
+<li>the endpoint answers <code>201 Created</code> with the new file's metadata;</li>
+<li>the file appears in the library with the right name and roughly the right size (~33% larger than the original image — the Base64 overhead);</li>
+<li>previews may or may not generate, and the file will not open as an image anywhere.</li>
+</ul>
+<p>Nothing errors, so nothing prompts you to look at the body. Compare with Trello's <code>400</code> on the same mistake — SharePoint is quieter, which is why this page exists.</p>
+<h2>The root cause: the body is written as-is, byte for byte</h2>
+<p><code>Files/add</code> treats the request body as the raw content of the file. The documented contract sends the file's binary bytes directly as the body, with <code>Content-Type: application/octet-stream</code>-style handling and a valid form digest (<code>X-RequestDigest</code>) when called from browser-authenticated contexts.</p>
+<p>Base64 is not a file format; it is a text encoding of bytes. When the body contains that text:</p>
+<ol>
+<li>SharePoint does not look for a <code>Content-Transfer-Encoding</code> header and does not attempt any decode;</li>
+<li>each ASCII character of your Base64 string becomes one byte of the stored file;</li>
+<li>the stored bytes are your <em>encoded</em> text, not the original image.</li>
+</ol>
+<p>The result is a file that is ~1.33× the size of the original, whose first bytes are the letters <code>iVBOR</code> (a PNG's Base64 prefix) instead of the PNG magic bytes. One hex dump of the uploaded file tells the whole story — if you see Base64 alphabet characters where you expect binary, this is the bug. The same "stored the text, not the bytes" behavior exists across cloud-storage APIs; the <a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive failure mode</a> is nearly identical.</p>
+<h2>Copy-paste fixes</h2>
+<p>The fix is always the same shape: <strong>decode once on your side, then send the raw bytes as the body.</strong></p>
+<h3>curl: --data-binary</h3>
+<pre><code># 1. Get a digest token (needed for cookie/ADFS-style auth; app-only bearer tokens can skip this)
+DIGEST=$(curl -s -X POST \
+  "https://contoso.sharepoint.com/sites/mysite/_api/contextinfo" \
+  -H "Authorization: Bearer ${SP_ACCESS_TOKEN}" \
+  -H "Accept: application/json;odata=verbose" \
+  | python3 -c "import sys,json;print(json.load(sys.stdin)['d']['GetContextWebInformation']['FormDigestValue'])")
+
+# 2. Upload the raw bytes — --data-binary, never -d on text
+curl -s -X POST \
+  "https://contoso.sharepoint.com/sites/mysite/_api/web/GetFolderByServerRelativeUrl('Shared%20Documents')/Files/add(url='logo.png',overwrite=true)" \
+  -H "Authorization: Bearer ${SP_ACCESS_TOKEN}" \
+  -H "Accept: application/json;odata=verbose" \
+  -H "Content-Type: application/octet-stream" \
+  -H "X-RequestDigest: ${DIGEST}" \
+  --data-binary @logo.png</code></pre>
+<p>The two details that matter: <code>--data-binary</code> (which sends the file bytes untouched — plain <code>-d</code> strips newlines) and no transformation of the body anywhere in the pipeline.</p>
+<h3>Node.js 18+</h3>
+<pre><code>// node sp-upload.mjs
+import { readFile } from "node:fs/promises";
+
+const site = "https://contoso.sharepoint.com/sites/mysite";
+const folder = "Shared Documents";
+const token = process.env.SP_ACCESS_TOKEN;
+if (!token) throw new Error("Set SP_ACCESS_TOKEN");
+
+const bytes = await readFile("logo.png");
+
+const url = `${site}/_api/web/GetFolderByServerRelativeUrl('${folder}')/Files/add(url='logo.png',overwrite=true)`;
+const res = await fetch(url, {
+  method: "POST",
+  headers: {
+    Authorization: `Bearer ${token}`,
+    Accept: "application/json;odata=verbose",
+    "Content-Type": "application/octet-stream",
+  },
+  body: bytes,                       // raw bytes — not a string, not JSON
+});
+if (!res.ok) throw new Error(`SharePoint ${res.status}: ${await res.text()}`);
+const data = await res.json();
+console.log(data.d.ServerRelativeUrl);</code></pre>
+<p>Passing <code>bytes</code> (a <code>Buffer</code>) keeps the body binary. If instead you do <code>body: bytes.toString("base64")</code> — or <code>JSON.stringify</code> anything — you have just created the corrupted-file bug this page is about.</p>
+<h3>Python: requests</h3>
+<pre><code>import requests
+
+site = "https://contoso.sharepoint.com/sites/mysite"
+folder = "Shared Documents"
+token = "YOUR_ACCESS_TOKEN"
+
+with open("logo.png", "rb") as f:
+    r = requests.post(
+        f"{site}/_api/web/GetFolderByServerRelativeUrl('{folder}')/Files/add(url='logo.png',overwrite=true)",
+        headers={
+            "Authorization": f"Bearer {token}",
+            "Accept": "application/json;odata=verbose",
+            "Content-Type": "application/octet-stream",
+        },
+        data=f,          # file object: requests streams the raw bytes
+        timeout=60,
+    )
+r.raise_for_status()
+print(r.json()["d"]["ServerRelativeUrl"])</code></pre>
+<p><code>data=f</code> (the file object) sends raw bytes. <code>data=f.read()</code> works too; <code>json=</code> or a Base64 string does not.</p>
+<h3>Browser: send ArrayBuffer, not a string</h3>
+<p>In browser code, the corruption usually arrives through jQuery's default request transforms or through building a binary string with <code>String.fromCharCode</code>. Send the <code>ArrayBuffer</code> directly and disable transforms:</p>
+<pre><code>const reader = new FileReader();
+reader.onloadend = async () =&gt; {
+  await fetch(endpoint, {
+    method: "POST",
+    headers: {
+      Accept: "application/json;odata=verbose",
+      "X-RequestDigest": document.getElementById("__REQUESTDIGEST").value,
+    },
+    body: reader.result,              // ArrayBuffer — body stays binary
+  });
+};
+reader.readAsArrayBuffer(fileInput.files[0]);</code></pre>
+<p>Historical note for older codebases: jQuery's default <code>transformRequest</code> serializes the body, which corrupts binary uploads; the classic fix is <code>transformRequest: []</code> (an empty transform chain) together with <code>processData: false</code>. Modern <code>fetch</code> with an <code>ArrayBuffer</code>/<code>Blob</code> body avoids the whole class of bugs.</p>
+<h2>Start from a Base64 string</h2>
+<p>If your image exists as Base64 — because you encoded it with the <a href="/">Image to Base64 tool</a> or received it from an upstream service — decode it before the request:</p>
+<pre><code>const bytes = Buffer.from(rawBase64, "base64");   // decode exactly once
+// ...then send `bytes` as the request body</code></pre>
+<p>Strip a <code>data:image/png;base64,</code> prefix first if present: everything before the first comma is metadata, and leaving it in makes the decode fail or produce junk. If the decoded file still will not open, the string itself may be damaged — whitespace, truncation, or double encoding; <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a> is the checklist for that.</p>
+<p>Note the asymmetry with reading: SharePoint can hand you file content in different shapes (the <code>/$value</code> endpoint returns raw binary), but writing has exactly one honest format — the bytes.</p>
+<h2>Pitfalls and a pre-flight checklist</h2>
+<ul>
+<li><strong><code>201 Created</code> proves nothing about content.</strong> Always verify by downloading the file and comparing sizes or hashing against the original.</li>
+<li><strong>No Base64 in the body. Ever.</strong> The endpoint does not negotiate encodings; <code>Content-Transfer-Encoding</code> headers are ignored, not honored.</li>
+<li><strong><code>Content-Type</code> describes the file, it does not transform the body.</strong> Setting <code>image/png</code> does not decode anything.</li>
+<li><strong>Beware string-based HTTP stacks.</strong> Anything that converts the body to a UTF-8 string before sending (older jQuery defaults, some ORM/HTTP wrappers) will corrupt binary uploads.</li>
+<li><strong>URL-encode folder names in the endpoint</strong> (<code>Shared%20Documents</code>), and keep the folder path in <code>GetFolderByServerRelativeUrl('...')</code> matching your site's real server-relative path.</li>
+<li><strong>Large files:</strong> this simple endpoint is fine for everyday assets; REST supports binary bodies up to 2 GB, and bigger jobs belong in the documented large-file patterns.</li>
+<li><strong>Verify with a hash:</strong> <code>certutil -hashfile logo.png MD5</code> (Windows) or <code>md5 logo.png</code> (macOS/Linux) against the downloaded copy.</li>
+</ul>
+<h2>FAQ</h2>
+<h3>Why does SharePoint return 201 if the content is garbage?</h3>
+<p>Because the request was valid — the body was stored, as-is. The endpoint has no schema for file contents; it cannot know that iVBOR... text was supposed to be a PNG. This is why 'it returned 201' is not a test.</p>
+<h3>Does adding Content-Transfer-Encoding: base64 help?</h3>
+<p>No. Unlike MIME email, REST file endpoints here ignore that header. The bytes you send are the bytes stored.</p>
+<h3>Can I upload Base64 through Microsoft Graph instead?</h3>
+<p>No — Graph has the same behavior on its OneDrive endpoints: it stores exactly what you PUT. The fix pattern is identical: decode, then send bytes.</p>
+
+<h2>Related guides</h2>
+<p>The OneDrive companion problem — <a href="/onedrive-graph-api-upload-base64-not-decoded">Graph stores Base64 as-is</a> — uses the same fix. For broken input strings, start with <a href="/fix-invalid-base64-image-data">invalid Base64 image data</a>; for JSON APIs that do accept Base64 text, see the <a href="/image-to-base64-for-api">API payload guide</a>.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Photo privacy">
+        <span class="head">Photo privacy</span>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

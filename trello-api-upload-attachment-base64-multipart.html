@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Trello API Attachments: Upload Files, Not Base64 Strings</title>
+<meta name="description" content="Trello's attachment API only accepts multipart/form-data. Copy curl, Node.js and Python examples that decode Base64 first and attach the file." />
+<link rel="canonical" href="https://image2base64.com/trello-api-upload-attachment-base64-multipart" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Trello API Attachments: Upload Files, Not Base64 Strings" />
+<meta property="og:description" content="Trello's attachment API only accepts multipart/form-data. Copy curl, Node.js and Python examples that decode Base64 first and attach the file." />
+<meta property="og:url" content="https://image2base64.com/trello-api-upload-attachment-base64-multipart" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Can I send Base64 in the JSON body like some other APIs?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Not on this endpoint. Trello's attachment API is multipart-only for uploads. Providers differ: Postmark's mail API takes Base64 inside JSON, Trello does not."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why did my attachment upload successfully but open as text?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "The Base64 text itself was stored as the file content. Decode it to bytes and re-upload through a real multipart file part."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Does this apply to card cover images?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Yes. Covers come from an uploaded image attachment (setCover=true) or from a fetchable url. A Base64 string is neither, so the cover stays unset even when the request returns 200."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+<h1>Trello API attachments: upload files, not Base64 strings</h1>
+<p>You have an image as a Base64 string — from a screenshot service, a build pipeline, or a converter — and you POST it to <code>POST /1/cards/{cardId}/attachments</code>. Either the request fails with a <code>400</code> parse error, or an attachment appears on the card that opens as a text file — a wall of Base64 characters where the picture should be. The image never displays, no previews are generated, and the card cover stays blank.</p>
+<p>The cause is simple: <strong>Trello's attachment endpoint accepts a file upload as <code>multipart/form-data</code>, or a link through the <code>url</code> parameter. It has no field that takes Base64 text and decodes it.</strong> The Base64 has to be decoded into raw bytes on your side, and those bytes have to travel as a real multipart file part.</p>
+<h2>What actually happens when you POST Base64</h2>
+<p>Three common outcomes, depending on how the request is built:</p>
+<div class="cmp-scroll"><table class="cmp"><thead><tr><th>What you sent</th><th>What Trello does</th></tr></thead><tbody>
+<tr><td>Raw Base64 text as the request body with <code>Content-Type: application/json</code> or <code>text/plain</code></td><td><code>400</code>-class error — Trello tries to parse the body and fails; a widely reported message is <code>Error parsing body</code></td></tr>
+<tr><td>Base64 text inside a multipart part named <code>file</code>, without a filename</td><td>The attachment is stored as a text file: it opens as text, <code>isUpload</code> is <code>true</code>, but it is not a valid image and gets no image previews</td></tr>
+<tr><td>A <code>data:image/png;base64,...</code> data URI as the body or as the <code>url</code> parameter</td><td>Same as above — a data URI is text, neither bytes Trello can store nor a URL Trello can fetch</td></tr>
+</tbody></table></div>
+<p>None of these produce a usable image. Trello stores whatever part body it receives; it does not sniff your string and work out that it is encoded content. This is the same class of failure as <a href="/slack-base64-image-not-working">Slack rejecting Base64 images</a>: most chat and work-management APIs want the bytes, not the text.</p>
+<h2>Why: Trello reads multipart parts, not JSON text</h2>
+<p>The documented contract for file attachments has exactly two inputs: a <code>file</code> upload sent as <code>multipart/form-data</code>, or a <code>url</code> parameter pointing at a publicly fetchable link. The official examples and every reliable community answer converge on the same rule: binary data — images, PDFs, anything — must go into a multipart file part.</p>
+<p>Base64 is a text encoding of bytes; JSON is a text container. Neither is what this endpoint reads. That differs from other providers you may know: Postmark's mail API, for example, takes Base64 inside a JSON <code>Content</code> field. Each API draws its own line, and the <a href="/image-to-base64-for-api">API payload guide</a> shows how much those payload shapes differ.</p>
+<h2>Copy-paste fixes</h2>
+<h3>curl: multipart with --form</h3>
+<p><code>--form</code> (short form <code>-F</code>) makes curl build the multipart body for you, including the boundary and the part headers:</p>
+<pre><code>curl --request POST \
+  "https://api.trello.com/1/cards/${CARD_ID}/attachments?key=${TRELLO_KEY}&amp;token=${TRELLO_TOKEN}" \
+  --form "file=@logo.png;type=image/png" \
+  --form "name=logo.png" \
+  --form "mimeType=image/png"</code></pre>
+<p>A successful call returns <code>200</code> with the attachment JSON. Check that <code>isUpload</code> is <code>true</code>, <code>bytes</code> matches your file size, and <code>previews</code> is non-empty for images.</p>
+<h3>Node.js 18+</h3>
+<p><code>FormData</code> and <code>Blob</code> are global since Node 18, so no multipart library is needed:</p>
+<pre><code>// node trello-attach.mjs &lt;cardId&gt; logo.png
+import { readFile } from "node:fs/promises";
+
+const [cardId, filePath] = process.argv.slice(2);
+const key = process.env.TRELLO_KEY;
+const token = process.env.TRELLO_TOKEN;
+if (!cardId || !filePath || !key || !token) {
+  throw new Error("Usage: node trello-attach.mjs &lt;cardId&gt; &lt;file&gt; (plus TRELLO_KEY/TRELLO_TOKEN)");
+}
+
+const bytes = await readFile(filePath);
+const form = new FormData();
+form.append("file", new Blob([bytes], { type: "image/png" }), "logo.png");
+form.append("name", "logo.png");
+form.append("mimeType", "image/png");
+
+const res = await fetch(
+  `https://api.trello.com/1/cards/${cardId}/attachments?key=${key}&amp;token=${token}`,
+  { method: "POST", body: form }
+);
+if (!res.ok) throw new Error(`Trello ${res.status}: ${await res.text()}`);
+const attachment = await res.json();
+console.log(attachment.id, attachment.mimeType);</code></pre>
+<p>Do <strong>not</strong> set a <code>Content-Type</code> header manually. The fetch implementation generates it together with the multipart boundary; a hand-written <code>Content-Type: application/json</code> — often a leftover session-wide default — is exactly what triggers the <code>400</code> parse errors reported against this endpoint.</p>
+<h3>Python: requests</h3>
+<p>The same rule in Python: pass <code>files=</code>, never set the header, and never encode the file first.</p>
+<pre><code>import requests
+
+card_id = "YOUR_CARD_ID"
+key, token = "YOUR_KEY", "YOUR_TOKEN"
+
+url = f"https://api.trello.com/1/cards/{card_id}/attachments"
+params = {"key": key, "token": token, "name": "logo.png", "mimeType": "image/png"}
+
+with open("logo.png", "rb") as f:
+    files = {"file": ("logo.png", f, "image/png")}
+    r = requests.post(url, params=params, files=files, timeout=30)
+
+r.raise_for_status()
+print(r.json()["id"])</code></pre>
+<p>If your code sets <code>Content-Type: application/json</code> globally (for example with <code>session.headers.update(...)</code>), remove that before the upload call — that single header has caused more "Trello returns 400" reports than any other detail.</p>
+<h2>Start from a Base64 string</h2>
+<p>If your image exists only as Base64 — for example because you ran it through the <a href="/">Image to Base64 tool</a> as an intermediate step — decode it once and upload the bytes. Never send the text itself.</p>
+<pre><code>const bytes = Buffer.from(rawBase64, "base64");   // decode exactly once
+form.append("file", new Blob([bytes], { type: "image/png" }), "logo.png");</code></pre>
+<p>In the browser, without Node:</p>
+<pre><code>const bytes = Uint8Array.from(atob(rawBase64), c =&gt; c.charCodeAt(0));</code></pre>
+<p>If the string carries a <code>data:image/png;base64,</code> prefix, strip everything before the first comma first — otherwise the decoder throws or quietly produces junk. A string that decodes to garbage usually has a broken prefix, stray whitespace, or a double encoding; <a href="/fix-invalid-base64-image-data">fixing invalid Base64 image data</a> walks through the diagnosis.</p>
+<h2>Pitfalls and a pre-flight checklist</h2>
+<ul>
+<li><strong>No manual <code>Content-Type</code>.</strong> Let the HTTP client generate the multipart header with its boundary.</li>
+<li><strong><code>mimeType</code> is a field, not just a part header.</strong> The response's <code>mimeType</code> is populated from the separate <code>mimeType</code> field; the file part's own <code>Content-Type</code> alone has been reported to leave it <code>null</code>. Set the field.</li>
+<li><strong>Decode once, not twice.</strong> Base64 to bytes to Base64 to bytes wastes bandwidth and is the usual cause of "it decodes but will not open".</li>
+<li><strong><code>url</code> attaches a link, not an image.</strong> The <code>url</code> parameter stores a reference (<code>isUpload: false</code>); Trello must be able to fetch it, and card-cover behavior differs from uploads.</li>
+<li><strong><code>name</code> is limited to 256 characters.</strong></li>
+<li><strong>Judge the response body, not just the status code.</strong> <code>isUpload: true</code>, <code>bytes</code> close to your file size, and image previews generated are the real success signals.</li>
+</ul>
+<h2>FAQ</h2>
+<h3>Can I send Base64 in the JSON body like some other APIs?</h3>
+<p>Not on this endpoint. Trello's attachment API is multipart-only for uploads. Providers differ: Postmark's mail API takes Base64 inside JSON, Trello does not.</p>
+<h3>Why did my attachment upload successfully but open as text?</h3>
+<p>The Base64 text itself was stored as the file content. Decode it to bytes and re-upload through a real multipart file part.</p>
+<h3>Does this apply to card cover images?</h3>
+<p>Yes. Covers come from an uploaded image attachment (setCover=true) or from a fetchable url. A Base64 string is neither, so the cover stays unset even when the request returns 200.</p>
+
+<h2>Related guides</h2>
+<p>Compare with <a href="/image-to-base64-for-api">API payload shapes</a>, fix a <a href="/fix-invalid-base64-image-data">broken Base64 string</a>, or read the same failure on <a href="/slack-base64-image-not-working">Slack</a>, where raw Base64 is rejected with <code>no_file_data</code>.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Photo privacy">
+        <span class="head">Photo privacy</span>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

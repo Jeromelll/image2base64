@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Freshdesk API Attachments: Multipart Only, No Base64 Field</title>
+<meta name="description" content="Freshdesk ticket and reply APIs accept attachments as multipart files only. Decode Base64 to bytes and copy working curl, Node.js and Python examples." />
+<link rel="canonical" href="https://image2base64.com/freshdesk-api-attachments-base64-not-supported" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="stylesheet" href="styles.css" />
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image to Base64 Converter" />
+<meta property="og:title" content="Freshdesk API Attachments: Multipart Only, No Base64 Field" />
+<meta property="og:description" content="Freshdesk ticket and reply APIs accept attachments as multipart files only. Decode Base64 to bytes and copy working curl, Node.js and Python examples." />
+<meta property="og:url" content="https://image2base64.com/freshdesk-api-attachments-base64-not-supported" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  "mainEntity": [
+    {
+      "@type": "Question",
+      "name": "Does Freshdesk have any endpoint that accepts Base64 attachments?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Across the v2 ticket, contact, reply, and conversation endpoints, attachments are multipart file uploads only. If a tutorial shows Base64 in a JSON body, it is describing a different product or is wrong."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Why did my ticket get created but the attachment vanished?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "Most likely the JSON payload carried an unknown attachment field (silently ignored), or the request was sent as application/json where multipart was required. Re-send with the file as a multipart part."
+      }
+    },
+    {
+      "@type": "Question",
+      "name": "Can I attach by URL, like Trello's url parameter?",
+      "acceptedAnswer": {
+        "@type": "Answer",
+        "text": "No. Freshdesk v2 has no attach-by-URL option for tickets. Download the bytes yourself and upload them."
+      }
+    }
+  ]
+}
+</script>
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+<main class="wrap" style="padding:48px 0 72px">
+  <article class="guide">
+<h1>Freshdesk API attachments: multipart only, no Base64 field</h1>
+<p>You want to attach a screenshot to a Freshdesk ticket through the API, and the image on your side exists as a Base64 string. The instinct is to put that string into the JSON payload next to <code>body</code> and send it. The result: either a validation error, or a ticket where the "attachment" is a broken or text-typed file that agents cannot open.</p>
+<p>The reason is a hard boundary in Freshdesk's API: <strong>the ticket and reply endpoints take attachments as <code>multipart/form-data</code> file parts, period. There is no JSON field that accepts a Base64 string and stores the decoded file.</strong> The JSON-side fields (<code>attachment_ids</code>, <code>inline_attachment_ids</code>, <code>cloud_files</code>) only reference attachments that already exist in Freshdesk or files already in cloud storage.</p>
+<h2>What happens when you send Base64</h2>
+<p>Depending on how the request is mangled, you will see one of these:</p>
+<ul>
+<li><strong><code>400 Client or Validation Error</code></strong> — the request body is not in the format the endpoint expects. Common when Base64 text is pushed into a JSON field that does not exist, or when a hand-set <code>Content-Type</code> header (usually <code>application/json</code>) overrides the multipart encoding your HTTP library would have produced.</li>
+<li><strong>A ticket or reply with a corrupted attachment</strong> — the string got stored as file content, so the "image" is a text file. It renders as a page of Base64 characters for every agent who opens it.</li>
+<li><strong>Nothing at all</strong> — unknown fields in a JSON payload are silently dropped, so the attachment never appears and no error explains why.</li>
+</ul>
+<p>Freshdesk's own error table lists <code>415 Unsupported Content-type</code> for content types like <code>application/xml</code>, and notes under <code>406</code> that "when uploading files multipart/form-data is supported" — the multipart boundary is the documented path, and the JSON body is simply the wrong container for file bytes.</p>
+<h2>Where attachments are actually allowed</h2>
+<p>Attachments work only on specific endpoints, per the official docs: <strong>Create a Ticket</strong> (<code>POST /api/v2/tickets</code>), <strong>Update a Ticket</strong>, <strong>Create a Contact</strong>, <strong>Update a Contact</strong>, <strong>Reply to a Ticket</strong> (<code>POST /api/v2/tickets/{id}/reply</code>), and <strong>Update a Conversation</strong>. For a private note (<code>POST /api/v2/tickets/{id}/notes</code>), attach the file the same multipart way when uploading it, or reference an existing attachment by ID where the endpoint supports it.</p>
+<p>Two constraints to design around:</p>
+<ul>
+<li><strong>Files come from your machine.</strong> The docs state that only local files can be attached — meaning your HTTP client reads bytes and sends them as multipart parts. There is no fetch-a-URL attachment option in the v2 API; if the image lives on a server, download the bytes first.</li>
+<li><strong>20 MB total.</strong> Ticket attachments combined cannot exceed 20 MB. Base64-inflated payloads (about +37% versus raw bytes) waste that budget and slow the request.</li>
+</ul>
+<h2>Copy-paste fixes</h2>
+<h3>curl: -F with attachments[]</h3>
+<pre><code>curl -v -u "${FRESHDESK_KEY}:X" \
+  -F "body=&lt;p&gt;Here is the screenshot you asked for.&lt;/p&gt;" \
+  -F "attachments[]=@logo.png;type=image/png" \
+  -X POST "https://${FRESHDESK_DOMAIN}.freshdesk.com/api/v2/tickets/${TICKET_ID}/reply"</code></pre>
+<p><code>-u "${FRESHDESK_KEY}:X"</code> is the documented auth scheme — the API key as username, <code>X</code> as password. <code>-F</code> builds the multipart body; do not add a <code>Content-Type</code> header yourself.</p>
+<h3>Node.js 18+</h3>
+<pre><code>// node freshdesk-reply.mjs
+import { readFile } from "node:fs/promises";
+
+const domain = process.env.FRESHDESK_DOMAIN;
+const key = process.env.FRESHDESK_KEY;
+const ticketId = process.env.TICKET_ID;
+if (!domain || !key || !ticketId) {
+  throw new Error("Set FRESHDESK_DOMAIN, FRESHDESK_KEY, and TICKET_ID");
+}
+
+const bytes = await readFile("logo.png");
+const form = new FormData();
+form.append("body", "&lt;p&gt;Here is the screenshot you asked for.&lt;/p&gt;");
+form.append("attachments[]", new Blob([bytes], { type: "image/png" }), "logo.png");
+
+const auth = Buffer.from(`${key}:X`).toString("base64");
+const res = await fetch(
+  `https://${domain}.freshdesk.com/api/v2/tickets/${ticketId}/reply`,
+  { method: "POST", headers: { Authorization: `Basic ${auth}` }, body: form }
+);
+if (!res.ok) throw new Error(`Freshdesk ${res.status}: ${await res.text()}`);
+console.log((await res.json()).id);</code></pre>
+<p>Leave the <code>Content-Type</code> header unset — the fetch implementation adds <code>multipart/form-data; boundary=...</code> automatically. A manual <code>application/json</code> header here is the classic cause of a <code>400</code> on an otherwise correct request.</p>
+<h3>Python: requests</h3>
+<pre><code>import base64
+import requests
+
+domain = "yourdomain"
+api_key = "YOUR_KEY"
+ticket_id = 12345
+
+with open("logo.png", "rb") as f:
+    files = [("attachments[]", ("logo.png", f, "image/png"))]
+    data = {"body": "&lt;p&gt;Here is the screenshot you asked for.&lt;/p&gt;"}
+    r = requests.post(
+        f"https://{domain}.freshdesk.com/api/v2/tickets/{ticket_id}/reply",
+        auth=(api_key, "X"),
+        files=files,
+        data=data,
+        timeout=30,
+    )
+
+r.raise_for_status()
+print(r.json()["id"])</code></pre>
+<p><code>requests</code> sets the multipart boundary itself when <code>files=</code> is present; adding <code>headers={"Content-Type": "multipart/form-data"}</code> without a boundary breaks the request.</p>
+<h2>Start from a Base64 string</h2>
+<p>If the image reaches your code as Base64 — from a converter like the <a href="/">Image to Base64 tool</a>, a message queue, or a database column — decode it once and hand the raw bytes to your HTTP client as a file part:</p>
+<pre><code>import base64
+
+image_bytes = base64.b64decode(raw_base64)          # decode exactly once
+files = [("attachments[]", ("logo.png", image_bytes, "image/png"))]</code></pre>
+<p>Node equivalent:</p>
+<pre><code>const bytes = Buffer.from(rawBase64, "base64");
+form.append("attachments[]", new Blob([bytes], { type: "image/png" }), "logo.png");</code></pre>
+<p>Strip a <code>data:image/png;base64,</code> prefix before decoding — everything before the first comma is metadata, not payload. If decoding succeeds but the stored file will not open, the string itself is probably damaged; <a href="/fix-invalid-base64-image-data">fixing invalid Base64 image data</a> covers the usual suspects (whitespace, wrong prefix, double encoding).</p>
+<h2>Pitfalls and a pre-flight checklist</h2>
+<ul>
+<li><strong>No manual <code>Content-Type</code>.</strong> The library builds <code>multipart/form-data; boundary=...</code>; an override header is the top cause of <code>400</code> errors on this API.</li>
+<li><strong>Field name is <code>attachments[]</code>.</strong> The bracket matters for multiple files; sending <code>attachments</code> (no brackets) or a bare JSON array field is a common silent failure.</li>
+<li><strong>Auth is <code>key:X</code> as Basic auth.</strong> Not a bearer token, not the password field.</li>
+<li><strong>20 MB combined limit.</strong> Count all attachments on the ticket, and remember Base64 is ~37% larger than the bytes it represents — decode before you count.</li>
+<li><strong>Notes vs replies.</strong> <code>POST /tickets/{id}/notes</code> is for private notes; <code>POST /tickets/{id}/reply</code> emails the requester. Attaching to the wrong one either hides the file from the customer or surprises them with an email.</li>
+<li><strong>JSON-side fields reference, not upload.</strong> <code>attachment_ids</code> on reply/bulk endpoints point at attachments Freshdesk already stores; they are not an upload channel.</li>
+<li><strong>Watch the 429s.</strong> Freshdesk rate-limits per domain; batch reply loops with attachments hit the ceiling quickly.</li>
+</ul>
+<h2>FAQ</h2>
+<h3>Does Freshdesk have any endpoint that accepts Base64 attachments?</h3>
+<p>No. Across the v2 ticket, contact, reply, and conversation endpoints, attachments are multipart file uploads only. If a tutorial shows Base64 in a JSON body, it is describing a different product or is wrong.</p>
+<h3>Why did my ticket get created but the attachment vanished?</h3>
+<p>Most likely the JSON payload carried an unknown attachment field (silently ignored), or the request was sent as application/json where multipart was required. Re-send with the file as a multipart part.</p>
+<h3>Can I attach by URL, like Trello's url parameter?</h3>
+<p>No. Freshdesk v2 has no attach-by-URL option for tickets. Download the bytes yourself and upload them.</p>
+
+<h2>Related guides</h2>
+<p>Compare the multipart-only pattern with providers that do take Base64 JSON — <a href="/postmark-cid-inline-image-base64">Postmark inline images</a> and <a href="/sendgrid-inline-image-base64">SendGrid attachments</a> — and keep <a href="/fix-invalid-base64-image-data">Base64 validation</a> close for upstream data.</p>
+  </article>
+</main>
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Photo privacy">
+        <span class="head">Photo privacy</span>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/postmark-cid-inline-image-base64">Postmark inline image with Base64</a>
+        <a href="/brevo-transactional-base64-attachment-no-cid">Brevo Base64 attachment and CID</a>
+        <a href="/jimp-getbase64-image-to-data-uri">Jimp getBase64 data URI</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+<script src="app.js"></script>
+</body>
+</html>

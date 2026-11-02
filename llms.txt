@@ -59,6 +59,10 @@ Core user value: turn an image into a self-contained text string for inline embe
 - [Send Base64 Image via Telegram Bot](/telegram-bot-send-base64-image): sendPhoto rejects data URIs — decode the payload and upload as multipart.
 - [Slack Base64 Image Not Working](/slack-base64-image-not-working): Slack answers no_file_data for raw Base64 — strip the prefix and upload as multipart.
 - [Send Base64 Image with Discord.js](/discord-js-send-base64-image): Decode the payload to a Buffer and wrap it in AttachmentBuilder.
+- [Trello Attachments with Base64](/trello-api-upload-attachment-base64-multipart): The API only accepts multipart file parts — decode Base64 to bytes and upload.
+- [Freshdesk Attachments via API](/freshdesk-api-attachments-base64-not-supported): No Base64 JSON field — multipart attachments[] with curl/Node/Python examples.
+- [SharePoint Base64 Upload Fix](/sharepoint-rest-api-upload-base64-image-corrupted): Files/add stores the body as-is; decode Base64 before uploading.
+- [OneDrive Graph Base64 Upload](/onedrive-graph-api-upload-base64-not-decoded): PUT /content never decodes; decode first, upload bytes, verify size.
 
 ## Optional
 
