@@ -256,6 +256,8 @@
         The exact figures depend on the image, which is why the tool reports the real result rather than
         an estimate. If you only need the numbers for a size you already know, the
         <a href="/base64-image-size-calculator">Base64 image size calculator</a> works from a file size alone.
+        The encode step after you have the bytes — prefix, raw payload, and language snippets — is in
+        <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a>.
       </p>
 
       <h3>When to inline at all</h3>
@@ -270,7 +272,9 @@
       <p>
         Decoding, resizing, re-encoding and Base64 conversion all happen in your browser through the
         Canvas and FileReader APIs. The file is never uploaded — you can disconnect from the internet
-        after the page loads and the tool still works.
+        after the page loads and the tool still works. That is the local side of the
+        <a href="/online-vs-local-base64-converter">online versus local converter</a> split: the page is
+        on the web, and the image still stays on the device.
       </p>
     </div>
   </section>
