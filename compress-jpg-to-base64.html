@@ -261,9 +261,11 @@
       <h3>When to inline at all</h3>
       <p>
         A compressed data URI is great for small hero previews, email templates, and anything that must
-        travel inside a single HTML file. For large or reused photos, a normal file is still better: the
+        travel inside a <a href="/embed-images-in-single-html-file">single HTML file</a>. For large or reused photos, a normal file is still better: the
         browser can cache it independently, and a half-megabyte text blob in your HTML hurts parse time.
-        Use the before/after readout to decide with real numbers.
+        Use the before/after readout to decide with real numbers. If that string is headed into a JSON
+        request, <a href="/image-to-base64-for-api">Image to Base64 for APIs</a> shows whether the field
+        wants the full data URI or only the raw Base64.
       </p>
 
       <h3>Private by construction</h3>
