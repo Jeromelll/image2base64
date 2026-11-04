@@ -218,6 +218,16 @@
 
       <h3>Private by design</h3>
       <p>The converter reads and encodes the selected file locally. It does not upload the file for conversion. Advertising and usage events may still make network requests; see the Privacy policy. Copying the output into another service shares the file when you send it there.</p>
+      <p>
+        Scanner output usually leaves as a JSON field.
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        shows whether that field wants the full data URI or only the raw payload, and
+        <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a>
+        has the same step in Python, PHP, and on the command line.
+        If the string then fails to decode,
+        <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a>
+        covers a missing prefix, whitespace, and a truncated payload.
+      </p>
     </div>
   </section>
 
