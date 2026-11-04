@@ -261,6 +261,15 @@ document.getElementById('bmp').addEventListener('change', (e) =&gt; {
       <p><strong>Preview works, paste fails in the app.</strong> You likely pasted a truncated string or the wrong shape (raw vs data URI).</p>
       <p><strong>MIME type looks wrong.</strong> Some systems expect <code>image/x-ms-bmp</code> instead of <code>image/bmp</code>.</p>
       <p><strong>File is huge.</strong> That is usually the BMP, not Base64. Compress or convert before encoding.</p>
+      <p>
+        The same FileReader step in other languages is in
+        <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a>.
+        A bitmap that has to travel inside one document is covered by
+        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.
+        If the pasted string fails to decode,
+        <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a>
+        covers a missing prefix, line wraps, and a truncated payload.
+      </p>
     </div>
   </section>
 

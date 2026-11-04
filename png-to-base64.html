@@ -330,6 +330,15 @@ document.querySelector(".preview").src = iconDataUri;</code></pre>
         If you accept Base64 from other users in an application, validate the declared MIME type, decoded size and
         file signature before storing or displaying it.
       </p>
+      <p>
+        The encode step in other languages — prefix, raw payload, and snippets — is in
+        <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a>.
+        A PNG that has to travel inside one document is covered by
+        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.
+        If a copied string fails to decode, the checks in
+        <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a>
+        cover a missing prefix, whitespace, and a truncated payload.
+      </p>
     </div>
   </section>
 

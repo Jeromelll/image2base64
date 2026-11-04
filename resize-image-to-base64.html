@@ -152,6 +152,7 @@ const dataUri = await resizeImageToBase64(fileInput.files[0], 256, 256);</code><
 
     <h2 id="when-not">When not to resize — when to skip base64 entirely</h2>
     <p>If the source image is over ~30 KB even after resizing, a regular file with HTTP caching almost always outperforms an inline string: the browser caches it, lazy-loads it, and keeps your HTML readable. Base64 is the right call when the constraint is <em>self-containment</em> — single-file HTML, email signatures, offline documents — not raw performance. For already-compressed sources, see our guides on <a href="/compress-jpg-to-base64">compressing JPG to base64</a> and <a href="/compress-png-to-base64">compressing PNG to base64</a>.</p>
+    <p>Once the file is small enough to inline, <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a> shows the data URI. A resized logo for a signature is covered by <a href="/base64-image-email-signature">Base64 images in email signatures</a>, and a report that must stay one file is covered by <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.</p>
 
     <h2 id="faq">Frequently asked questions</h2>
     <section class="faq-section">
