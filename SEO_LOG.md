@@ -1,3 +1,11 @@
+## 2026-11-04 — PR #7 构建恢复并上线三个比较页正文链接
+
+- PR：#7 已合并，生产源码提交 `8894b2c695b774b1446d311a67091763d4cb514d`，保留同日 PR #6 的全部改动。
+- 根因：原 Workers Builds `47b7626b-88ee-43bf-9d7c-248df2b7233d` 未配置 Build command，直接上传时报 `/opt/buildhome/repo/dist` 不存在。沿用同日 PR #6 已补齐的 `python3 build.py`，PR #7 重试构建 `a8134357-638b-42b7-8f6c-4db0a056e47c` 成功，GitHub 检查转绿。
+- 生产部署：GitHub Actions `41768646779` 与 Workers Builds `c27a80a7-bd03-4812-8a89-662e5f09f0b6` 均成功。最终生产 Version ID：`ff5676c5-2c56-4ca6-8511-d4c310952905`，100% 流量（2026-11-04 11:41 CST）。
+- 线上验收：`/image-to-base64-alternatives`、`/online-vs-local-base64-converter`、`/remove-bg-alternatives` 均 HTTP 200；各页 `<main>` 内链接序列与 PR 源码一致，每页 4 个去重内容链接，10 个去重目标 URL 全部 HTTP 200。
+- 门禁：34 项现有测试通过；SEO 检查 184 项通过、0 FAIL、3 个既有 canonical 合并 WARN；89 个公开资源构建与 Wrangler dry-run 通过；实际合并树与验收快照一致。
+
 ## 2026-11-04 — 修复 Workers Builds 并上线 PR #6 正文指南链接
 
 - PR：#6 已合并，生产源码提交 `7316fff3f565a40add3b7bb5a10da1e7a41f5b3f`。
