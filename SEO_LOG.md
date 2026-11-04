@@ -1,3 +1,11 @@
+## 2026-11-04 — 修复 Workers Builds 并上线 PR #6 正文指南链接
+
+- PR：#6 已合并，生产源码提交 `7316fff3f565a40add3b7bb5a10da1e7a41f5b3f`。
+- 故障原因：Workers Builds 的 Build command 为空，版本上传报 `/opt/buildhome/repo/dist` 不存在。Cloudflare 项目构建命令已设为 `python3 build.py`；生产命令保留 `npx wrangler deploy`，非生产分支命令保留 `npx wrangler versions upload`。
+- 验证：PR 重试构建 `cba5f7f6-d0d6-457e-9c38-4a2439cd752a` 成功；合并后 GitHub Actions `41768321488` 与 Workers Builds `5ccb7073-e2af-48fc-ae9d-74c89fdb8618` 均完成部署。最终生产 Version ID：`9e704a06-1412-4421-96fc-2f17a3b120e0`（2026-11-04 11:39 CST）。
+- 线上验收：JPG、PNG、BMP、WebP、GIF、SVG、TIFF、resize-image-to-base64、data-uri-generator 九页均 HTTP 200，完整 HTML 与合并源码一致；26 个新增链接均在 `<main>` 正文中，链接文本匹配，8 个去重目标 URL 均 HTTP 200。
+- 门禁：34 项现有测试通过；SEO 检查 64 页、59 个 sitemap URL、0 FAIL、3 个既有 canonical 合并 WARN；构建与 Wrangler dry-run 通过。
+
 ## 2026-11-02 — 上线 4 篇 API 附件上传场景页（Trello / Freshdesk / SharePoint / OneDrive）
 
 - 来源：当日选词雷达「按你建议来」批准；草稿见 Research/image2base64/SEO/内容草稿/2026-11-02_*.md，流水线报告 内容流水线_2026-11-02.md。
