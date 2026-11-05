@@ -212,7 +212,14 @@
         Percent-encoded SVGs (<code>data:image/svg+xml,%3Csvg…</code>) are not Base64 and are skipped —
         those decode with plain URL unescaping instead. And an image whose payload was truncated in a copy
         will fail to preview; the tool tells you which cards are broken rather than silently downloading
-        corrupt files.
+        corrupt files. A copy that was cut off mid-string is the case in
+        <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a>.
+      </p>
+      <p>
+        Putting an extracted image back into one document is covered by
+        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>,
+        and into a README by
+        <a href="/embed-base64-image-in-markdown">embedding a Base64 image in Markdown</a>.
       </p>
     </div>
   </section>
