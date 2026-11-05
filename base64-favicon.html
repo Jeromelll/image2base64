@@ -235,6 +235,9 @@
         source image of 16×16, 32×32 or 48×48 pixels and an encoded result under roughly 2–3 KB. A 32×32 PNG icon
         typically encodes to a few hundred characters. If your favicon source is large, resize it first — the browser
         will scale it down anyway, and you would just be shipping wasted bytes in your HTML.
+        Estimate the encoded length with the
+        <a href="/base64-image-size-calculator">Base64 image size calculator</a>
+        before you commit the tag to every page.
       </p>
 
       <h3>PNG or SVG for an inline favicon?</h3>
@@ -270,7 +273,12 @@
         The generator uses the browser's <code>FileReader</code> API. Your favicon is read on the current device and
         the data URI is assembled locally — the file is not uploaded and nothing is stored. The same privacy applies
         in reverse: Base64 is an encoding, not encryption, so treat the generated string with the same care as the
-        source image.
+        source image. That local read is the split described in the
+        <a href="/online-vs-local-base64-converter">online versus local converter comparison</a>.
+        Inlining the icon is the small case of
+        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>,
+        and the encode step in other languages is in
+        <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a>.
       </p>
     </div>
   </section>
