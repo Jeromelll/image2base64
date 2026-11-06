@@ -236,6 +236,12 @@
         typically encodes to a few hundred characters. If your favicon source is large, resize it first — the browser
         will scale it down anyway, and you would just be shipping wasted bytes in your HTML.
       </p>
+      <p>
+        <a href="/resize-image-to-base64">Resize image to Base64</a> crops an oversized source down to that box before encoding, and the
+        <a href="/base64-image-size-calculator">Base64 size calculator</a> shows the data URI length before the icon
+        is pasted into every page. Reports and offline demos that must stay one file — icon included — are the case in
+        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.
+      </p>
 
       <h3>PNG or SVG for an inline favicon?</h3>
       <p>
@@ -267,7 +273,8 @@
 
       <h3>Private, browser-only encoding</h3>
       <p>
-        The generator uses the browser's <code>FileReader</code> API. Your favicon is read on the current device and
+        The generator uses the browser's <code>FileReader</code> API, the same call written out in
+        <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a>. Your favicon is read on the current device and
         the data URI is assembled locally — the file is not uploaded and nothing is stored. The same privacy applies
         in reverse: Base64 is an encoding, not encryption, so treat the generated string with the same care as the
         source image.
