@@ -102,15 +102,16 @@
     <p>A data URI must look exactly like this:</p>
     <pre><code>data:image/png;base64,iVBORw0KGgoAAAANS...</code></pre>
     <p>Common mistakes: missing the <code>data:</code> scheme, missing the <code>;base64,</code> separator, or a wrong MIME type (e.g. <code>image/jpg</code> instead of <code>image/jpeg</code>). If you store only the raw payload, do not add a prefix when decoding raw bytes — the prefix and the raw string are two different formats.</p>
-    <p><strong>Fix:</strong> if the consumer expects a data URI, prepend the correct prefix for the actual format: <code>data:image/jpeg;base64,</code> for JPEG, <code>data:image/png;base64,</code> for PNG. Match the prefix to the real bytes, not the original file extension.</p>
+    <p><strong>Fix:</strong> if the consumer expects a data URI, prepend the correct prefix for the actual format: <code>data:image/jpeg;base64,</code> for JPEG, <code>data:image/png;base64,</code> for PNG. Match the prefix to the real bytes, not the original file extension. Keeping the prefix for HTML and stripping it for an API are different jobs — <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a> shows both shapes.</p>
 
     <h2 id="whitespace">2. Whitespace and line breaks inside the payload</h2>
     <p>Many encoders (and email clients, and code formatters) wrap base64 at 76 characters. Most browser decoders tolerate newlines; many JSON parsers and API validators do not.</p>
     <p><strong>Fix:</strong> strip all whitespace before sending or storing the string:</p>
     <pre><code>const clean = raw.replace(/\s+/g, "");</code></pre>
+    <p>If the wrapped string came from an HTML email, what the client does next — keep the data URI, strip it, or block it — is in <a href="/base64-image-in-html-email">Base64 images in HTML email</a>.</p>
 
     <h2 id="urlsafe">3. URL-safe base64 characters (<code>-</code> and <code>_</code>)</h2>
-    <p>JWTs and some APIs use URL-safe base64, which replaces <code>+</code> with <code>-</code> and <code>/</code> with <code>_</code>. The standard <code>atob()</code> and most image decoders expect the standard alphabet, so these strings fail with an invalid-character error.</p>
+    <p>JWTs and some APIs use URL-safe base64, which replaces <code>+</code> with <code>-</code> and <code>/</code> with <code>_</code>. The standard <code>atob()</code> and most image decoders expect the standard alphabet, so these strings fail with an invalid-character error. Image APIs usually want that standard alphabet, and often the raw body with no <code>data:</code> prefix — <a href="/image-to-base64-for-api">image to Base64 for APIs</a> shows which field is which.</p>
     <p><strong>Fix:</strong> convert back before decoding:</p>
     <pre><code>const standard = urlSafe.replace(/-/g, "+").replace(/_/g, "/");
 // pad to a multiple of 4 if needed:

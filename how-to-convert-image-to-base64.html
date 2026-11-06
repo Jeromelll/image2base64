@@ -128,7 +128,7 @@ input.addEventListener('change', () => {
     <p><strong>Gotchas:</strong></p>
     <ul>
       <li><code>readAsDataURL</code> is asynchronous — the result only exists inside the <code>onload</code> callback (or after <code>await</code>ing a promise wrapper).</li>
-      <li>If you need to <em>resize or compress</em> first, draw the image to a <code>&lt;canvas&gt;</code> and use <code>canvas.toDataURL('image/jpeg', 0.8)</code> — that returns a data URI too.</li>
+      <li>If you need to <em>resize or compress</em> first, draw the image to a <code>&lt;canvas&gt;</code> and use <code>canvas.toDataURL('image/jpeg', 0.8)</code> — that returns a data URI too. The same resize-then-encode step, with a width and height you choose, is <a href="/resize-image-to-base64">resize image to Base64</a>.</li>
       <li>The data URI prefix tells the consumer what the bytes are. Keep it for HTML/CSS/JSON; strip it only when an API explicitly wants the raw Base64 body.</li>
     </ul>
 
@@ -164,7 +164,7 @@ echo '&lt;img src="data:image/jpeg;base64,' . $b64 . '"&gt;';</code></pre>
     <ul>
       <li><code>file_get_contents</code> works on URLs too, but only if <code>allow_url_fopen</code> is on — on shared hosting it sometimes isn't. cURL is the portable alternative.</li>
       <li>When echoing into HTML, the Base64 body itself is safe (it contains no HTML-special characters apart from <code>+</code> and <code>/</code>), but keep quotes around the attribute value.</li>
-      <li>To decode the other direction: <code>base64_decode($b64, true)</code> — the <code>true</code> makes it strict and reject malformed input.</li>
+      <li>To decode the other direction: <code>base64_decode($b64, true)</code> — the <code>true</code> makes it strict and reject malformed input. A <code>false</code> return is the string, not PHP: whitespace, a missing prefix, or a truncated payload, which <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a> walks through one cause at a time.</li>
     </ul>
 
     <h2 id="java">Java</h2>
@@ -188,7 +188,7 @@ base64 -d image.b64 &gt; restored.png</code></pre>
     <p><strong>Gotcha:</strong> on macOS, the BSD <code>base64</code> has no <code>-w0</code> flag (it doesn't wrap by default), and decode is <code>base64 -D</code> (capital) instead of <code>-d</code> on older macOS versions; Linux (GNU coreutils) uses lowercase <code>-d</code> and wraps at 76 columns unless you pass <code>-w0</code>. A wrapped Base64 string pasted into JSON will break — that's what <code>-w0</code> prevents.</p>
 
     <h2 id="n8n">n8n — convert an image to Base64 in a workflow</h2>
-    <p>Automation platforms are where this question comes up most: you have an image as a file or a download, and an API node (OpenAI, a webhook, a database) that wants Base64. In n8n:</p>
+    <p>Automation platforms are where this question comes up most: you have an image as a file or a download, and an API node (OpenAI, a webhook, a database) that wants Base64. Whether that node wants the full data URI or only the raw payload is covered in <a href="/image-to-base64-for-api">image to Base64 for APIs</a>. In n8n:</p>
     <ol>
       <li>Get the image as <strong>binary data</strong> — a <em>Read/Write Files from Disk</em> node, or an <em>HTTP Request</em> node with <strong>Response → Format: File</strong>.</li>
       <li>Add a <strong>Code node</strong> (JavaScript, like Node) and convert the binary property:</li>

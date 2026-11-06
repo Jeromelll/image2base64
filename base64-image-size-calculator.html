@@ -203,8 +203,8 @@
 
       <h3>The verdict thresholds</h3>
       <ul>
-        <li><strong>Under 5 KB — good to inline.</strong> The HTTP request you save usually outweighs the extra text, especially for icons and small logos.</li>
-        <li><strong>5-50 KB — borderline.</strong> Compress first: resizing to display dimensions and re-encoding as WebP often cuts the source by 70-90%, which changes the verdict entirely.</li>
+        <li><strong>Under 5 KB — good to inline.</strong> The HTTP request you save usually outweighs the extra text, especially for icons and small logos such as a <a href="/base64-favicon">Base64 favicon</a>.</li>
+        <li><strong>5-50 KB — borderline.</strong> Compress first: <a href="/resize-image-to-base64">resizing to display dimensions</a> and re-encoding as WebP or JPG often cuts the source by 70-90%, which changes the verdict entirely. A JPEG-only pass is <a href="/compress-jpg-to-base64">compress JPG to Base64</a>.</li>
         <li><strong>Over 50 KB — use a file.</strong> The browser can cache a normal image independently, lazy-load it, and deliver it via CDN — none of which work for an inline string.</li>
       </ul>
 
@@ -214,7 +214,8 @@
         overhead on the wire, but not all of it — and none of it on disk. Reusing the same data URI across
         many pages repeats the bytes every time, where a hosted file downloads once. Measure, compare, then
         decide; if the answer is "compress first", the <a href="/compress-png-to-base64">compress + encode tool</a>
-        does both steps in one pass.
+        does both steps in one pass. A page that still has to carry the picture inside the document is covered by
+        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.
       </p>
     </div>
   </section>
