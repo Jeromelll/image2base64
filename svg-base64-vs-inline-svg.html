@@ -1,0 +1,268 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SVG: Base64 Data URI vs Inline &lt;svg&gt; - Which and When</title>
+<meta name="description" content="Inline SVG keeps stylable, scriptable markup; a Base64 data URI is one opaque string. Trade-offs for icons, favicons, and CSS backgrounds." />
+<link rel="canonical" href="https://image2base64.com/svg-base64-vs-inline-svg" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image2Base64" />
+<meta property="og:title" content="SVG: Base64 Data URI vs Inline &lt;svg&gt; - Which and When" />
+<meta property="og:description" content="Inline SVG keeps stylable, scriptable markup; a Base64 data URI is one opaque string. Trade-offs for icons, favicons, and CSS backgrounds." />
+<meta property="og:url" content="https://image2base64.com/svg-base64-vs-inline-svg" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "SVG: Base64 Data URI vs Inline SVG - Which and When",
+  "description": "Inline SVG keeps stylable, scriptable markup; a Base64 data URI is one opaque string. Trade-offs for icons, favicons, and CSS backgrounds.",
+  "datePublished": "2026-11-10",
+  "inLanguage": "en",
+  "author": {"@type": "Person", "name": "Jerome", "url": "https://image2base64.com/about"},
+  "publisher": {"@type": "Organization", "name": "Image2Base64", "url": "https://image2base64.com/", "logo": {"@type": "ImageObject", "url": "https://image2base64.com/logo.png"}}
+}
+</script>
+
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h1>SVG as a data URI vs inline SVG</h1>
+      <p class="muted">Published 2026-11-10 · for icons, favicons, and CSS backgrounds</p>
+<p>An SVG can reach the page through three doors, and once it arrives, its behavior differs depending on which one you used. The same file works as an external <code>.svg</code> asset, as markup pasted straight into HTML, or as a data URI string — and developers get burned when they assume the three are interchangeable. Styling hooks, caching, script execution, and even duplicate-id bugs all hinge on the delivery route.</p>
+
+<p>The route also decides what the SVG <em>is</em> to the browser. External files and data URIs placed in <code>&lt;img&gt;</code> or CSS are treated as images. Inline markup becomes part of the document itself. Most of the trade-offs below fall out of that single distinction.</p>
+
+<p>If you just need to encode or decode a file right now, the <a href="/svg-to-base64">SVG to Base64</a> tool and the <a href="/base64-to-svg">Base64 to SVG</a> decoder are one paste away. The rest of this page is about choosing the right form in the first place.</p>
+
+<h2>The three ways to ship an SVG</h2>
+
+<h3>External .svg file</h3>
+<p>Referenced as <code>&lt;img src="icon.svg"&gt;</code> or <code>background-image: url(/icons/icon.svg)</code>. The browser makes a separate HTTP request and keeps a separate cache entry, so the same icon can be reused across pages without inflating any single document. Like every image reference, it costs one round trip before first render.</p>
+
+<h3>Inline markup</h3>
+<p>Paste the <code>&lt;svg&gt;</code> element directly into the HTML. There is no request at all, and the markup joins the DOM like any other element. That gives the page full styling control — and full responsibility: because inline SVG is document content, a <code>&lt;script&gt;</code> inside it executes like any other script on the page, which is why SVG from an untrusted source should never be pasted in raw.</p>
+
+<h3>Data URI</h3>
+<p>The whole file, URL-encoded or Base64-encoded into one string with the <code>image/svg+xml</code> MIME type. Both encodings are valid, and browsers accept either:</p>
+
+<pre><code>&lt;img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0i..." alt=""&gt;
+&lt;img src="data:image/svg+xml,%3Csvg%20xmlns%3D%22http..." alt=""&gt;</code></pre>
+
+<p>A data URI works anywhere a URL works — <code>&lt;img src&gt;</code>, CSS <code>url()</code>, favicon <code>&lt;link&gt;</code> tags, and <code>&lt;object&gt;</code> embeds.</p>
+
+<h2>What stops working inside a data URI (or an img)</h2>
+
+<p>When an SVG is loaded as an image — through <code>&lt;img&gt;</code>, a CSS background, or a data URI used in either place — browsers treat it as static image data, not as a document. The consequences are consistent across modern browsers:</p>
+
+<ul>
+<li><strong>Scripts never run.</strong> A <code>&lt;script&gt;</code> element inside the SVG is ignored entirely.</li>
+<li><strong>External references are not fetched.</strong> Stylesheets, web fonts, and other images referenced from inside the SVG do not load. An icon that depends on a hosted font renders with a fallback instead.</li>
+<li><strong>The page's CSS does not reach inside.</strong> Class names from your stylesheet do nothing, variables defined on <code>:root</code> are invisible, and <code>currentColor</code> has no page color to inherit — it falls back to the image context's own default.</li>
+</ul>
+
+<p>What does survive: internal <code>&lt;style&gt;</code> blocks, presentation attributes, and the declarative core of SVG — paths, shapes, gradients, masks. If your artwork relies only on those, the data URI form renders exactly like the file it came from.</p>
+
+<p>One more consequence is about caching rather than rendering: a data URI has no cache entry of its own. It travels inside the HTML or CSS file and is re-read every time that file is loaded. For a small icon that is irrelevant; for something large and reused across pages it adds up — the same dynamic covered in <a href="/when-not-to-inline-base64">when not to inline Base64 images</a>.</p>
+
+<h2>What inline SVG gives you</h2>
+
+<p>Inline markup is a first-class DOM citizen, and everything the image context forbids becomes available:</p>
+
+<ul>
+<li><strong>Page styling.</strong> A rule like <code>.btn:hover .icon path { fill: #fff; }</code> works. <code>currentColor</code> picks up the surrounding text color, so one icon can follow the theme without variants.</li>
+<li><strong>CSS variables.</strong> Define <code>--icon-stroke</code> once on the page and reference it from the SVG's attributes.</li>
+<li><strong>Reuse with <code>&lt;use&gt;</code>.</strong> Define an icon once with an id and instantiate it elsewhere with <code>&lt;use href="#icon-name"&gt;</code>, instead of duplicating markup.</li>
+<li><strong>Accessibility hooks.</strong> <code>role="img"</code>, <code>&lt;title&gt;</code>, <code>&lt;desc&gt;</code>, and <code>aria-labelledby</code> sit in the normal document flow where assistive technology expects them.</li>
+</ul>
+
+<p>The costs are the mirror image. Everything lives in one document, so ids are global: paste the same icon twice with a gradient defined as <code>id="g1"</code> in both copies, and internal <code>url(#g1)</code> references can resolve to the wrong copy, leaving one icon filled with the other's gradient. Slightly wrong colors from duplicated ids are a classic inline-SVG bug. Inline also means trusting the markup you pasted — untrusted SVG can carry scripts that will run, so sanitize anything you did not draw yourself.</p>
+
+<h2>What a data URI gives you</h2>
+
+<p>The data URI is the opposite bargain: isolation in exchange for opacity.</p>
+
+<ul>
+<li><strong>Encapsulation.</strong> Each data URI is its own little document. No id collisions, no style leakage in either direction, no surprises from a page-level CSS reset.</li>
+<li><strong>Universal placement.</strong> It works in <code>&lt;img&gt;</code>, CSS <code>url()</code>, favicon links, and any tooling that only accepts URL strings — places where pasting raw <code>&lt;svg&gt;</code> markup is impossible.</li>
+<li><strong>Self-contained deliverables.</strong> A page that embeds its icons as data URIs works as a single file with no side requests — handy for demos, email templates, and offline docs.</li>
+<li><strong>A hard trust boundary.</strong> In image context the browser will not execute the SVG's scripts at all. An SVG data URI cannot do what inline markup can; it still deserves sanitizing if it came from an untrusted source, but it cannot run as document content.</li>
+</ul>
+
+<p>Against that: the string is opaque. Debugging a rendering bug means decoding the Base64 back to readable markup — the <a href="/base64-to-svg">Base64 to SVG</a> decoder takes a paste — and the payload grows by about a third, with no separate cache entry, as covered above.</p>
+
+<h2>Percent-encoding or Base64?</h2>
+
+<p>SVG is text, so Base64 is not the only option. Both of these are valid <code>image/svg+xml</code> data URIs for the same tiny circle:</p>
+
+<pre><code>data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAxNiAxNiI+PGNpcmNsZSBjeD0iOCIgY3k9IjgiIHI9IjYiLz48L3N2Zz4=
+
+data:image/svg+xml,%3Csvg%20xmlns%3D%22http%3A%2F%2Fwww.w3.org%2F2000%2Fsvg%22%20viewBox%3D%220%200%2016%2016%22%3E%3Ccircle%20cx%3D%228%22%20cy%3D%228%22%20r%3D%226%22%2F%3E%3C%2Fsvg%3E</code></pre>
+
+<p>How the two trade off:</p>
+
+<ul>
+<li><strong>Base64 is quoting-safe.</strong> Its alphabet contains no quotes, angle brackets, or ampersands, so the string drops into a double-quoted HTML attribute or a CSS <code>url("…")</code> without a second escaping pass. It always adds roughly a third to the size and turns the markup unreadable.</li>
+<li><strong>Percent-encoding stays readable.</strong> You can still see the SVG structure inside the string, which helps debugging and code review. Its length depends on how much of the markup needs escaping — with light cleanup such as removing line breaks and switching to single-quoted attributes, it often lands near the source size and sometimes beats the Base64 form. In exchange it demands care with context-sensitive characters like <code>%</code>, <code>#</code>, and quotes; a missed escape is a classic cause of an SVG data URI that renders blank.</li>
+</ul>
+
+<p>Neither form is more correct, and every modern browser handles both. Pick percent-encoded when you want the string inspectable and diffable; pick Base64 when the string passes through strict quoting contexts, templates, or tooling that expects it. Encode with <a href="/svg-to-base64">SVG to Base64</a>; decode with <a href="/base64-to-svg">Base64 to SVG</a> when a string needs inspecting.</p>
+
+<h2>Choosing by use case</h2>
+
+<p>The shortest correct answer is usually one of four moves:</p>
+
+<div class="cmp-scroll">
+<table class="cmp">
+<caption>SVG delivery route decision matrix</caption>
+<thead><tr><th>Situation</th><th>Better fit</th><th>Why</th></tr></thead>
+<tbody>
+<tr><th>Icon must react to hover, focus, or the site theme</th><td>Inline <code>&lt;svg&gt;</code></td><td>Page CSS, <code>currentColor</code>, and variables reach inside</td></tr>
+<tr><th>Icon lives in CSS <code>background-image</code></th><td>Data URI</td><td><code>url()</code> takes a URL, not markup; a data URI needs no extra request</td></tr>
+<tr><th>Same artwork pasted into the page more than once</th><td>Data URI, or <code>&lt;use&gt;</code></td><td>Separate documents avoid duplicate-id clashes</td></tr>
+<tr><th>Large illustration reused across many pages</th><td>External <code>.svg</code> file</td><td>Own cache entry; keeps every HTML document lean</td></tr>
+<tr><th>Favicon</th><td>Data URI</td><td>One string in a <code>&lt;link&gt;</code> tag, no extra request</td></tr>
+</tbody>
+</table>
+</div>
+
+<h3>The favicon case</h3>
+
+<p>Favicons deserve their own note because most trade-offs barely apply. The artwork is tiny, it appears on every page, and there is no styling to preserve. A single line like <code>&lt;link rel="icon" href="data:image/svg+xml;base64,..."/&gt;</code> removes a network request and keeps the icon next to the markup that references it. SVG favicons work in most modern browsers, though Safari has historically been the holdout — keep a PNG fallback alongside. The <a href="/base64-favicon">Base64 favicon</a> page has a ready-to-paste snippet.</p>
+
+<h3>Summary</h3>
+
+<ul>
+<li><strong>Use inline SVG when</strong> the artwork must respond to page styling, you need <code>&lt;use&gt;</code> reuse within one document, or DOM accessibility labels matter. Watch for duplicate ids, and only inline markup you trust.</li>
+<li><strong>Use a data URI when</strong> the SVG is a CSS background, a favicon, a repeated paste, or part of a self-contained file. Expect a larger payload and no separate cache entry.</li>
+<li><strong>Use an external file when</strong> the SVG is large or shared across pages. Both inline copies and data URIs stop making sense at some size — the thresholds are laid out in <a href="/when-not-to-inline-base64">when not to inline Base64</a>.</li>
+</ul>
+
+<p>One cross-cutting rule ties the routes to security: inline SVG runs scripts, SVG-as-image never does, and SVG loaded as a document through <code>&lt;object&gt;</code> or <code>&lt;iframe&gt;</code> runs them again. If your site ships a Content-Security-Policy, <a href="/data-uri-csp-security">data URIs and CSP</a> explains which directives need <code>data:</code> — and which must never get it.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Photo privacy">
+        <span class="head">Photo privacy</span>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

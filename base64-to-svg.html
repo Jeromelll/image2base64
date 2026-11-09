@@ -151,36 +151,110 @@
     <div class="wrap prose">
       <h2>Base64 to SVG, explained</h2>
       <p>
-        SVG is different from raster formats: it's text-based vector markup, not pixels. This decoder turns a Base64 SVG
-        string back into an <strong>.svg</strong> file you can preview or download. Because SVG is vector,
-        it scales to any size without blur.
+        SVG is not a picture of a shape; it is a description of one. The file is XML — <code>&lt;path&gt;</code>,
+        <code>&lt;rect&gt;</code>, <code>&lt;circle&gt;</code>, <code>&lt;g&gt;</code>, style rules, and coordinates
+        — which the renderer draws at whatever size you ask for. That is why this decoder takes a different route from
+        the raster pages on this site. It base64-decodes the string, checks that the bytes really are SVG, and hands
+        you back the original markup. There is no canvas step and no re-encode, so nothing about the vector data is
+        altered on the way through.
       </p>
 
-      <h3>When to choose SVG</h3>
+      <h3>Why rasterizing would ruin the file</h3>
+      <p>
+        The tempting shortcut with any "convert to image" tool is to render the source into a bitmap and save that.
+        For SVG it destroys the only thing that makes the format useful. A canvas snapshot bakes in one resolution:
+        the file becomes pixels, stops scaling cleanly, and can no longer be edited as markup. A 24-pixel icon
+        rendered at 24 pixels is a 24-pixel PNG with a vector's name. Keeping the original bytes means the file you
+        download still opens in a text editor, still scales to a billboard, and still responds to
+        <code>currentColor</code> and CSS variables.
+      </p>
+      <p>
+        The trade-off is that this page cannot rescue malformed input. If the decoded bytes are not valid SVG, there
+        is nothing to hand back, and the decoder rejects the string instead of producing a broken file. That is
+        stricter than a raster tool, and it is the correct behaviour.
+      </p>
+
+      <h3>Two kinds of SVG data URI, and how to tell them apart</h3>
+      <p>
+        An inline SVG can be carried in a data URI in two ways, and both are legitimate:
+      </p>
       <ul>
-        <li><strong>Icons, logos, illustrations.</strong> Crisp at every resolution.</li>
-        <li><strong>You need to edit the source.</strong> SVG is plain XML you can open and tweak.</li>
-        <li><strong>Small, reusable assets for CSS.</strong> Common in sprites and inline styles.</li>
+        <li><strong>Base64</strong> — <code>data:image/svg+xml;base64,PHN2ZyB4bWxucz0...</code>. The body is a
+        Base64 alphabet: letters, digits, <code>+</code>, <code>/</code>, and <code>=</code> padding. It usually
+        begins with <code>PHN2Zy</code>, which is <code>&lt;svg</code> after encoding.</li>
+        <li><strong>Percent-encoded</strong> — <code>data:image/svg+xml,%3Csvg%20xmlns%3D...</code>. The body is the
+        markup itself with reserved characters escaped as <code>%XX</code>. It often still contains readable tag
+        names and attribute values.</li>
       </ul>
+      <p>
+        The presence of <code>;base64,</code> after the MIME type is the definitive marker. If it is there, decode as
+        Base64. If it is absent, the body is text that needs percent-decoding, and pasting it into a Base64 decoder
+        will produce garbage or an error. A raw percent-encoded URI is also usually shorter, because SVG is mostly
+        ASCII and Base64 spends roughly a third of its length on overhead.
+      </p>
+      <p>
+        Many SVGs you find in stylesheets are the percent-encoded kind, because hand-authored CSS tends to use the
+        shorter form. If you need to go the other direction and produce a Base64 URI from a file,
+        <a href="/svg-to-base64">SVG to Base64</a> is the encode counterpart.
+      </p>
 
       <h3>What you can paste</h3>
       <ul>
-        <li><strong>A full data URI</strong> — <code>data:image/svg+xml;base64,PHN2Zy...</code>. Names the exact format, most reliable.</li>
+        <li><strong>A full data URI</strong> — <code>data:image/svg+xml;base64,PHN2Zy...</code>. Names the exact format and is the most reliable input.</li>
         <li><strong>A bare Base64 body</strong> — verified as SVG before it is previewed or downloaded.</li>
+        <li><strong>A wrapped string</strong> — line breaks from a formatter or an email client are tolerated.</li>
       </ul>
 
-
-      <h3>Raster Base64 cannot become a real SVG</h3>
+      <h3>Raster input cannot become a real SVG</h3>
       <p>
-        This page only accepts <code>image/svg+xml</code> data. A PNG or JPEG string is rejected — there is no
-        vectorization step. The download is the original SVG markup, not a canvas snapshot, so you can open it
-        in a text editor. To inspect mixed unknown strings, use <a href="/base64-to-image">Base64 to image</a>.
+        This page accepts <code>image/svg+xml</code> data only. A PNG, JPEG, GIF, or WebP string is rejected, because
+        there is no vectorization step here — tracing a bitmap into paths is a different problem with a different set
+        of tools, and the result is an approximation, not a recovery. If you paste an unknown string and are not sure
+        what it holds, <a href="/base64-to-image">Base64 to image</a> auto-detects the format and shows you the
+        preview first.
+      </p>
+
+      <h3>SVG can carry scripts — context decides whether they run</h3>
+      <p>
+        SVG is an XML document format, and XML documents can contain <code>&lt;script&gt;</code> elements and event
+        attributes such as <code>onload</code>. Whether that code executes depends entirely on how the file is
+        loaded, and the difference is not cosmetic:
+      </p>
+      <ul>
+        <li><strong>Opened directly as a document</strong> — navigating to the <code>.svg</code> URL, or loading it
+        in an <code>&lt;iframe&gt;</code> or <code>&lt;object&gt;</code> — the SVG runs as its own document in most
+        browsers, and embedded scripts can execute in that origin.</li>
+        <li><strong>Referenced from <code>&lt;img&gt;</code> or CSS <code>url()</code></strong> — the SVG is treated
+        as an image, scripts do not run, and external resources are not fetched. This is the safe embedding path and
+        the one used for icons.</li>
+      </ul>
+      <p>
+        The practical rule: treat any SVG from an untrusted source as executable content until you have looked at it.
+        Decoding it here does not sanitize it — this page returns the original bytes unchanged, including any script
+        elements. If you plan to serve user-uploaded SVG, strip <code>&lt;script&gt;</code>, event handler
+        attributes, and <code>javascript:</code> URLs server-side, and serve the files with a restrictive
+        <code>Content-Security-Policy</code>. Serving them from a separate origin is the more durable fix.
+      </p>
+
+      <h3>When you actually want a raster instead</h3>
+      <p>
+        Vector is the right default for icons, logos, and diagrams, but it is the wrong answer in a few situations.
+        Some platforms reject SVG uploads outright. Email clients handle inline SVG inconsistently at best. And an
+        SVG built from thousands of traced paths can end up larger than a well-compressed PNG.
+      </p>
+      <p>
+        In those cases, rasterize deliberately rather than by accident: <a href="/base64-to-png">Base64 to PNG</a>
+        keeps transparency and hard edges, while <a href="/base64-to-webp">Base64 to WebP</a> produces a smaller file
+        for the same visual result. Pick the target size before converting, because a rasterized icon is locked to
+        whatever dimensions you chose.
       </p>
 
       <h3>Private by design</h3>
       <p>
-        Decoding uses the browser's native image handling — the string is turned into an image element locally and
-        never sent anywhere. Safe for confidential assets.
+        Decoding happens in the tab. The string is turned into a blob URL locally so the preview can render, and the
+        download is written from the same in-memory bytes. No request leaves the browser, which matters here more
+        than usual: an SVG can contain internal hostnames, font paths, or comments you would rather not hand to a
+        third-party server.
       </p>
     </div>
   </section>
@@ -264,6 +338,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -299,6 +374,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

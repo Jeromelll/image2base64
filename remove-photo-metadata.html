@@ -165,6 +165,48 @@
         forums and classified-ad sites usually keep the original file you attach — metadata included.
       </p>
 
+      <h2>Metadata is more than EXIF</h2>
+      <p>
+        EXIF is the best-known payload, not the only one. One JPEG from a phone can carry several independent
+        blocks that overlap in what they say: EXIF for camera and capture data, XMP for Adobe-style XML tags
+        that often repeat the coordinates, IPTC/Photoshop records for captions, credits and keywords, a
+        comment segment that some editors use for job notes, and a multi-picture block that can hold a second
+        frame. The MakerNote sits inside EXIF and belongs to the manufacturer rather than any public standard.
+      </p>
+      <p>
+        Full removal clears all of those. The one EXIF entry it keeps, when the file has one, is the
+        orientation flag: dropping it would make a correctly rotated photo appear on its side in any viewer
+        that honors the tag. One block it deliberately does not touch is the ICC color profile, which
+        describes how the numbers should be rendered. That is display data, not identity data, and removing it
+        can shift colors. If you use the GPS-only mode instead, captions, credits and comments stay; what goes
+        is the location directory plus the XMP and multi-picture blocks that can carry a second copy of it.
+      </p>
+
+      <h2>Lossless strip versus re-encode</h2>
+      <p>
+        Two different mechanisms get called "metadata removal", and they are not equivalent. A lossless strip
+        edits the file container: it finds the metadata segments, drops or rewrites them, and copies the
+        compressed image data across without decoding it. Quality is identical, size usually shrinks by a few
+        kilobytes, and the pixel dimensions are unchanged. A re-encode decodes the image to raw pixels, draws
+        it, and writes a new file — metadata cannot survive that, because the canvas has no place to put it,
+        but the image goes through a fresh lossy compression and may change size.
+      </p>
+      <p>
+        This tool strips losslessly for JPEG, PNG and WebP, and re-encodes only for HEIC input. That exception
+        is visible in the output: the extension becomes <code>.jpg</code>, the file size moves in either
+        direction, and very large images may come back with smaller dimensions. A quick way to tell which path
+        ran on a JPEG is the size delta — a few hundred bytes means segments were removed, tens of kilobytes
+        means the picture itself was re-compressed.
+      </p>
+
+      <h2>Which of these pages you need</h2>
+      <ul>
+        <li><strong>You want to see the fields first.</strong> Use the <a href="/exif-viewer">EXIF viewer</a>; it reads the file and changes nothing.</li>
+        <li><strong>You want the location gone but the camera and dates kept.</strong> Use <a href="/remove-gps-from-photo">remove GPS from photo</a>.</li>
+        <li><strong>You are on an iPhone and want the iOS-specific paths.</strong> Read <a href="/remove-metadata-from-photo-iphone">remove metadata on iPhone</a>, which also covers HEIC and the share-sheet toggle.</li>
+        <li><strong>You want a smaller file rather than a cleaner one.</strong> Metadata removal saves little; <a href="/compress-image-to-100kb">compress an image to 100 KB</a> is the right job for that.</li>
+      </ul>
+
       <h2>What this remover actually does</h2>
       <p>
         The tool reads the file structure directly: for a JPEG it walks the marker segments and drops the
@@ -283,6 +325,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
         <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
       </nav>
       <nav class="footer-nav" aria-label="Photo privacy">
@@ -317,6 +360,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

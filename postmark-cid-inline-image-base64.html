@@ -82,6 +82,9 @@
 <tr><td><code>ContentID</code></td><td>The CID reference used by the HTML, including <code>cid:</code> in Postmark's documented format</td></tr>
 </tbody></table></div>
 <p>Do not copy a different provider's attachment schema unchanged. For example, <a href="/sendgrid-inline-image-base64">SendGrid inline images</a> use different field names and a different convention for <code>content_id</code>.</p>
+<h2>Why a data URI in HtmlBody is the weaker bet</h2>
+<p>A browser renders a <code>data:</code> source right away, which makes the trick look safe while you are testing in a page. Mail is a different environment. Clients decide for themselves whether to honor that scheme, some sanitizers strip it, and support is uneven enough that one message renders two ways in two inboxes. Postmark accepts the payload either way, so the API response tells you nothing about the outcome.</p>
+<p>Size compounds the problem. The encoded bytes become part of <code>HtmlBody</code> itself, so a large image inflates the body rather than riding along as its own part. Clients that trim long bodies can cut the payload mid-string, which leaves a broken image and no error anywhere in the delivery log. A CID attachment keeps the body small.</p>
 <h2>Build the payload in Node.js</h2>
 <p>Save this as <code>postmark-inline.mjs</code>. It requires Node.js 18 or later and a PNG named <code>logo.png</code>. Running it normally prints a reviewable payload. Passing <code>--send</code> makes an actual API request, so use a verified sender, the intended recipient, and a server token only when you are ready to send.</p>
 <pre><code>import { readFile } from &quot;node:fs/promises&quot;;
@@ -125,9 +128,23 @@ if (!process.argv.includes(&quot;--send&quot;)) {
   console.log(result.MessageID);
 }</code></pre>
 <p>The MIME type must match the file you read. For a JPEG, change the filename and use <code>image/jpeg</code>. Do not relabel JPEG bytes as PNG. Keep real tokens in environment variables rather than the source file, and review the payload before sending.</p>
+<h2>ContentID naming: the prefix belongs to the value</h2>
+<p>Postmark's documented example puts the whole prefixed string in the field, so <code>ContentID</code> holds <code>cid:logo001</code> and the HTML holds the same characters. Exact equality is what makes the lookup work. A helper that adds <code>cid:</code> in one place and omits it in the other produces a message the client cannot reconcile, and clients disagree about whether to guess.</p>
+<p>Set the value once and reuse the variable in both spots:</p>
+<pre><code>const cid = &quot;cid:logo001&quot;;
+const attachment = { ContentID: cid, /* Name, Content, ContentType */ };
+const html = `&lt;img src=&quot;${cid}&quot; alt=&quot;Company logo&quot;&gt;`;</code></pre>
+<p>Providers differ in what they expect here, so copy the convention from the current API reference rather than from a blog post. The <a href="/brevo-transactional-base64-attachment-no-cid">Brevo attachment guide</a> covers an endpoint whose public schema does not expose this field at all, which is the opposite failure: no naming mistake, just no supported way to set the identifier.</p>
 <h2>Raw Base64, data URI, and CID are different</h2>
 <p>Raw Base64 is the encoded file content. A data URI adds a media type and prefix, for example <code>data:image/png;base64,...</code>. A CID is a reference to an attachment in a MIME message.</p>
 <p>If your upstream code returns a data URI, remove its header before placing the content in <code>Attachments.Content</code>. If your upstream code already returns raw Base64, use it directly. Encoding that text a second time produces Base64 of the string rather than Base64 of the original image bytes. The <a href="/image-to-base64-for-api">API payload guide</a> explains this boundary in more detail.</p>
+<h2>Message size, and when a hosted image wins</h2>
+<p>Encoding is mechanical: three bytes become four characters, so a file of size N lands at roughly 1.33N once it is text. A 2 MB photograph therefore adds about 2.7 MB to the request, and the delivered message carries the same weight. Provider size limits apply on top of that; read the current figures instead of assuming a round number.</p>
+<p>Past a few hundred kilobytes, hosting usually wins. A public HTTPS URL keeps the message light, lets the recipient's client cache the file, and removes the encoding step from your code. The costs are real too. Many clients withhold remote images until the recipient allows them, and the URL has to stay reachable for as long as old mail is opened. Logos and small diagrams belong in the message; photography usually belongs behind a link.</p>
+<p>The <a href="/base64-image-size-calculator">Base64 size calculator</a> turns a known file size into the encoded length, which makes that decision arithmetic rather than guesswork after a rejection.</p>
+<h2>A test loop that proves rendering</h2>
+<p>The API response confirms acceptance and nothing more. Rendering needs its own check, and the loop is short: send to a Gmail mailbox and to Outlook desktop, open each message's original source, then look at the picture with remote images blocked.</p>
+<p>In the source, confirm the image part exists with the expected <code>Content-Type</code>, a <code>Content-ID</code> identical to the value in the HTML, and <code>Content-Disposition: inline</code>. In the rendered view with remote content disabled — the default for many recipients — a CID image should still appear, because it travels inside the message and triggers no network fetch. If the picture disappears in that state, something remote is being loaded and the message is not doing what you think. Background on how clients treat inline data is in <a href="/base64-image-in-html-email">Base64 images in HTML email</a>.</p>
 <h2>Troubleshooting an image that does not render</h2>
 <p>Check the CID match first. Check that <code>Content</code> has no <code>data:</code> prefix, that its decoded bytes form the expected file, and that <code>ContentType</code> matches those bytes. Use a small image while debugging so the payload is easy to inspect.</p>
 <p>Client behavior still matters after a valid API request. An accepted message does not prove that every mail client displayed the image. Test the actual clients your recipients use; the <a href="/base64-image-not-showing-in-outlook">Outlook Base64 image guide</a> explains why a data URI inside HTML is a separate compatibility problem.</p>
@@ -153,6 +170,7 @@ if (!process.argv.includes(&quot;--send&quot;)) {
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       </nav>
       <nav class="footer-nav" aria-label="Photo privacy">
         <span class="head">Photo privacy</span>
@@ -188,6 +206,12 @@ if (!process.argv.includes(&quot;--send&quot;)) {
         <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

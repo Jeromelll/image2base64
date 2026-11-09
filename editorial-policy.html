@@ -10,8 +10,6 @@
 <meta name="theme-color" content="#5365ff" />
 <link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
 <link rel="stylesheet" href="styles.css" />
-<!-- AdSense head snippet (inserted by adsense_prep) -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
 </head>
 <body>
 <header class="site-header">
@@ -28,23 +26,30 @@
 
 <main class="wrap" style="padding:48px 0 72px;max-width:720px">
   <h1>Editorial policy</h1>
-  <p class="muted">Last updated: 2026-09-15</p>
+  <p class="muted">Last updated: 2026-11-10</p>
+  <p>This policy describes how content on Image2Base64 is written, verified, updated, and corrected.</p>
 
   <h2>What these pages are for</h2>
-  <p>Image2Base64 pages explain how to encode images to Base64 / data URIs and decode them back in the browser. Copy should stay practical, format-specific where it matters, and free of unverifiable claims.</p>
+  <p>The site publishes three kinds of pages. Converter pages host a working tool and explain exactly what that tool does to a given format — what survives a JPEG re-encode, what happens to transparency, what a HEIC file turns into. Guide pages cover the tasks around the tools: converting, resizing, embedding images in HTML or Markdown, and getting Base64 images to render inside email clients and third-party APIs. Photo privacy pages show people what their pictures carry — camera details, timestamps, location tags — and help them remove it, EXIF and GPS included. Every page falls into one of these groups, and none of the content is syndicated or purchased.</p>
 
   <h2>Accuracy</h2>
   <ul>
-    <li>Tools run client-side with the browser FileReader / canvas APIs. Pages should not imply server upload or cloud processing.</li>
-    <li>Format notes (transparency, animation, MIME prefixes) should match real browser behavior.</li>
-    <li><strong>.jpg</strong> and <strong>.jpeg</strong> are the same image format; we keep one encode URL (<a href="/jpg-to-base64">/jpg-to-base64</a>) and redirect the alias.</li>
+    <li>All tools execute inside your browser via the FileReader and canvas APIs. Pages never imply server upload or cloud processing, and readers can verify that themselves in the Network tab.</li>
+    <li>Format notes (transparency, animation, MIME prefixes) must match real browser behavior. Before an instruction is published, it is run in current versions of Chrome, Safari, and Firefox, and the page describes what those tests showed. Where the browsers differ, the page says so rather than averaging the differences into a wrong middle ground.</li>
+    <li><strong>.jpg</strong> and <strong>.jpeg</strong> are the same image format; the site keeps one encode URL (<a href="/jpg-to-base64">/jpg-to-base64</a>) and redirects the alias instead of maintaining duplicate pages.</li>
   </ul>
 
-  <h2>Updates and corrections</h2>
-  <p>We update pages when a snippet is wrong, a link breaks, or browser behavior changes. Send corrections to <a href="mailto:jeromell@be-winner.com">jeromell@be-winner.com</a> with the URL and the suggested fix.</p>
+  <h2>Sourcing</h2>
+  <p>Claims come from two places: browser documentation published by the engine vendors, and first-hand testing on the machine the site is written on. Numbers are never invented — the size inflation from Base64 encoding, for example, follows from the encoding arithmetic itself (4 characters for every 3 bytes), not from a survey. A claim that cannot be checked by test or documentation does not go in, and pages are written from that evidence rather than paraphrased from other converter articles.</p>
+
+  <h2>Update policy</h2>
+  <p>Browsers change, so pages are re-checked when they do: new canvas behavior, changed defaults, or a shift in how an email client treats data URIs each trigger a review of the affected pages. Every page carries a last-updated line under the heading, and that line moves only for substantive edits — rewritten guidance, changed behavior notes, new tests. Typo fixes and broken-link repairs do not move the date, because the date is a freshness signal and keeping it honest matters more than making a page look new. Questions that keep arriving by email end up answered on the <a href="/faq">FAQ</a> instead of staying scattered in replies.</p>
+
+  <h2>Corrections</h2>
+  <p>Corrections go to <a href="mailto:jeromell@be-winner.com">jeromell@be-winner.com</a>. Include the page URL and the suggested fix; a report with both can usually be verified and applied in one pass. Verified errors are fixed on the page itself, and if the fix is substantive, the last-updated line changes with it. Reader corrections are handled the same way as errors found in-house: the page gets fixed, not defended. Questions about how the site is run can go to the same address or through the <a href="/contact">contact page</a>.</p>
 
   <h2>Advertising</h2>
-  <p>This site uses Google AdSense. Ads are not mixed into converter controls. We do not ask visitors to click ads or reward clicks. Cookie and vendor details live on the <a href="/privacy">privacy policy</a>; authorized sellers are in <a href="/ads.txt"><code>ads.txt</code></a>.</p>
+  <p>The site is funded by Google AdSense, and that money is kept visibly separate from the content. Ads never appear inside converter controls or between a tool's input and its output, and guides contain no paid placements or sponsored recommendations. Ad cookies and vendor details live on the <a href="/privacy">privacy policy</a>; authorized sellers are listed in <a href="/ads.txt"><code>ads.txt</code></a>. What a page says about a format is decided by testing, not by any advertising relationship.</p>
 </main>
 
 <footer class="site-footer">
@@ -61,6 +66,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -96,6 +102,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

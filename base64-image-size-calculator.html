@@ -186,6 +186,15 @@
         adds the MIME prefix — <code>data:image/png;base64,</code> is 22 characters — and because every
         character is one ASCII byte, the character count is effectively the encoded size in bytes.
       </p>
+      <p>
+        Two parts of that formula catch people out. The <code>ceil</code> means a file whose byte count is not
+        divisible by three still gets a full final group: the remainder is padded with <code>=</code>, costs
+        four characters like any other group, and pushes the total to a multiple of four. A 1,000-byte image
+        encodes to 1,336 characters, not 1,333. The unit matters just as much. This calculator reads 1 KB as
+        1,024 bytes, so a file your system labels 100 KB (102,400 bytes) and a file of exactly 100,000 bytes
+        produce different strings — 136,536 characters against 133,336. That 2.4% gap comes from the definition
+        of the unit, not from the encoder.
+      </p>
       <table class="cmp">
         <caption>Worked examples (data URI including the 22-char prefix)</caption>
         <thead>
@@ -201,12 +210,84 @@
       </table>
       <p class="cmp-note">The overhead percentage drifts down toward exactly +33.3% as files get larger; small files carry a slightly higher relative overhead because of the prefix.</p>
 
+      <h3>Where the math starts to hurt</h3>
+      <p>
+        Small files make the overhead look harmless, and that is the trap. A 100 KB image (102,400 bytes)
+        becomes 136,536 characters, or 136,558 with the standard 22-character prefix — about 133 KB of text
+        standing in for a picture that was 100 KB. A 10 MB photo (10,485,760 bytes) becomes 13,981,016
+        characters, roughly 13.3 MB of ASCII in a single unbroken run. That string is larger than plenty of
+        JSON body limits, and pasting it into a browser textarea will make the tab stutter while it lays out
+        the text.
+      </p>
+      <p>
+        The percentage itself settles as files grow: +33.4% at 100 KB, +33.3% at 10 MB. Only tiny files show a
+        visibly worse ratio, because the prefix is a fixed cost. What never settles is the absolute number, and
+        absolute numbers are what hit column widths, request limits and mail gateways.
+      </p>
+
       <h3>The verdict thresholds</h3>
       <ul>
         <li><strong>Under 5 KB — good to inline.</strong> The HTTP request you save usually outweighs the extra text, especially for icons and small logos.</li>
-        <li><strong>5-50 KB — borderline.</strong> Compress first: resizing to display dimensions and re-encoding as WebP often cuts the source by 70-90%, which changes the verdict entirely.</li>
+        <li><strong>5-50 KB — borderline.</strong> Compress first: resizing to display dimensions and re-encoding as WebP often cuts the source by 70-90%, which changes the verdict entirely. The <a href="/resize-image-to-base64">resize-before-encoding walkthrough</a> covers the pixel side of that.</li>
         <li><strong>Over 50 KB — use a file.</strong> The browser can cache a normal image independently, lazy-load it, and deliver it via CDN — none of which work for an inline string.</li>
       </ul>
+
+      <h3>The size that matters is what you send</h3>
+      <p>
+        A file has one size; the payload you hand to an API, a database column or an email body has another.
+        Three multipliers sit between them, and only one of them is Base64. First the encoding: four characters
+        for every three bytes. Second the wrapper — a JSON string value or an HTML attribute adds quoting and the
+        MIME prefix, but it does not escape anything inside the payload, because the Base64 alphabet contains no
+        quotes and no backslashes. Third, URL encoding, if the string goes into a query parameter:
+        <code>+</code> becomes <code>%2B</code>, <code>/</code> becomes <code>%2F</code> and <code>=</code>
+        becomes <code>%3D</code>, so those characters triple in length and the result no longer decodes until
+        something unescapes it. Anyone sending images through a REST endpoint should read
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a> before choosing a transport.
+      </p>
+      <p>
+        That is how a request fails while the image still looks small. Measure the body you are about to send,
+        not the file you started from. On a JSON endpoint, compare the encoded length against the documented
+        limit for the whole body and leave room for every other field in it.
+      </p>
+
+      <h3>Line wrapping and the 76-character habit</h3>
+      <p>
+        MIME set a 76-character line limit for encoded bodies, and a lot of tooling still honors it. The
+        <code>base64</code> command wraps at 76 columns unless you pass <code>-w 0</code>, Java's
+        <code>Base64.getMimeEncoder()</code> does it by design, and mail libraries insert a break at the same
+        interval. Each break costs one byte for LF or two for CRLF, which is roughly 1.3% or 2.6% stacked on top
+        of the 33.3%. Small, but not zero: a validator counting characters will reject a string the encoder
+        considers correct, and a decoder expecting a continuous run will fail on the newlines. When the string
+        has to pass a length check, encode without wrapping.
+      </p>
+
+      <table class="cmp">
+        <caption>Working backwards from an encoded budget</caption>
+        <thead>
+          <tr><th>Where it goes</th><th>Encoded budget</th><th>Source budget</th><th>What drives it</th></tr>
+        </thead>
+        <tbody>
+          <tr><th>Inline UI icon</th><td>under 1 KB</td><td>~750 B</td><td>repeats in every rule that references it</td></tr>
+          <tr><th>Favicon data URI</th><td>under 2 KB</td><td>~1.5 KB</td><td>sits in the document head on every page</td></tr>
+          <tr><th>Header logo</th><td>under 8 KB</td><td>~6 KB</td><td>one per page, no independent cache entry</td></tr>
+          <tr><th>Hero or decorative image</th><td>10-30 KB</td><td>7-22 KB</td><td>above this a cached file wins on repeat visits</td></tr>
+          <tr><th>JSON attachment field</th><td>the endpoint limit</td><td>limit ÷ 1.334</td><td>shared with every other field in the body</td></tr>
+          <tr><th>Email signature image</th><td>up to ~7 KB</td><td>2-5 KB</td><td>clients differ; plan for the smallest cap you must support</td></tr>
+        </tbody>
+      </table>
+      <p class="cmp-note">Source budget = encoded budget ÷ 1.334. Round down, and only ignore the newline case if you control the encoder.</p>
+
+      <h3>Checking a number you do not trust</h3>
+      <p>
+        When the calculator and your code disagree, the cause is usually one of four things: the byte count you
+        typed was a rounded label from a file manager, the encoder wrapped lines, the measured string included
+        the MIME prefix and surrounding quotes, or the payload was counted in UTF-16 units instead of bytes. To
+        settle it, take the string your code produced, remove the <code>data:…;base64,</code> prefix, strip
+        whitespace, then check two properties — the remainder is a multiple of four, and its length equals
+        <code>4 × ceil(bytes / 3)</code>. If both hold, the encoder is right and the budget was wrong. If the
+        length falls short by a few characters, the string was truncated somewhere between the encoder and the
+        place you measured it.
+      </p>
 
       <h3>Why the numbers matter more than the rule</h3>
       <p>
@@ -214,7 +295,9 @@
         overhead on the wire, but not all of it — and none of it on disk. Reusing the same data URI across
         many pages repeats the bytes every time, where a hosted file downloads once. Measure, compare, then
         decide; if the answer is "compress first", the <a href="/compress-png-to-base64">compress + encode tool</a>
-        does both steps in one pass.
+        does both steps in one pass. For measured numbers on what compression actually recovers, see
+        <a href="/base64-overhead-measured">how much bigger Base64 really is</a>, and for the cases where a
+        string is the wrong answer outright, <a href="/when-not-to-inline-base64">when not to inline Base64</a>.
       </p>
     </div>
   </section>
@@ -258,6 +341,14 @@
         <summary>Can I reduce the size before encoding?</summary>
         <p>Yes — that is the only real lever. Resize to display dimensions and re-encode as WebP or JPG. The <a href="/compress-png-to-base64">compressor on this site</a> does both steps in one pass.</p>
       </details>
+      <details>
+        <summary>Is a kilobyte 1,000 bytes or 1,024 here?</summary>
+        <p>1,024. The calculator uses binary units, so 1 KB is 1,024 bytes and 1 MB is 1,048,576. Type the raw byte count if your file manager reports decimal units — the encoded length differs by about 2.4% between the two conventions.</p>
+      </details>
+      <details>
+        <summary>Why is my encoder's output longer than this calculator says?</summary>
+        <p>Usually line wrapping. MIME-style encoders insert a break every 76 characters, which adds roughly 1.3% with LF and 2.6% with CRLF on top of the 33.3%. Encode without wrapping — <code>base64 -w 0</code>, <code>Base64.getEncoder()</code> — and the numbers match.</p>
+      </details>
     </div>
   </section>
 </main>
@@ -300,6 +391,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -335,6 +427,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

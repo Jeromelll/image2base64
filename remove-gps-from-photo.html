@@ -122,42 +122,106 @@
 
   <section class="content-section">
     <div class="wrap prose">
-      <h2>Why GPS in photos is a bigger deal than the rest of the EXIF</h2>
+      <h2>What a GPS tag physically holds</h2>
       <p>
-        Camera model and timestamps describe the file; <strong>coordinates describe your life</strong>. A
-        handful of "innocent" photos — the balcony view, the kid's school gate, the regular parking spot —
-        can map out where you live, work, and spend time. Once a geotagged file reaches a public page,
-        anyone who downloads the original can read the exact coordinates, even though nothing shows on the
-        visible image.
+        Coordinates are not stored as the decimal pair you see in a map URL. Latitude and longitude each
+        arrive as three rational numbers — degrees, minutes, seconds — with two separate ASCII tags carrying
+        the hemisphere (N or S, E or W). Altitude is another rational, paired with a reference byte that says
+        whether it is above or below sea level. The same directory can hold a UTC date stamp and a
+        time-of-day split into three rationals, an image direction in degrees from true north, and the map
+        datum, which in practice is almost always WGS-84. Because the numbers are rationals, an untouched dump
+        reads like <code>44/1, 26/1, 3344/100</code> — a form that means nothing until something divides it
+        out. The viewer on this site does that division and shows both notation styles.
       </p>
       <p>
-        Platforms differ in whether they keep it. Instagram and X re-encode uploads and typically drop the
-        block. Email attachments, file-as-document messaging, cloud storage links, Discord attachments and
-        most forums preserve the original bytes. Since you rarely control the receiving side, removing the
-        location before you hit send is the only reliable option.
-      </p>
-
-      <h2>What gets removed — and what deliberately stays</h2>
-      <p>
-        The tool rewrites the EXIF segment without these entries: latitude, longitude and their reference
-        hemispheres, altitude, GPS timestamp and date, direction/heading, and the map datum. Everything
-        outside the GPS group is untouched, so a photo journalist can still prove <em>when</em> and
-        <em>with what</em> a picture was taken without disclosing <em>where</em>. The pixels themselves are
-        never re-encoded — the output is visually and technically identical.
+        A file either has that directory or it does not. There is no partial location, no fuzzy city-level
+        guess stored alongside: if the GPS group is absent, the file carries no coordinates at all. This is
+        why the check is binary and takes one second, and why "it's probably fine" is a bad default.
       </p>
 
-      <h2>Stop geotagging at the source</h2>
+      <h2>Where geotagged files actually escape</h2>
       <p>
-        Cleaning existing files fixes the past. For future shots, turn the camera's location access off:
+        The obvious channels are the ones people already distrust. The ones that cause trouble are the
+        ordinary, workaday paths where nobody thinks about bytes:
       </p>
-      <ol>
-        <li><strong>iPhone:</strong> Settings → Privacy &amp; Security → Location Services → Camera → Never.</li>
-        <li><strong>Android:</strong> open the Camera app → Settings (gear) → toggle off "Location tags" / "Save location" (naming varies by manufacturer).</li>
-        <li>Verify with the <a href="/exif-viewer">EXIF viewer</a>: a fresh photo should show no GPS group at all.</li>
-      </ol>
+      <ul>
+        <li><strong>Marketplace and classifieds listings.</strong> A "view full size" link usually serves the file you attached, byte for byte. Three listings shot from the same balcony describe one address.</li>
+        <li><strong>Hobby forums and imageboards.</strong> Attachments are commonly stored and served unmodified, and they stay indexed long after the thread dies.</li>
+        <li><strong>Email attachments.</strong> The ordinary SMTP path does not rewrite image metadata, so the recipient gets what you sent, coordinates included. Gateway software at either end may behave differently, which is another reason not to count on it.</li>
+        <li><strong>Chat apps sending "as file" or "as document".</strong> The compressed-photo path usually re-encodes and drops the block; the document path is designed to preserve the original. Same app, different result.</li>
+        <li><strong>Cloud drive share links.</strong> The shared object is the uploaded object. Anyone with the link can download it and read the EXIF.</li>
+        <li><strong>Dating and social apps.</strong> Behavior varies by product and changes without notice. Some re-encode on upload, some keep the original behind the download link, and you cannot tell which from the outside.</li>
+        <li><strong>Your own CMS.</strong> If uploads are stored as received and served from the same object, cleaning the local file before upload is the only step that helps.</li>
+      </ul>
+
+      <h2>Two honest ways to remove it</h2>
       <p>
-        Note that turning location off loses the ability to sort your own library by place. A middle path:
-        keep tagging on, and run anything you're about to publish through this page first.
+        The first family rewrites the container. On a JPEG this page walks the marker segments, finds the EXIF
+        APP1 block, rebuilds it without the GPS directory, and copies the compressed scan data across
+        untouched; on a PNG it rebuilds the <code>eXIf</code> chunk the same way, and on WebP it rewrites the
+        EXIF chunk.
+        The pixels are never decoded, so nothing is re-quantized and the output opens at exactly the same
+        quality. Two other segments are dropped at the same time on purpose: XMP can repeat the coordinates in
+        XML, and the multi-picture block can hold a second, smaller frame. Leaving either in place would
+        defeat the point of a location strip.
+      </p>
+      <p>
+        The second family decodes the image and writes a new file. Draw the photo into a canvas, export it,
+        and the metadata cannot survive — the canvas holds pixels and nothing else. That approach is
+        thorough, and it costs you a JPEG generation: the output is re-compressed, the file size changes,
+        and any color profile the original carried may be lost. For a portfolio image or a print, that
+        matters. For a quick forum post, it usually does not.
+      </p>
+      <p>
+        A third option exists for batches on a desktop: a command-line tag editor can clear the location
+        group in place across a folder. If you already have that tool installed, it is the fastest route for
+        hundreds of files. For one photo on a machine you do not want to configure, this page is quicker.
+      </p>
+
+      <h2>Approaches that look like they work</h2>
+      <p>
+        A few popular habits remove less than people assume. An in-app "hide location" switch in a social
+        product usually governs that product's own upload pipeline; export the same file to a drive and the
+        tag is still there. Renaming the file, changing its extension or putting it in a ZIP changes nothing
+        about the bytes inside. Many photo editors copy the source EXIF onto their output as a feature, so
+        cropping or color-grading a geotagged photo can produce a new file that still carries the old
+        coordinates. And a screenshot is genuinely clean — capturing the frame drops the original block
+        entirely — but you lose resolution, you may capture interface chrome around the picture, and you end
+        up with a PNG that is often larger than the JPEG you started with. It is a real fix with a real cost,
+        not a free one.
+      </p>
+
+      <h2>Confirm the strip in about ten seconds</h2>
+      <p>
+        Do not trust the file name. A copy saved as <code>photo_no-gps.jpg</code> is only a naming
+        convention; nothing enforces it. Reopen the downloaded copy in the
+        <a href="/exif-viewer">EXIF viewer</a> and read the summary line: it should report fewer entries and
+        state plainly that no GPS location is embedded, while camera and date rows remain. The entry count
+        should drop by a handful, not to zero — a full wipe means you used the wrong mode or the wrong tool.
+        Comparing file sizes gives a second signal: removing one directory typically takes a few hundred
+        bytes, whereas a drop of tens of kilobytes suggests the image was re-encoded.
+      </p>
+
+      <h2>Stop the tag at the source</h2>
+      <p>
+        Cleaning old files fixes the past; a camera setting fixes the future. On an iPhone, open
+        Settings → Privacy &amp; Security → Location Services → Camera and set it to Never. On Android, open
+        the Camera app's settings and switch off the location-tag option, whose label differs by
+        manufacturer. Then take one test shot and drop it into the viewer: no GPS group means the change took
+        effect. The trade-off is real — your library can no longer group photos by place, and a few
+        third-party camera apps lose features that depend on location. Plenty of people keep tagging on and
+        clean files at publish time instead, which is why this page exists.
+      </p>
+
+      <h2>When location is not the only thing you want gone</h2>
+      <p>
+        Keeping the camera and date is often deliberate: a photojournalist can show when a frame was shot and
+        with what, without disclosing where. If that is not your situation — a client deliverable, a public
+        profile picture, a photo of your own front door — the wider strip on the
+        <a href="/remove-photo-metadata">metadata remover</a> clears the device strings as well, and the
+        <a href="/remove-metadata-from-photo-iphone">iPhone page</a> covers the share-sheet shortcuts that
+        already handle location on iOS. Either way, the image itself is unchanged: removing metadata never
+        crops, never resizes, and never alters what a viewer sees.
       </p>
     </div>
   </section>
@@ -184,6 +248,14 @@
       <details>
         <summary>Do social platforms strip it anyway?</summary>
         <p>Some re-encode and drop EXIF, but email, document-style messaging, cloud drives and many forums preserve the original file. Cleaning first means you never have to guess.</p>
+      </details>
+      <details>
+        <summary>Does the cleaned file keep the same checksum?</summary>
+        <p>No. Dropping the location directory changes the bytes, so any SHA or MD5 you recorded for the original no longer matches. That is expected: the pixels are identical, the container is not.</p>
+      </details>
+      <details>
+        <summary>Can the coordinates be recovered from the cleaned copy?</summary>
+        <p>Not from that file. The directory is gone, and nothing else in a JPEG, PNG or WebP duplicates it once XMP and the multi-picture block are dropped too. Any earlier copy you still have, or an upload made before cleaning, is a separate question.</p>
       </details>
     </div>
   </section>
@@ -241,6 +313,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
         <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
       </nav>
       <nav class="footer-nav" aria-label="Photo privacy">
@@ -275,6 +348,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

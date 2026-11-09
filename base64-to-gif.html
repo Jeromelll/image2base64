@@ -150,43 +150,94 @@
     <div class="wrap prose">
       <h2>Base64 to GIF, explained</h2>
       <p>
-        A Base64 image string is just text that encodes an image's binary data. This decoder reverses the process for the
-        GIF format: paste the string, preview the picture, and save it back as a <strong>.gif</strong> file. GIF is a
-        lossless format limited to 256 colors per frame — great for simple graphics, icons, and short looping
-        animations where file size matters more than photographic detail.
+        Paste a Base64 string or a data URI, preview the picture, and save a <strong>.gif</strong> file. What
+        sets the GIF page apart from the other decode pages on this site is that nothing here re-encodes your
+        image: the bytes you download are the bytes the string was encoding, verified against the GIF file
+        signature before a download link is created.
       </p>
 
-      <h3>When to choose GIF</h3>
+      <h3>Byte passthrough, and why it has to work that way</h3>
+      <p>
+        Browsers decode GIF natively — that is why the preview animates. What browsers cannot do is write GIF:
+        there is no GIF encoder behind the canvas API, so no browser-side tool can redraw an image and save it
+        as an animated GIF. A page that outputs GIF honestly has exactly one option, which is to hand back the
+        original bytes unchanged. That constraint is why the file you download here always matches its source —
+        same frames, same palette, same loop behavior, byte for byte.
+      </p>
+      <p>
+        The practical payoff shows up in round trips. If the string came from
+        <a href="/gif-to-base64">GIF to Base64</a>, decoding it here returns the exact file you started with.
+        Nothing between the two steps ever touched the image data, so there is nothing to degrade.
+      </p>
+
+      <h3>The 256-color ceiling belongs to the format</h3>
+      <p>
+        GIF stores at most 256 colors per frame in its palette. The limit is part of the format definition, so
+        it appears in every GIF ever made — this tool neither adds it nor removes it. A source GIF with a
+        well-built palette (icons, logos, simple UI captures) decodes looking precisely as it always did. A
+        source GIF that was converted from a photograph already went through palette reduction and dithering
+        somewhere upstream, and that posterized look comes back in the download too, because passthrough
+        preserves it. When the image is photographic, GIF was the wrong container before it was ever Base64 —
+        decode through <a href="/base64-to-image">Base64 to image</a> to recover the original format instead.
+      </p>
+
+      <h3>When GIF is the right target, and when it is not</h3>
       <ul>
-        <li><strong>Small, simple graphics.</strong> Logos, icons, and flat illustrations stay crisp at tiny sizes.</li>
-        <li><strong>Short animations.</strong> GIF is the most universally supported looping-animation format on the web.</li>
-        <li><strong>Universal support.</strong> Every browser, email client, and chat app renders GIF without extra codecs.</li>
+        <li><strong>Right target:</strong> you have GIF bytes and want the GIF file back, animation included. Passthrough makes this the safest place to do it.</li>
+        <li><strong>Right target:</strong> flat artwork or a short loop, where the palette limit and the format's universal support matter more than its size inefficiency.</li>
+        <li><strong>Wrong target:</strong> photographs. JPEG or WebP represents them better at smaller sizes, and no amount of decoding changes what the palette already threw away.</li>
+        <li><strong>Wrong target:</strong> hoping for compression wins. GIF's compression predates modern codecs; for still images, PNG or WebP files come out smaller at equal or better quality. For animation, animated WebP is the modern alternative, and <a href="/base64-to-webp">Base64 to WebP</a> covers the decode in that direction.</li>
       </ul>
 
-      <h3>What you can paste</h3>
+      <h3>What counts as valid input</h3>
       <ul>
-        <li><strong>A full data URI</strong> — <code>data:image/gif;base64,R0lGOD...</code>. This is the most reliable form because it names the exact format.</li>
-        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The tool verifies the GIF file signature before showing a result.</li>
+        <li><strong>Full data URI.</strong> <code>data:image/gif;base64,R0lGOD...</code> — the MIME label names the format, and the signature check still verifies the bytes underneath it.</li>
+        <li><strong>Bare Base64 body.</strong> The long string by itself, with no <code>data:</code> prefix. The GIF header check is what decides whether it becomes a downloadable file.</li>
       </ul>
 
-      <h3>A note on animated GIFs</h3>
+      <h3>Animated GIFs living inside a data URI</h3>
       <p>
-        The decoder saves the original GIF bytes instead of redrawing the preview through a canvas. That means an
-        animated GIF keeps every frame, its timing, and its looping behavior in the downloaded file.
+        The same passthrough property applies while the GIF is still a string. A data URI built from an animated
+        GIF contains every frame, because Base64 encodes bytes rather than pixels. Drop that URI into an
+        <code>&lt;img&gt;</code> tag or a CSS <code>background-image</code> on a web page and the animation
+        plays exactly as the file would. The picture changes outside the browser: plenty of email clients strip
+        data URIs outright, animated or not, which makes inlined GIFs a web technique rather than a mailing one.
       </p>
 
-
-      <h3>Original GIF bytes, not a canvas GIF</h3>
+      <h3>Reading the two GIF headers</h3>
       <p>
-        This page accepts GIF only and downloads the decoded bytes. Frames, timing, and loop count stay intact.
-        It will not convert a PNG or JPEG into a GIF. For unknown strings, start at
-        <a href="/base64-to-image">Base64 to image</a>.
+        Before offering the download, the decoder checks the head of the decoded data for <code>GIF87a</code> or
+        <code>GIF89a</code>. The two names are revisions of the same spec: 87a is the original 1987 definition
+        and predates animation, while 89a introduced the extensions that carry frame timing, transparency flags,
+        and loop counts. Nearly every GIF you encounter today, still or animated, is 89a. If the check fails, the
+        string was never a GIF to begin with, and the tool stops rather than labeling a broken file
+        <code>.gif</code>.
       </p>
 
-      <h3>Private by design</h3>
+      <h3>Everything happens locally</h3>
       <p>
-        Decoding uses the browser's native image handling — the string is turned into an image element locally and
-        never sent anywhere. Safe for confidential assets.
+        Decoding and the signature check both run in the page; no request leaves the browser carrying your data.
+        Paste strings from private repositories, internal tools, or client projects freely.
+      </p>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="wrap prose">
+      <h2>Checking the file you got back</h2>
+      <p>
+        Passthrough decoding makes verification straightforward, because there is no re-encode to second-guess.
+        Three checks cover most of what can go wrong, and all three point at the string rather than the decoder:
+      </p>
+      <ul>
+        <li><strong>File size.</strong> The .gif on disk should weigh exactly what the source GIF weighed. A mismatch means the string was truncated, padded, or built from a different version of the file — not that this page altered anything.</li>
+        <li><strong>Animation.</strong> Open the download in a browser tab instead of a static image viewer, and confirm the loop count and per-frame delays match what you expected.</li>
+        <li><strong>Palette edges.</strong> If the source GIF came out of a photo conversion, inspect gradients and small text in the first frame. Palette artifacts were already inside the bytes; they will not appear or disappear here.</li>
+      </ul>
+      <p>
+        When a paste refuses to decode at all — characters outside the Base64 alphabet, leftover markup wrapped
+        around the payload — the cleanup steps live in
+        <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a>.
       </p>
     </div>
   </section>
@@ -227,6 +278,14 @@
       <details>
         <summary>Is the decoder private?</summary>
         <p>Yes. Decoding happens entirely in your browser. Nothing is uploaded, so your data stays on your device.</p>
+      </details>
+      <details>
+        <summary>Is the downloaded GIF identical to the original file?</summary>
+        <p>Yes. The decoder verifies the GIF87a/GIF89a header and then passes the original bytes through, so frames, palette, timing, and loop count come back exactly as the string encoded them. Nothing is re-encoded.</p>
+      </details>
+      <details>
+        <summary>Can I turn a PNG or JPEG string into a GIF here?</summary>
+        <p>No. The page accepts GIF data only, and the signature check rejects anything else before a download is offered. Format conversion would require re-encoding, which browsers cannot do for GIF.</p>
       </details>
     </div>
   </section>
@@ -270,6 +329,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -305,6 +365,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

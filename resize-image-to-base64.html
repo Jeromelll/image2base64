@@ -87,10 +87,15 @@
     <nav>
       <ul>
         <li><a href="#why">Why resize before encoding?</a></li>
+        <li><a href="#irreversible">Why a string can't be resized later</a></li>
         <li><a href="#how-small">How small should you go?</a></li>
         <li><a href="#code">Resize and encode in one step (JavaScript)</a></li>
+        <li><a href="#downscale">What the downscale costs in quality</a></li>
+        <li><a href="#dpi">DPI is metadata, not pixels</a></li>
         <li><a href="#no-code">No-code alternative</a></li>
+        <li><a href="#server">When the server should resize</a></li>
         <li><a href="#when-not">When to skip base64 entirely</a></li>
+        <li><a href="#decide">A short decision list</a></li>
         <li><a href="#faq">FAQ</a></li>
       </ul>
     </nav>
@@ -103,6 +108,10 @@
       <li><strong>Email and CMS restrictions.</strong> Many email clients and CRMs silently strip or truncate very large embedded images.</li>
     </ul>
     <p>If you need to check whether your payload fits, our <a href="/base64-image-size-calculator">base64 image size calculator</a> shows the exact encoded size for any input — useful before you paste a string into a size-limited field.</p>
+
+    <h2 id="irreversible">You cannot resize a Base64 string later</h2>
+    <p>A Base64 string is not an image. It is one image's byte stream transcribed into 64 printable characters, and none of the structure inside it — header, palette, scan lines — is readable until the whole payload is decoded back into a bitmap. There is no field you can edit to halve the width, and no truncation that crops rather than corrupts: change a character and the group of three bytes it carries no longer matches the original. So the only workable order is decode, resize, encode — and that second encode produces a new generation of the file.</p>
+    <p>For JPEG that matters. Every decode-resize-encode cycle re-quantizes the coefficients, so a string resized three times has been through three compressions. Keep the source file and treat the encoded string as output only. If the source is gone and all you have is the string, decode it once, save the result as a lossless intermediate, and work from that copy.</p>
 
     <h2 id="how-small">How small should you go?</h2>
     <div class="cmp-scroll">
@@ -120,6 +129,7 @@
       </table>
     </div>
     <p class="cmp-note">Resizing to the <em>display</em> dimensions is the biggest win: a logo displayed at 64×64 px doesn't need a 1024×1024 source. Dropping from 1024 px to 256 px on each side removes roughly 94% of the pixels.</p>
+    <p>Two cases get the arithmetic wrong. A retina icon needs twice the CSS size in pixels — a 32 px icon wants a 64 px source, and encoding a 32 px file makes it look soft on a high-density screen. Thumbnails go the other way: a grid of 48 px avatars should carry 48 px images, or 96 px ones if you care about 2× displays, and the per-image budget multiplies by the number of thumbnails on the page. Twenty avatars at 6 KB each is 120 KB of inline text before the HTML around them is counted.</p>
 
     <h2 id="code">Resize and encode in one step (browser JavaScript)</h2>
     <p>You don't need a separate image editor. The canvas API resizes and encodes in one pass:</p>
@@ -145,14 +155,36 @@
 
 // Usage: cap at 256×256, output ~85% JPEG quality
 const dataUri = await resizeImageToBase64(fileInput.files[0], 256, 256);</code></pre>
-    <p>Note the two independent levers: <strong>dimensions</strong> (the scale factor) and <strong>quality</strong> (the JPEG/WebP quality value). For photos, dropping quality from 100% to 80–85% typically halves the size with no visible difference; for PNG graphics with sharp edges, keep PNG and resize dimensions instead.</p>
+    <p>Note the two independent levers: <strong>dimensions</strong> (the scale factor) and <strong>quality</strong> (the JPEG/WebP quality value). For photos, dropping quality from 100% to 80–85% typically halves the size with no visible difference; for PNG graphics with sharp edges, keep PNG and resize dimensions instead. Quality applies only to lossy formats — PNG encoders ignore the value entirely, which leaves dimensions as the only lever for that kind of artwork.</p>
+
+    <h2 id="downscale">What the browser's downscale does to the pixels</h2>
+    <p><code>drawImage()</code> with a smaller destination rectangle resamples the source in a single pass, and the browser chooses the filter. The default is not the best one available: <code>ctx.imageSmoothingQuality = "high"</code> asks for the closest thing to a proper resample, while <code>low</code> and <code>medium</code> trade accuracy for speed. One large jump down also loses more than several small ones: stepping in halves keeps enough neighbouring pixels at each stage to average, which a single 8× reduction cannot do. On a photo shown at a quarter of its size the difference appears as ringing along high-contrast edges; on flat icons it is usually invisible.</p>
+    <p>Sharpness after encoding is a separate question. Downscaling softens edges, then JPEG quantization softens them again, which is why a resized and compressed logo can look worse than the same mark drawn as SVG at its final size. If the artwork started as vector, keep it vector.</p>
+
+    <h2 id="dpi">DPI is metadata, not pixels</h2>
+    <p>A 1000×1000 image tagged 300 DPI still contains 1000×1000 pixels. The tag tells a printer how tightly to pack them on paper; browsers ignore it and lay the image out at whatever CSS size the page assigns. A data URI displayed at <code>width: 64px</code> occupies 64 CSS pixels whether the file claims 72 DPI or 600, so rewriting or stripping the DPI value changes nothing about how it renders on screen. What does change is the pixel grid: 1000 px shown at 64 px means the browser decodes a million pixels and displays 4,096 of them, keeping 0.4% of the work it paid for.</p>
+    <p>DPI earns its keep in print layouts and in an editor's "actual size" preview. Inside a web payload it is dead weight — a few bytes of metadata, not a resizing control. To make the file smaller, the levers are dimensions, format and quality, in that order.</p>
 
     <h2 id="no-code">No-code alternative</h2>
     <p>Paste or drop your image into the <a href="/">image to base64 converter</a> — resize and compress options included, the encoded string updates live, and you can copy the data URI, HTML tag, or CSS declaration directly. For image-heavy workflows where base64 is the wrong tool, compare approaches in <a href="/online-vs-local-base64-converter">online vs local base64 conversion</a>.</p>
 
+    <h2 id="server">When the server should own the resize</h2>
+    <p>Browser encoding depends on the client's CPU, its canvas implementation and its ability to hold the original in memory — and it means shipping the full-size file to the client before shrinking it. A server-side resize with sharp, libvips or ImageMagick returns the same bytes for the same input every time, applies EXIF orientation consistently, drops metadata you did not intend to publish, and never sends a 4 MB original over a mobile connection to produce a 6 KB thumbnail. It also caches: resize once per source, width and format, then serve the encoded string from that result.</p>
+    <p>Local encoding still has its place. The file never leaves the machine, there is no round trip, and an image captured on that device never has to be uploaded at all.</p>
+
     <h2 id="when-not">When not to resize — when to skip base64 entirely</h2>
     <p>If the source image is over ~30 KB even after resizing, a regular file with HTTP caching almost always outperforms an inline string: the browser caches it, lazy-loads it, and keeps your HTML readable. Base64 is the right call when the constraint is <em>self-containment</em> — single-file HTML, email signatures, offline documents — not raw performance. For already-compressed sources, see our guides on <a href="/compress-jpg-to-base64">compressing JPG to base64</a> and <a href="/compress-png-to-base64">compressing PNG to base64</a>.</p>
-    <p>Once the file is small enough to inline, <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a> shows the data URI. A resized logo for a signature is covered by <a href="/base64-image-email-signature">Base64 images in email signatures</a>, and a report that must stay one file is covered by <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.</p>
+    <p>Once the file is small enough to inline, <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a> shows the data URI. A resized logo for a signature is covered by <a href="/base64-image-email-signature">Base64 images in email signatures</a>, and a report that must stay one file is covered by <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>. If the image is already close to the threshold, <a href="/when-not-to-inline-base64">when not to inline Base64</a> lays out the cases where a plain file is the better answer regardless of size.</p>
+
+    <h2 id="decide">A short decision list</h2>
+    <ol>
+      <li><strong>Is the image displayed smaller than its pixel size?</strong> Resize first — it is almost always the largest single win, and <a href="/base64-overhead-measured">the overhead measurement</a> explains why the saving survives the encode.</li>
+      <li><strong>Is it a photograph?</strong> WebP or JPEG at 80–85 quality. PNG will be several times larger for the same visible result.</li>
+      <li><strong>Is it a screenshot, icon or line drawing?</strong> Keep PNG, cut the dimensions, and switch to SVG when the source is vector.</li>
+      <li><strong>Will the same image appear on repeat visits?</strong> Keep it a file and let HTTP caching work; inline only when self-containment is the requirement.</li>
+      <li><strong>Does the destination state a size cap?</strong> Check the encoded length before pasting — the <a href="/base64-image-size-calculator">size calculator</a> returns that number without encoding anything.</li>
+      <li><strong>Do you still have the original?</strong> If not, save a lossless copy of the decoded bytes before the first re-encode.</li>
+    </ol>
 
     <h2 id="faq">Frequently asked questions</h2>
     <section class="faq-section">
@@ -192,6 +224,7 @@ const dataUri = await resizeImageToBase64(fileInput.files[0], 256, 256);</code><
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       </nav>
       <nav class="footer-nav" aria-label="Photo privacy">
         <span class="head">Photo privacy</span>
@@ -223,6 +256,12 @@ const dataUri = await resizeImageToBase64(fileInput.files[0], 256, 256);</code><
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

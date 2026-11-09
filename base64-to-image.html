@@ -154,23 +154,36 @@
     <div class="wrap prose">
       <h2>Base64 to image, explained</h2>
       <p>
-        A Base64 image string is just text that encodes an image's binary data. This decoder reverses the process:
-        paste the string and the browser reconstructs the original picture, which you can preview and save back to a
-        real file. The decoder identifies PNG, JPG, GIF, WebP and SVG from the decoded bytes, so it also works when a
-        raw Base64 value has no MIME type. It's the counterpart to the <a href="/">image to Base64</a> encoder.
+        A Base64 image string is text standing in for a file's bytes. Decode it and you get the file back — that is
+        the entire contract on this page. Paste a string or a data URI, and the decoder works out which image format
+        the bytes belong to, renders a preview, and saves a real file. The bytes are written out untouched, so what
+        lands in your downloads folder is the original image, not a redrawn approximation of it.
       </p>
 
       <h3>What you can paste</h3>
       <ul>
-        <li><strong>A full data URI</strong> — <code>data:image/png;base64,iVBOR...</code>. This is the most reliable form because it names the exact format.</li>
-        <li><strong>A bare Base64 body</strong> — just the long string with no <code>data:</code> header. The decoder detects the format from its file signature.</li>
+        <li><strong>A complete data URI</strong> — <code>data:image/png;base64,iVBOR...</code> or the equivalent for any supported type. The label announces the format up front.</li>
+        <li><strong>A bare Base64 body</strong> — the payload alone, header stripped. Detection then runs against the decoded bytes, which is why the format still gets identified correctly.</li>
       </ul>
 
-      <h3>How format detection works</h3>
+      <h3>How the format is detected</h3>
       <p>
-        PNG, JPG, GIF and WebP files begin with recognizable binary signatures. SVG is detected from its XML or
-        <code>&lt;svg&gt;</code> markup. If the bytes do not match a supported image, the tool shows an error instead
-        of downloading a file with a guessed extension.
+        Every image format writes a fixed signature into its first bytes, and because Base64 is deterministic,
+        each signature has one fixed Base64 spelling. The decoder reads the head of the decoded data and matches
+        it against the known formats:
+      </p>
+      <ul>
+        <li><code>iVBORw0KGgo</code> — PNG.</li>
+        <li><code>/9j/</code> — JPEG.</li>
+        <li><code>R0lGOD</code> — GIF, both the 87a and 89a revisions.</li>
+        <li><code>UklGR</code> — WebP.</li>
+        <li>BMP — recognized from its <code>BM</code> header.</li>
+        <li>SVG carries no binary signature; it is identified from its XML content or its MIME label.</li>
+      </ul>
+      <p>
+        When the head of the data matches none of these, the decoder stops with an error rather than downloading a
+        file with a guessed extension. That is deliberate: a wrong extension produces quieter failures downstream
+        than a clear error does.
       </p>
 
       <h3>Example Base64 image</h3>
@@ -186,20 +199,45 @@
         <li>Sanity-check the output of an encoder before shipping it.</li>
       </ul>
 
-
-      <h3>Original bytes vs format converters</h3>
+      <h3>Original bytes versus format converters</h3>
       <p>
-        This decoder writes the original decoded bytes. Pages such as <a href="/base64-to-jpg">Base64 to JPG</a>
-        and <a href="/base64-to-webp">Base64 to WebP</a> re-encode through canvas and may change quality, flatten
-        animation, or fill transparency. Use this page to recover a file; use a format page only when you want a
-        different output type.
+        This page never re-encodes. The download is the decoded data exactly as the string expressed it — same
+        dimensions, same metadata, same compression choices, same animation if the source had one. Pages aimed at a
+        single output format work differently: <a href="/base64-to-jpg">Base64 to JPG</a> and
+        <a href="/base64-to-webp">Base64 to WebP</a> draw the image onto a canvas and export a fresh encoding,
+        which is how they can change the format at all — and also why their output is not bit-identical to their
+        input. Recover a file here; convert a file on a format page.
       </p>
 
-      <h3>Private by design</h3>
+      <h3>When the decode fails</h3>
       <p>
-        Decoding uses the browser's native image handling — the string is turned into an image element locally and
-        never sent anywhere. Safe for confidential assets.
+        Two failure modes cover most bad pastes. The first is malformed Base64 — characters outside the alphabet,
+        an HTML tag wrapped around the string, a URL pasted instead of a payload. The second is valid Base64 that
+        decodes into something no supported image format claims, which trips the signature check. Both stop before
+        any file is written, and the first case is usually repairable at the source; the repair steps are laid out
+        in <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a>.
       </p>
+
+      <h3>Runs on your device</h3>
+      <p>
+        Detection, preview, and download all happen locally in the browser. The string never travels to a server,
+        so payloads lifted out of internal APIs, private databases, or customer records can be decoded without
+        exposing them anywhere new.
+      </p>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="wrap prose">
+      <h2>After the file is back on disk</h2>
+      <p>
+        Recovering the original image is usually a middle step rather than the goal. Two follow-ups cover most of
+        what people do with the download:
+      </p>
+      <ul>
+        <li><strong>Put it back into code.</strong> Once the file is renamed, cropped, or otherwise edited, run it through the encoder for its format to produce a fresh data URI for embedding.</li>
+        <li><strong>Price the inline before committing.</strong> A recovered image can be heavier than the slot it is meant to fill; check the string length it would produce with the <a href="/base64-image-size-calculator">Base64 image size calculator</a> before pasting it into a template.</li>
+      </ul>
     </div>
   </section>
 
@@ -244,6 +282,14 @@
         <summary>Is the decoder private?</summary>
         <p>Yes. Decoding happens entirely in your browser. Nothing is uploaded, so your data stays on your device.</p>
       </details>
+      <details>
+        <summary>Which Base64 signatures belong to which format?</summary>
+        <p>PNG strings begin with <code>iVBORw0KGgo</code>, JPEG with <code>/9j/</code>, GIF with <code>R0lGOD</code>, and WebP with <code>UklGR</code>. SVG has no binary signature — the decoder recognizes it from its XML markup or MIME label.</p>
+      </details>
+      <details>
+        <summary>Does this decoder re-encode my image?</summary>
+        <p>No. The format is detected from the file signature and the original decoded bytes are downloaded as-is, so dimensions, metadata, animation, and compression settings all come back exactly as they were.</p>
+      </details>
     </div>
   </section>
 </main>
@@ -286,6 +332,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -321,6 +368,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

@@ -28,28 +28,34 @@
 
 <main class="wrap" style="padding:48px 0 72px;max-width:720px">
   <h1>About Image2Base64</h1>
-  <p><strong>Image2Base64</strong> (previously shown as Base64Img) is a free developer utility for encoding images to Base64 / data URIs and decoding those strings back into files. It is an independent site, not a product of Google or of any image-hosting company.</p>
+  <p class="muted">Last updated: 2026-11-10</p>
+  <p><strong>Image2Base64</strong> is a free, independent utility site for encoding images to Base64 strings and data URIs, and for decoding those strings back into files. Older screenshots may show the header as Base64Img; it is the same site. It is not a product of Google or of any image-hosting company. The site has been operating since 2026 and is hosted on Cloudflare.</p>
+  <p>Around the converters sits a library of format guides — why a PNG with transparency behaves the way it does, how email clients treat inline images — plus compression and resizing tools, a Base64 size calculator, and a set of photo privacy utilities. Common questions are collected on the <a href="/faq">FAQ</a>.</p>
 
   <h2>Who runs it</h2>
-  <p>The site is built and operated by Jerome (GitHub <a href="https://github.com/Jeromelll" rel="noopener">@Jeromelll</a>). There is no separate company page and no user accounts. Corrections, tool bugs, and advertising questions go to <a href="mailto:jeromell@be-winner.com">jeromell@be-winner.com</a> — see the <a href="/contact">contact page</a>.</p>
-  <p>Source and issue tracker: <a href="https://github.com/Jeromelll/image2base64" rel="noopener">github.com/Jeromelll/image2base64</a>.</p>
+  <p>The site is built and operated by one person: Jerome (GitHub <a href="https://github.com/Jeromelll" rel="noopener">@Jeromelll</a>). There is no company behind it, no editorial staff, and no support desk. Source code and the issue tracker are public at <a href="https://github.com/Jeromelll/image2base64" rel="noopener">github.com/Jeromelll/image2base64</a>, so bug reports and fixes happen in the open. Corrections, tool bugs, and advertising questions go to <a href="mailto:jeromell@be-winner.com">jeromell@be-winner.com</a>; the <a href="/contact">contact page</a> explains what to include so a report can be reproduced quickly.</p>
+
+  <h2>Why everything runs in your browser</h2>
+  <p>Every converter executes locally with the FileReader and canvas APIs built into your browser. Your image is decoded, processed, and re-encoded on your own machine; the bytes never leave the device, and nothing is stored server-side. You can confirm this in the Network tab: choosing a file does not produce an upload request.</p>
+  <p>The design has three practical consequences. Privacy: a confidential screenshot, an ID scan, or a family photo can be converted without anyone else ever holding a copy. Speed: there is no round trip, so conversion takes however long your machine needs, not a turn in a server queue. Independence: once the page has loaded, the conversion itself needs no further connection.</p>
 
   <h2>What the tools do</h2>
-  <p>Every converter runs in your browser with the FileReader / canvas APIs. Images and Base64 strings are not uploaded to our servers. You can confirm that in the browser Network tab: choosing a file does not create an upload request.</p>
+  <p>The converters cover the formats developers actually run into:</p>
   <ul>
     <li>Encode: PNG, JPG/JPEG, SVG, WebP, GIF, TIFF, HEIC/HEIF, BMP</li>
     <li>Decode: Base64 / data URI → preview and download (original bytes, or a canvas export when you pick a target format)</li>
     <li>Copy helpers: raw Base64, data URI, HTML <code>&lt;img&gt;</code>, CSS</li>
   </ul>
-  <p>Guides on the site cover format-specific pitfalls (transparency, animation, MIME prefixes, email clients) rather than repeating the same “what is Base64” paragraph on every URL.</p>
+  <p>Compression and resizing tools shrink a file to a byte target before encoding, and a size calculator tells you how much text a given image will produce once encoded. Separate photo privacy utilities let you see what a photo reveals about itself — camera details, timestamps, location tags — and remove it before sharing; the <a href="/remove-photo-metadata">remove photo metadata</a> tool is the main entry point, with an EXIF viewer alongside it. Because the tools are ordinary web pages, they behave the same on Windows, macOS, Linux, Android, and iOS, with nothing to install.</p>
 
-  <h2>Why a dedicated site</h2>
-  <p>Most “image to Base64” results are either upload-to-a-server tools or one-page toys with no format notes. This site exists so a PNG with alpha, an animated GIF, a TIFF scan, or an SVG icon each has a page that states what the browser actually does — including when a conversion is <em>not</em> lossless.</p>
+  <h2>What the guides cover</h2>
+  <p>The guides deal with the cases that actually break: a PNG with alpha behaving differently after conversion, an animated GIF coming out as a still frame, the <code>data:image/png;base64,</code> prefix getting lost in a paste, or Outlook and Gmail refusing to render an inline image. Others walk through integrations — embedding images in a single HTML file, sending Base64 payloads through mail and chat APIs, uploading attachments through third-party services. Several are troubleshooting notes rather than tutorials, written for the failure modes that keep repeating: a signature image visible to the sender but not the recipient, an API that rejects a Base64 attachment because it expects multipart form data, a bot that needs the payload wrapped differently. Each guide states what the browser really does with that format, including when a conversion is <em>not</em> lossless, instead of repeating one generic paragraph about Base64 on every URL. How pages are written and verified is documented in the <a href="/editorial-policy">editorial policy</a>.</p>
 
-  <h2>Advertising</h2>
-  <p>The site uses Google AdSense to keep the tools free. Ads are not part of the converter UI. We do not ask anyone to click ads. Cookie and vendor details are on the <a href="/privacy">privacy policy</a>. Authorized sellers are listed in <a href="/ads.txt"><code>ads.txt</code></a>.</p>
+  <h2>Optional sign-in</h2>
+  <p>Signing in with Google, GitHub, or X is optional and exists purely for convenience. Every tool works without an account, and signing in does not open any upload path for image data — there is still no server pipeline for your files.</p>
 
-  <p><a href="/privacy">Privacy</a> · <a href="/editorial-policy">Editorial policy</a> · <a href="/contact">Contact</a></p>
+  <h2>How the site is funded</h2>
+  <p>Google AdSense keeps the tools free. Ads stay out of the converter interface, and guides contain no sponsored recommendations. First-party analytics are cookieless event pings used to see which tools get used; they do not build advertising profiles or follow you across sites. Cookie and vendor details are on the <a href="/privacy">privacy policy</a>, and authorized ad sellers are listed in <a href="/ads.txt"><code>ads.txt</code></a>.</p>
 </main>
 
 <footer class="site-footer">
@@ -66,6 +72,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -101,6 +108,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

@@ -187,55 +187,129 @@
     <div class="wrap prose">
       <h2>SVG to Base64, explained</h2>
       <p>
-        Encoding an SVG to Base64 turns the vector file into a plain-text string you can embed directly in CSS, HTML
-        or JSON — no separate file to host. Because SVG is <strong>resolution-independent</strong>, an inlined SVG
-        icon stays razor-sharp at any size and on any screen density.
+        Encoding an SVG produces a plain-text string that carries the whole drawing. That string can live inside a
+        stylesheet, an HTML attribute, or a JSON payload, with no second request and no file to host. This page reads
+        the file with <code>FileReader</code>, converts the bytes to Base64, and gives you both the bare string and a
+        finished <code>data:image/svg+xml;base64,...</code> URI. Because SVG is
+        <strong>resolution-independent</strong>, an inlined icon stays sharp at any size and on any pixel density —
+        the reason this trick is so common for UI assets.
       </p>
 
-      <h3>Base64 vs URL-encoding for SVG</h3>
+      <h3>What the encoder actually does</h3>
       <p>
-        SVG is itself text, so you'll see two ways to inline it in CSS: <strong>Base64</strong> and
-        <strong>URL-encoding</strong> (percent-encoding). Base64 — what this tool outputs — is the most
-        copy-paste-safe and universally compatible. URL-encoding often produces a slightly shorter string for SVG,
-        but it's easy to get the escaping wrong; Base64 is the reliable default.
+        Base64 maps every three bytes to four ASCII characters, so the output is about a third longer than the input
+        and contains nothing but <code>A-Z</code>, <code>a-z</code>, <code>0-9</code>, <code>+</code>,
+        <code>/</code>, and <code>=</code>. That alphabet is the point: it survives being pasted into CSS, dropped
+        into a JSON string, embedded in an HTML attribute, or wrapped across lines by a formatter, without any
+        character needing an escape. The trade is size — a 2 KB icon becomes roughly 2.7 KB of text.
+      </p>
+      <p>
+        The encoding is mechanical and lossless. Attribute order, comments, whitespace, and precision in
+        <code>d</code> path data all come through unchanged, because nothing parses the markup. That also means
+        minifying before encoding pays off directly: every byte you strip from the source saves about 1.33 bytes in
+        the output.
       </p>
 
-      <h3>How to use it</h3>
-      <pre><code>&lt;img src="data:image/svg+xml;base64,PHN2ZyB4bWxu..." alt="icon" /&gt;
+      <h3>Base64 or URL-encoding: pick per case</h3>
+      <p>
+        SVG is text, so there are two ways to inline it. <strong>Base64</strong> is what this tool emits. It is the
+        most copy-paste-safe option and the least likely to break when a build step, a CMS, or a templating engine
+        touches the string. <strong>Percent-encoding</strong> produces a shorter result — often noticeably so, since
+        most of an SVG is ordinary ASCII that survives unescaped — but it fails on the details: an unescaped
+        <code>#</code> in a colour value truncates the URI at a fragment, and unquoted <code>"</code> or newlines
+        inside a CSS <code>url()</code> will break the declaration.
+      </p>
+      <p>
+        Use percent-encoding when you control both ends and want the smallest possible string. Use Base64 when the
+        asset passes through systems you do not control, when it goes into JSON, or when someone else will paste it
+        by hand. The two forms are interchangeable at render time, and this page gives you the Base64 side while
+        <a href="/base64-to-svg">Base64 to SVG</a> goes back the other way if you inherit a string and need the markup.
+      </p>
 
-.icon { background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxu...); }</code></pre>
+      <h3>Where the string goes</h3>
+      <p>
+        Three placements cover almost every real use:
+      </p>
+      <pre><code>&lt;img src="data:image/svg+xml;base64,PHN2ZyB4bWxu..." alt="icon" width="24" height="24" /&gt;
+
+.icon { background-image: url(data:image/svg+xml;base64,PHN2ZyB4bWxu...); }
+
+&lt;style&gt;@font-face { src: url(data:font/woff2;base64,...) format("woff2"); }&lt;/style&gt;</code></pre>
+      <p>
+        The <code>&lt;img&gt;</code> form is the simplest and works in every current browser. The CSS form is what
+        you want for decorative marks, hover states, and pseudo-element icons where adding an element is awkward. The
+        <code>@font-face</code> line is a different asset type, but it is the same mechanism — a data URI in a
+        <code>url()</code> slot — and it is worth knowing that the browser caches an inlined font or image as part of
+        the stylesheet rather than as a separate resource.
+      </p>
+      <p>
+        One consequence of inlining is that the data travels with the CSS. A 40 KB icon set inlined into a stylesheet
+        blocks rendering until that stylesheet arrives, where forty separate requests might have loaded in parallel.
+        For one or two small marks the trade is clearly good; for a full sprite sheet it usually is not. If total page
+        weight is the concern, the <a href="/base64-image-size-calculator">Base64 size calculator</a> shows what the
+        encoding overhead costs before you commit.
+      </p>
+
+      <h3>What stops working inside an image tag</h3>
+      <p>
+        An SVG loaded through <code>&lt;img&gt;</code> or CSS <code>url()</code> is treated as an image, not as a
+        document. That sandbox is what makes inlined SVG safe, and it is also what silently disables features people
+        expect to keep:
+      </p>
+      <ul>
+        <li><strong>Scripts and event handlers</strong> do not run. <code>&lt;script&gt;</code> is ignored, and
+        attributes like <code>onclick</code> are inert.</li>
+        <li><strong>External resources</strong> are not fetched. Linked fonts, remote images, and
+        <code>xlink:href</code> references to other files fail.</li>
+        <li><strong>SMIL animation</strong> often does not play, and CSS animations inside the SVG are unreliable
+        across browsers.</li>
+        <li><strong>Interactivity</strong> is gone — no hover states, no <code>:target</code> tricks, no tooltips.</li>
+      </ul>
+      <p>
+        If you need any of that, the SVG has to be inlined as markup in the DOM — an actual
+        <code>&lt;svg&gt;</code> element in the HTML — not wrapped in a data URI. Base64 encoding is the right tool
+        for static marks and the wrong one for animated or interactive graphics. Note that encoding does not sanitize
+        either: scripts inside the source are still present in the decoded bytes, so a file from an untrusted source
+        needs cleaning before you ship it, whatever form you deliver it in.
+      </p>
 
       <h3>When to inline an SVG</h3>
       <ul>
-        <li>Small UI icons and logos you want crisp on every display.</li>
-        <li>CSS backgrounds where you'd rather not ship a separate request.</li>
-        <li>Self-contained components, emails or design tokens.</li>
+        <li>Small UI icons and logos that must stay crisp on every display.</li>
+        <li>CSS backgrounds where a separate request costs more than the bytes.</li>
+        <li>Self-contained components, HTML emails, and design tokens passed between tools.</li>
+        <li>Favicons, where a data URI avoids a request that blocks on every page load.</li>
       </ul>
-
-
-      <h3>Why Base64 SVG instead of a raw svg+xml URL</h3>
       <p>
-        You can also inline SVG as <code>data:image/svg+xml,...</code> with percent-encoding. That form breaks
-        if the markup contains unescaped <code>#</code>, quotes, or newlines. Base64 avoids those CSS
-        <code>url()</code> pitfalls. The MIME is <code>image/svg+xml</code>; the body usually starts with
-        <code>PHN2Zy</code> (<code>&lt;svg</code> in Base64).
+        The favicon case has its own constraints — some browsers want a specific MIME type and a raster fallback —
+        covered in <a href="/base64-favicon">Base64 favicon</a>. When a whole page needs to be portable as one file,
+        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a> shows the general
+        pattern.
       </p>
-      <h3>Encoding is not sanitizing</h3>
+
+      <h3>Size, caching, and the gzip question</h3>
       <p>
-        Scripts, external font URLs, and <code>xlink:href</code> to other files still behave as in the original
-        SVG. If you accept user-supplied SVG, strip scripts before encoding. This tool does not rewrite markup.
+        Base64 costs about 33 percent on the wire, but that is the uncompressed figure. Text compresses well, and a
+        server that gzips or brotli-compresses HTML and CSS shrinks the encoded payload substantially — often back
+        near the size of the original binary. The overhead is worst when the data URI sits in a file that is served
+        uncompressed, or in a context that is re-sent on every navigation.
+      </p>
+      <p>
+        Caching is the other half. A separate <code>.svg</code> file is cached independently and revalidated cheaply;
+        an inlined SVG is cached only as part of whatever document contains it. For an icon used on one page, inline
+        wins. For an icon used across a site, a cached file usually wins after the first visit. Measure before
+        assuming either way.
       </p>
 
       <h3>Private by design</h3>
       <p>
-        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server.
+        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server, no
+        temporary storage on someone else's disk. Files you are not allowed to send anywhere are fine here.
       </p>
       <p>
         Hosts differ on whether they keep the data URI.
         <a href="/embed-base64-image-in-markdown">Embedding a Base64 image in Markdown</a>
         lists GitHub, Notion, and WordPress.
-        An icon that has to travel inside one document is covered by
-        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.
         The same step in other languages is in
         <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a>.
       </p>
@@ -321,6 +395,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -356,6 +431,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Sending Images in JSON APIs: Base64 vs Multipart vs URLs</title>
+<meta name="description" content="Base64 in JSON is simple but inflates payloads by a third. When multipart uploads, presigned URLs, or separate binary fields fit better." />
+<link rel="canonical" href="https://image2base64.com/base64-in-json-apis" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image2Base64" />
+<meta property="og:title" content="Sending Images in JSON APIs: Base64 vs Multipart vs URLs" />
+<meta property="og:description" content="Base64 in JSON is simple but inflates payloads by a third. When multipart uploads, presigned URLs, or separate binary fields fit better." />
+<meta property="og:url" content="https://image2base64.com/base64-in-json-apis" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "Sending Images in JSON APIs: Base64 vs Multipart vs URLs",
+  "description": "Base64 in JSON is simple but inflates payloads by a third. When multipart uploads, presigned URLs, or separate binary fields fit better.",
+  "datePublished": "2026-11-10",
+  "inLanguage": "en",
+  "author": {"@type": "Person", "name": "Jerome", "url": "https://image2base64.com/about"},
+  "publisher": {"@type": "Organization", "name": "Image2Base64", "url": "https://image2base64.com/", "logo": {"@type": "ImageObject", "url": "https://image2base64.com/logo.png"}}
+}
+</script>
+
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h1>Sending images in JSON APIs</h1>
+      <p class="muted">Published 2026-11-10 · Base64 vs multipart vs presigned URLs</p>
+<p>JSON has no binary type. When an API schema wants an image inside a JSON body, the bytes have to become text, and Base64 is the standard way to do it. That works — the OpenAI vision and Google Cloud Vision endpoints both accept Base64-encoded images — but it is worth knowing what the encoding costs, why so many APIs demand it anyway, and when multipart or object storage is the better move.</p>
+
+<p>The short version: Base64 in JSON is fine for thumbnails and for API contracts that require it, and expensive for multi-megabyte payloads that don't.</p>
+
+<h2>What Base64 does to a JSON payload</h2>
+
+<p>Base64 encodes every 3 bytes as 4 characters, so the string is 33.3% larger than the file before any transport. A 1 MB photo becomes a roughly 1.33 MB string. Nothing you do to the JSON changes that ratio — it is arithmetic, not overhead you can tune away. <a href="/base64-overhead-measured">Measured Base64 overhead</a> walks through the numbers for several image formats.</p>
+
+<p>JSON escaping, at least, adds nothing on top. The Base64 alphabet — A–Z, a–z, 0–9, plus <code>+</code>, <code>/</code>, and padding <code>=</code> — needs no escaping inside a JSON string, so there are no <code>\u</code> sequences and no doubled quotes. The inflation stops at exactly the encoding ratio.</p>
+
+<p>The structural cost is subtler. A typical payload looks like this:</p>
+
+<pre><code>{
+  "title": "Receipt scan",
+  "image": {
+    "mime_type": "image/png",
+    "data": "iVBORw0KGgoAAAANSUhEUgAA..."
+  }
+}</code></pre>
+
+<p>The image is one enormous token in a document that parsers typically materialize in memory as a single string. Most frameworks cannot stream into a field or index into it; logging the request body dumps the whole blob; and a debugging session that prints the payload becomes useless. If the API validates the string before decoding, the server holds the 1.33x string and the decoded bytes at the same time.</p>
+
+<p>A related question is why the image cannot ride in the URL instead. URLs have practical length limits across clients and intermediaries, and a request line carrying a megabyte of encoded image is unreliable. Image payloads belong in request bodies, and in a JSON API the body is Base64.</p>
+
+<h2>Why APIs require it anyway</h2>
+
+<p>Given the costs, the number of JSON APIs that accept Base64 images needs explaining. Three reasons dominate:</p>
+
+<ul>
+<li><strong>One request, one schema.</strong> Everything travels in a single JSON document: metadata, options, and the image together. There is no second endpoint and no multipart parser, and the payload survives proxies and gateways that only understand JSON.</li>
+<li><strong>Framework gravity.</strong> JSON in, JSON out is what most web frameworks do best. Keeping an endpoint pure JSON keeps validation, auth middleware, and error responses uniform.</li>
+<li><strong>Vision models.</strong> The LLM image-input APIs are JSON-first. OpenAI's chat completions accept an <code>image_url</code> content part whose URL can be a full data URI — <code>data:image/png;base64,…</code> — which is the pattern in our <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a> guide. Google's Cloud Vision takes raw Base64, no <code>data:</code> prefix, in the <code>image.content</code> field of an <code>images.annotate</code> request; the <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a> page has the exact body, and the endpoint's request-size limits apply.</li>
+</ul>
+
+<p>Some ticketing and messaging APIs also accept Base64 attachments in their create-object payloads, while several of the same products reject Base64 for uploads and insist on multipart. Read the docs for the specific object type before building around it — the same product can support both shapes on different endpoints.</p>
+
+<p>There is also a size reality to respect. APIs that accept Base64 usually document a request-size ceiling, and that ceiling is enforced on the encoded string, not the original file. If a framework or gateway limits request bodies, the effective image limit is roughly three quarters of it after encoding — plan for the encoded size, not the file size.</p>
+
+<h2>The alternatives and their trade-offs</h2>
+
+<h3>multipart/form-data</h3>
+
+<p>The classic upload format. Image bytes go over the wire as raw binary in one part, with metadata in the other parts. No encoding tax, and servers can stream the part to disk or storage instead of buffering a giant string. Browsers speak it natively through <code>FormData</code>, and most HTTP libraries handle it in a line or two. The cost is that the endpoint stops being pure JSON: some gateways, some test tooling, and some team conventions treat multipart as a separate beast to configure.</p>
+
+<h3>Presigned URLs and direct-to-storage uploads</h3>
+
+<p>The API issues a short-lived signed URL; the client uploads the bytes straight to object storage and sends only the resulting key or reference back. Your API never touches the image bytes, so there is no decode cost, no body-size limit to negotiate, and no memory spike — at the price of an extra round trip, client-side upload logic, and expiry details to get right. This is the standard architecture once files get large or traffic grows.</p>
+
+<h3>Binary body with metadata in headers</h3>
+
+<p>For single-image endpoints: the raw image bytes are the request body with an <code>image/*</code> Content-Type, and metadata travels in custom headers or query parameters. It is maximally efficient — zero encoding overhead — and appropriately uncommon. Serializers, proxies, and logging middleware that assume JSON need explicit handling, so it fits purpose-built endpoints better than general CRUD APIs.</p>
+
+<h3>Hybrid patterns</h3>
+
+<p>Real systems often combine the options. A common split: create the record in JSON, then upload the bytes in a second call to an upload URL the first response returns. It keeps the metadata endpoint clean, lets the binary step use multipart or plain binary, and makes retries cheap because only the failing step repeats. If you control the API design, this pattern delivers most of the direct-upload benefits without a storage dependency.</p>
+
+<h2>Matching transport to size and endpoint</h2>
+
+<div class="cmp-scroll">
+<table class="cmp">
+<caption>Choosing a transport for images in APIs</caption>
+<thead><tr><th>Scenario</th><th>Better transport</th><th>Why</th></tr></thead>
+<tbody>
+<tr><th>Thumbnail or icon under roughly 100 KB inside a JSON record</th><td>Base64 in JSON</td><td>One round trip, one schema; the 33% costs little at this size</td></tr>
+<tr><th>Multi-megabyte photo, scan, or screenshot</th><td>multipart or presigned upload</td><td>Skips the encoding tax and the server-side decode peak</td></tr>
+<tr><th>Synchronous ML or vision API</th><td>Whatever the contract documents</td><td>Raw Base64 or a data URI, exactly as specified — not a place to improvise</td></tr>
+<tr><th>Client uploads, API keeps bookkeeping</th><td>Presigned URL to storage</td><td>Bytes bypass the API entirely; it sees only a reference</td></tr>
+<tr><th>Single-image endpoint with tight bandwidth</th><td>Binary body plus header metadata</td><td>No encoding overhead at all</td></tr>
+</tbody>
+</table>
+</div>
+
+<p>Reading the table, the boundary is less about a specific byte count and more about who pays for what. Base64 in JSON pushes cost onto the client (a bigger upload), the server (decode memory), and the log pipeline all at once; multipart shifts the cost to endpoint complexity; presigned uploads shift it to an extra round trip and client code. Pick where the cost is cheapest for your traffic shape.</p>
+
+<h2>Practical tips</h2>
+
+<ul>
+<li><strong>Send the shape the docs ask for.</strong> Some APIs want raw Base64; others want the full <code>data:</code> URI including the prefix. They are not interchangeable — the wrong shape usually means a 400 response. Our <a href="/image-to-base64-for-api">image to Base64 for API</a> guide shows both shapes for the common endpoints.</li>
+<li><strong>Budget for decode on the server.</strong> Decoding turns a 1.33 MB string into 1 MB of bytes, and with concurrent uploads those memory peaks stack. Enforce a request-size limit that matches the real use case, and release the string after decoding.</li>
+<li><strong>Shrink before you encode.</strong> Resizing or compressing first helps every transport, but it matters most for Base64, where the encoding tax multiplies whatever you send. If the target is a hard ceiling, <a href="/compress-image-to-100kb">compressing an image to 100 KB</a> and then encoding usually beats negotiating with transport-level tricks.</li>
+<li><strong>Don't count on request compression.</strong> Responses get gzip or Brotli routinely; request bodies usually do not. Some servers accept compressed requests and some clients can send them, but in most setups a Base64 payload travels at full size — plan sizes accordingly.</li>
+<li><strong>Respect body-size limits on the encoded string.</strong> Frameworks and gateways enforce request limits on the wire format, and Base64 rides inside the JSON body. A limit that looks generous for metadata gets tight once an image is inside it — size the limit for the encoded payload.</li>
+<li><strong>Truncate logs.</strong> A single debug line containing a full Base64 body can dwarf everything else in your log store. Log the field's length and a short prefix instead.</li>
+</ul>
+
+<h2>When Base64 in JSON makes sense</h2>
+
+<ul>
+<li><strong>Use it when</strong> the API contract requires it — including LLM vision endpoints — when the images are small, tens to a few hundred kilobytes, and when you want one request, one schema, and no upload machinery.</li>
+<li><strong>Avoid it when</strong> payloads reach into the megabytes, clients are mobile on metered connections, you need streaming or resumable uploads, or object storage is already part of the stack. Multipart or presigned uploads are cheaper in bytes, memory, and patience.</li>
+<li><strong>In between</strong>, compress or resize first and re-measure. The <a href="/base64-overhead-measured">measured overhead page</a> helps you put a number on the decision before you commit an endpoint design to it.</li>
+</ul>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Photo privacy">
+        <span class="head">Photo privacy</span>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

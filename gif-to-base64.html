@@ -187,9 +187,10 @@
     <div class="wrap prose">
       <h2>GIF to Base64, explained</h2>
       <p>
-        Encoding a GIF to Base64 turns the image's binary data into a plain-text string you can embed directly in
-        your code. <strong>GIF</strong> is best known for small animations and simple graphics; the Base64 data URI
-        keeps the original GIF bytes, including animation frames.
+        Drop a <strong>.gif</strong> file here and the page reads its bytes and folds them, unchanged, into a data
+        URI — an animation travelling as a plain-text string you can paste into HTML, CSS, JSON, or JavaScript.
+        Nothing samples or redraws the frames along the way; the encoder works on bytes, so whatever went into the
+        file is exactly what the string carries out.
       </p>
 
       <h3>How to use it</h3>
@@ -199,18 +200,24 @@
 
       <h3>Browser support</h3>
       <p>
-        A Base64 GIF data URI shows up in any browser that supports GIF — which today is every modern browser
-        (Chrome, Firefox, Safari, Edge). Encoding to Base64 doesn't change format support; it only changes how the
-        same bytes are delivered.
+        GIF support is a solved problem: the format predates the web, and every browser that can render a page can
+        render a GIF, animated or not. A data URI changes how the bytes travel, not what the browser is able to do
+        with them, so the string plays the same as the file would.
       </p>
 
-      <h3>Keep an eye on size</h3>
+      <h3>The size math for animated GIFs</h3>
       <p>
-        Base64 still adds about <strong>33%</strong> over the raw file and inlined images can't be cached on their
-        own. Animated GIFs can get large quickly, so a normal cached <code>.gif</code> file is usually faster for
-        anything beyond tiny icons, badges and single-file deliverables.
+        Two effects stack, and both deserve respect before you inline an animation. First the source: a looping
+        GIF carries image data for every frame, so it weighs several times what a comparable still image does
+        before any encoding happens. Then the encoding: Base64 trades bytes for text at a fixed exchange rate,
+        adding roughly a third to whatever it is given. A chunky animation multiplied by 1.33 can outweigh the rest
+        of the document it lives in.
       </p>
-
+      <p>
+        The string also travels inside its container rather than beside it — every page load, every JSON payload,
+        every email draft carries the full weight again, and none of it gets a cache entry of its own. That second
+        part is the real cost of inlining an animation, more than the 33 percent itself.
+      </p>
 
       <h3>Animation stays in the bytes</h3>
       <p>
@@ -219,6 +226,21 @@
         <code>background-image</code> data URIs do animate in modern browsers; many email clients still strip
         them — use a hosted <code>.gif</code> there.
       </p>
+
+      <h3>Web pages versus email clients</h3>
+      <p>
+        On a web page, an inlined GIF behaves like the file: it plays, it loops, and it needs no extra request.
+        Inside email the situation changes, because mail clients filter markup aggressively. Some strip data URIs
+        from the message body entirely, some keep the image but refuse to animate it, and support varies between
+        clients and mobile apps. The workable pattern for a newsletter is a hosted image referenced by URL, since
+        the host controls the file and the client controls nothing.
+      </p>
+      <p>
+        The client-by-client rundown lives in
+        <a href="/base64-image-in-html-email">Base64 images in HTML email</a>, and the same filtering rules
+        decide what survives in a signature.
+      </p>
+
       <h3>256 colors and the GIF signature</h3>
       <p>
         GIF is limited to 256 colors per frame. Photographs encoded as GIF look posterized; keep photos as JPG
@@ -226,7 +248,7 @@
         GIF87a/GIF89a header).
       </p>
 
-      <h3>Private by design</h3>
+      <h3>Local conversion, start to finish</h3>
       <p>
         The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server.
       </p>
@@ -237,6 +259,26 @@
         <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a>.
         A paste that will not decode — wrapped lines, or a payload that no longer starts with <code>R0lGOD</code> — is covered by
         <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="wrap prose">
+      <h2>What a good GIF-to-Base64 workflow looks like</h2>
+      <p>
+        The tool is one step in a chain, and the order matters more than the encoding itself:
+      </p>
+      <ul>
+        <li><strong>Decide the destination first.</strong> A web page, a single-file HTML deliverable, and an email draft have different rules about data URIs, and the last of those usually rules them out entirely.</li>
+        <li><strong>Keep the animation small before encoding it.</strong> Fewer frames and a tighter palette make the source file lighter, and the Base64 string shrinks with it. Cropping the canvas to the region that actually moves often removes more weight than any compression setting.</li>
+        <li><strong>Encode, then measure.</strong> Check the character count of the result against the rest of the document. If the string dominates the payload, host the file instead.</li>
+        <li><strong>Verify it animates where it lands.</strong> Paste the string into a scratch HTML file and open it in the browser you care about. Animation support varies more than static image support does, and a quick look catches it immediately.</li>
+      </ul>
+      <p>
+        If you need the reverse direction — a string back as an animated file — the
+        <a href="/base64-to-gif">Base64 to GIF</a> decoder passes the original bytes through, so the animation you
+        encoded here comes back out intact.
       </p>
     </div>
   </section>
@@ -277,6 +319,14 @@
       <details>
         <summary>Is the conversion private?</summary>
         <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The GIF is never uploaded to any server.</p>
+      </details>
+      <details>
+        <summary>Will an animated GIF still animate inside a data URI?</summary>
+        <p>Yes on web pages — the frames, delays, and loop count are all inside the encoded bytes, and CSS background-image data URIs animate too. Many email clients strip data URIs or refuse to animate them, so host the file there instead.</p>
+      </details>
+      <details>
+        <summary>How much bigger is the data URI than the GIF file?</summary>
+        <p>Base64 adds roughly a third to the source size. For animated GIFs the effect compounds, because the source already carries image data for every frame — which is why large animations are better served as a hosted file.</p>
       </details>
     </div>
   </section>
@@ -320,6 +370,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -355,6 +406,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

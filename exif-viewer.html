@@ -122,36 +122,98 @@
 
   <section class="content-section">
     <div class="wrap prose">
-      <h2>What each field means</h2>
+      <h2>What EXIF actually is</h2>
       <p>
-        A phone photo typically carries dozens of entries. The ones worth understanding:
+        EXIF is a small binary block that a camera writes next to the pixels. In a JPEG it sits in an APP1
+        segment immediately after the start-of-image marker; in a PNG it lives in an <code>eXIf</code> chunk;
+        in a WebP it is an EXIF chunk inside the RIFF container. Within the block are directories — IFD0 for
+        device basics, a sub-directory for shooting settings, a separate one for GPS — and each directory
+        holds tags made of an ID, a type, a count, and either an inline value or an offset pointing at one.
+        None of it is compressed with the picture, so a parser can read the entire thing in microseconds
+        without decoding a single pixel. That is why the field list can appear here before the thumbnail has
+        finished painting.
       </p>
+      <p>
+        The block is stamped at capture, then rewritten by every tool that touches the file afterwards. Some
+        editors append their own tags, some rebuild the block from scratch, some discard it. Two exports of
+        the same shot can therefore disagree about the camera while the pixels stay identical.
+      </p>
+
+      <h2>The fields worth reading</h2>
       <ul>
-        <li><strong>GPS latitude / longitude.</strong> The capture spot in degrees-minutes-seconds, also shown as decimal plus a map link. Absent when the camera had location turned off or the file was already cleaned.</li>
-        <li><strong>Camera make / model / lens.</strong> What shot the picture — useful for verifying your own archive, identifying a leaked file's source device, or checking gear settings behind a shot you admire.</li>
-        <li><strong>Date taken vs. file modified.</strong> The first is burned in at capture; the second changes every time the file is saved. If they diverge wildly, the file has been re-saved or edited after the fact.</li>
-        <li><strong>Exposure, ISO, aperture, focal length.</strong> The recipe of the shot. Landscape shooters compare focal lengths; low-light shooters compare ISO ceilings.</li>
-        <li><strong>MakerNote.</strong> A vendor-specific blob (Canon, Apple, Sony…) that can hold serial numbers and scene data. It rarely matters to you but can identify the device.</li>
-        <li><strong>Orientation.</strong> Why some photos display rotated in one app and upright in another — the pixels are stored one way and a flag tells the viewer to rotate.</li>
+        <li><strong>Make, Model, LensModel.</strong> What produced the file. Enough to separate a phone from a camera body with a lens attached, or to check which lens you had mounted at 35 mm.</li>
+        <li><strong>ExposureTime, FNumber, ISO, ExposureBias, FocalLength.</strong> The settings behind the frame — the practical way to reverse-engineer a look you like, or to sanity-check a claim about available light.</li>
+        <li><strong>DateTimeOriginal against DateTime.</strong> The first is stamped when the shutter fired; the second is rewritten on save. A wide gap between the two says the file was re-saved long after the shoot.</li>
+        <li><strong>GPS latitude and longitude.</strong> Three rationals per axis plus a hemisphere reference, with altitude, a UTC timestamp and a heading in the same group. The viewer turns them into decimal degrees and hands you a map link.</li>
+        <li><strong>Orientation.</strong> A value from 1 to 8 telling a renderer how to rotate or mirror the stored pixels for display.</li>
+        <li><strong>Software, Artist, Copyright.</strong> Which editor saved last, and what rights string the author attached to the file.</li>
+        <li><strong>MakerNote.</strong> An opaque vendor block. It can carry serial numbers, lens IDs, focus distance and scene flags, and no public standard describes all of it.</li>
       </ul>
 
-      <h2>Why check metadata before sharing?</h2>
+      <h2>Why the inspection has to stay local</h2>
       <p>
-        The classic scenario: a marketplace listing photo that quietly includes the coordinates of your
-        living room. Or a photographer submitting a mock-up whose EXIF names the client's studio. Checking
-        first costs two seconds and tells you exactly what you're about to hand over. If the GPS group is
-        present and the photo is going to strangers, either strip everything with the
-        <a href="/remove-photo-metadata">metadata remover</a> or delete just the location with the
-        <a href="/remove-gps-from-photo">GPS removal tool</a>.
+        Coordinates are the one field that says where you physically stood, which makes "just upload it to
+        a free online viewer" a strange trade. By the time a stranger's server finishes parsing the file, it
+        already knows your address; the decision you came to make has been made for you. The same logic
+        applies to the copy sitting in their logs, their CDN cache and their analytics pipeline.
+      </p>
+      <p>
+        This page never forms that request. The drop handler reads the bytes the browser already holds, hands
+        them to the parser, and renders the result — no multipart form, no base64 body, no worker shipping
+        the file somewhere else. You can audit it in the Network panel: look for any request that carries the
+        image, and there is none. Stronger test: disconnect the network and inspect a file anyway. A tool that
+        needs a server cannot parse offline, and this one does. If the tab dies on a very large image, that is
+        the browser's memory ceiling, not a transfer.
       </p>
 
-      <h2>Formats the viewer reads</h2>
+      <h2>What a viewer cannot tell you</h2>
+      <ul>
+        <li><strong>Who took the photo.</strong> Make and Model describe a product line sold in large numbers. A serial number buried in the MakerNote narrows it to one body, which is still not a person, and is still editable.</li>
+        <li><strong>Whether the file is untouched.</strong> Every one of these fields is bytes. A script can set the capture date to anything, and removing metadata is a single function call in most libraries.</li>
+        <li><strong>That a clean file was scrubbed.</strong> Screenshots, forwards through chat apps, CDN re-encodes and canvas exports all produce files with no EXIF. Absence describes the pipeline, not the intent.</li>
+        <li><strong>What used to be there.</strong> Once a platform or a strip tool dropped the block, those values are gone. There is no undo stored inside the image.</li>
+      </ul>
+
+      <h2>Why a photo displays sideways</h2>
       <p>
-        JPEG files carry EXIF in an APP1 segment; PNG files in an <code>eXIf</code> chunk; WebP files in an
-        EXIF chunk of the RIFF container. HEIC photos from iPhones decode in Safari. If a file contains no
-        metadata block at all, the viewer says so plainly — screenshots and re-saved downloads usually fall
-        in this group. For a deeper format-by-format tour, see the main
-        <a href="/remove-photo-metadata">metadata removal guide</a>.
+        Camera sensors are mounted at an angle to the body, so the raw pixel grid is often landscape even
+        when you held the phone upright. The firmware writes the pixels as captured and records the
+        correction in the Orientation tag; renderers that honor the tag rotate on display, renderers that
+        ignore it show the frame on its side. This is also why metadata removal needs care: the full strip
+        on the <a href="/remove-photo-metadata">metadata remover</a> keeps that single tag on purpose, so a
+        cleaned file still opens the right way up. What stripping cannot fix is a file whose pixels were
+        physically rotated and then mislabeled — there you need to rotate and re-save, which does touch the
+        image data.
+      </p>
+
+      <h2>Check before you upload</h2>
+      <p>
+        A quick triage, in the order most people hit it. Marketplace and classifieds listings: assume the
+        full-size original is downloadable, so look at the GPS group before you post. Bug reports and support
+        threads: screenshots are usually clean, camera photos are not. Client mock-ups and portfolio pieces:
+        the device string and capture date can identify the studio or the date of the shoot. Publishing
+        through a CMS that keeps originals: clean the file itself, because the copy on the CDN inherits
+        whatever you uploaded. Sorting your own archive: leave the metadata alone, it is how you search by
+        gear and place.
+      </p>
+      <p>
+        When something needs to go, strip everything with the
+        <a href="/remove-photo-metadata">metadata remover</a>, take only the coordinates out with the
+        <a href="/remove-gps-from-photo">GPS tool</a>, or follow the iOS-specific notes on the
+        <a href="/remove-metadata-from-photo-iphone">iPhone page</a>. What these pages do with your file is
+        described on the <a href="/privacy">privacy page</a>.
+      </p>
+
+      <h2>Formats this viewer reads</h2>
+      <p>
+        JPEG, PNG and WebP are parsed field by field. HEIC is the exception worth knowing about: Safari can
+        decode an iPhone HEIC, but the code path for it re-encodes the image, so you get a summary of what was
+        found instead of a tag-by-tag list. Export a JPEG from Photos when you need to read the entries
+        individually. Anything else is reported as unsupported rather than guessed at — TIFF carries EXIF as
+        well, but it sits outside this tool's scope. One more quirk: some cameras append a multi-picture block
+        holding an extra embedded frame, and the viewer lists the main image's tags without showing that
+        preview as a separate photo. For the format-by-format mechanics, see the
+        <a href="/remove-photo-metadata">removal guide</a>.
       </p>
     </div>
   </section>
@@ -178,6 +240,14 @@
       <details>
         <summary>Can I export what the viewer finds?</summary>
         <p>Yes — "Copy as JSON" puts every discovered field on your clipboard.</p>
+      </details>
+      <details>
+        <summary>Can the metadata be faked?</summary>
+        <p>Easily. Every field is plain bytes, so any library or script can rewrite the capture date, the camera model or the coordinates. Read the values as context about the file, not as proof of anything.</p>
+      </details>
+      <details>
+        <summary>Does inspecting a photo modify it?</summary>
+        <p>No. The viewer opens a read-only copy of the bytes and writes nothing back. Your file on disk keeps its name, its size and its metadata; use the metadata remover if you actually want a cleaned copy.</p>
       </details>
     </div>
   </section>
@@ -235,6 +305,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
         <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
       </nav>
       <nav class="footer-nav" aria-label="Photo privacy">
@@ -269,6 +340,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
