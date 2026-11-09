@@ -1,3 +1,13 @@
+## 2026-11-10 — AdSense 复核前的内容深度整改（PR #10）
+
+- 触发：2026-11-08 AdSense 拒信（pub-4027819746718681）；9-26 首次、11-07 第二次，同一模板。技术面排查（广告代码、ads.txt、robots/Mediapartners、可访问性、索引）全部通过，判定落在官方四类原因中的「内容不足 / 低价值内容」。
+- 改动：21 个页面正文扩到 950–1800 词（5 个 base64-to-*、svg/webp/gif-to-base64、tiff、compress、resize、extract-css、size-calculator、4 个照片隐私页、jimp/brevo/postmark、about/contact/editorial）；新增 6 篇指南（overhead 实测、邮件客户端、内联取舍、SVG 数据 URI、JSON API 传输、data: 与 CSP）+ /terms；全站 footer 增加 /terms 与 6 条新指南；privacy/contact/editorial-policy/terms 移除 AdSense 代码段；png-to-base64 去掉 h1/h2 与冗余 FAQ 里的 "Base 64" 拼写变体；sitemap 59→66 loc；llms.txt +6 指南 +terms。
+- 事实口径：base64-to-gif 与 base64-to-svg 为原始字节透传（不做 canvas 重编码），png/jpg/webp 走 canvas 重编码（quality 0.92 / 0.9）；overhead 表为本机实测（Python base64 + gzip -9，站点自有 5 个资产），不是引用值。
+- 部署：PR #10 合并提交 `f55e61e`；Workers Builds 与 GitHub Actions `42666120902` 均成功；生产 Version `23db9ccf-dd8d-4073-9d41-02f584a136d4`，100% 流量（2026-11-10 01:35 CST）。
+- 线上验收：7 个新页 200、canonical 自指、正文 1459–1784 词；23 个扩写页线上词数与本地一致（1113–1733 词）；首页 footer 含 /terms 与 6 条新指南；privacy/contact/editorial-policy/terms 无 adsbygoogle，内容页保留；sitemap 66 loc；png-to-base64 H1 为 "PNG to Base64 Converter"。
+- 门禁：`check_seo_consistency.py` fail=0（3 个既有 canonical 合并 WARN）；node 测试 34/34；`build.py` 96 个公开资源；全站 JSON-LD 可解析、站内链接无死链、无 >25% 8-gram 重复告警。
+- 未做（需 Jerome 后台操作）：确认 AdSense「网站」页显示的拒绝原因字符串；在「隐私权和消息」确认 Google CMP 已启用；核实 sephiria-guide / warhammersurvivors 使用的第二个发布商 ID `pub-8359621843582672` 归属；整改完成后重新提交审核。
+
 ## 2026-11-04 — PR #7 构建恢复并上线三个比较页正文链接
 
 - PR：#7 已合并，生产源码提交 `8894b2c695b774b1446d311a67091763d4cb514d`，保留同日 PR #6 的全部改动。

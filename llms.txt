@@ -45,6 +45,12 @@ Core user value: turn an image into a self-contained text string for inline embe
 - [OpenAI Vision Base64 Image](/openai-vision-base64-image): The image_url data URI payload GPT-4o/GPT-4.1 expect, with limits and failure modes.
 - [Cloud Vision Base64 Image](/cloud-vision-base64-image): Raw Base64 (no prefix) in images.annotate's image.content, with size limits and batching.
 - [Base64 Image in HTML Email](/base64-image-in-html-email): Data URI vs CID vs hosted — client support matrix and per-provider working patterns.
+- [How Much Bigger Is a Base64 Image?](/base64-overhead-measured): The measured 33% overhead on five real assets, and what transport compression gives back.
+- [Data URI Images in Email Clients](/base64-image-email-clients): Which clients usually render data URIs, the common failure modes, and the CID or hosted-image fallbacks.
+- [When Not to Inline Images as Base64](/when-not-to-inline-base64): Caching, repetition and render-priority costs — and the cases where inlining still wins.
+- [SVG: Data URI vs Inline SVG](/svg-base64-vs-inline-svg): Styling, id clashes and quoting for icons, favicons and CSS backgrounds.
+- [Sending Images in JSON APIs](/base64-in-json-apis): Base64 in JSON vs multipart vs presigned URLs, by image size and endpoint type.
+- [Data URIs and CSP](/data-uri-csp-security): Which directives should allow data: and which must never.
 
 ## Troubleshooting
 
@@ -71,3 +77,4 @@ Core user value: turn an image into a self-contained text string for inline embe
 - [Privacy](/privacy): Privacy policy — conversions never leave the device.
 - [Editorial Policy](/editorial-policy): Content standards.
 - [Contact](/contact): Feedback and inquiries.
+- [Terms of Service](/terms): Plain-language terms for using the free tools.
