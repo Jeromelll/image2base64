@@ -187,10 +187,10 @@
     <div class="wrap prose">
       <h2>WebP to Base64, explained</h2>
       <p>
-        Encoding a WebP to Base64 turns the image's binary data into a plain-text string you can embed directly in
-        your code. <strong>WebP</strong> is a modern format that compresses smaller than PNG or JPG at similar
-        quality and supports both transparency and animation — so its Base64 strings tend to be shorter than the
-        equivalent PNG.
+        This page takes a <strong>.webp</strong> file and returns the same image as text — a data URI you can paste
+        into HTML, CSS, JSON, or JavaScript and carry around without a file system. WebP's compression is the reason
+        developers reach for it over PNG for photographs and over GIF for animation: smaller source bytes mean a
+        shorter Base64 string riding along inside whatever document you paste it into.
       </p>
 
       <h3>How to use it</h3>
@@ -198,32 +198,62 @@
 
 .hero { background-image: url(data:image/webp;base64,UklGRni...); }</code></pre>
 
+      <h3>What the encoder does to your file</h3>
+      <p>
+        Mechanically, nothing touches the pixels. The browser reads the file as raw bytes, and Base64 maps every
+        three bytes onto four characters drawn from a fixed 64-symbol alphabet. The result is a longer string that
+        unpacks to exactly the bytes you dropped in. That is why alpha, animation, and metadata all survive: the
+        encoding step has no opinions about image content, only about bytes.
+      </p>
+
       <h3>Browser support</h3>
       <p>
-        A Base64 WebP data URI shows up in any browser that supports WebP — which today is every modern browser
-        (Chrome, Firefox, Safari, Edge). Encoding to Base64 doesn't change format support; it only changes how the
-        same bytes are delivered. If you must support very old browsers, keep a PNG/JPG fallback.
+        Every current major browser decodes WebP, and a data URI does not change that: support is a property of the
+        format, not of the delivery method. The compatibility question only reappears on machines old enough to
+        predate WebP entirely — the same machines that would also fail on a hosted .webp file. If one of those is
+        genuinely in your audience, the fix is a fallback asset, not a different encoder.
       </p>
 
-      <h3>Keep an eye on size</h3>
+      <h3>Sizing before you paste</h3>
       <p>
-        Base64 still adds about <strong>33%</strong> over the raw file and inlined images can't be cached on their
-        own. WebP's strong compression softens the hit, but for large images a normal cached <code>.webp</code> file
-        is usually faster. Reserve inlining for small icons, thumbnails and single-file deliverables.
+        The string is always longer than the file — about a third longer once the Base64 overhead lands, before any
+        transport compression gets involved. When a budget matters, run the file through the
+        <a href="/base64-image-size-calculator">Base64 image size calculator</a> first. Remember too that an inlined
+        image gives up its own cache entry: it downloads again with every document that contains it, instead of
+        being reused across pages the way a separate file is.
       </p>
 
-
-      <h3>Lossy, lossless, and animated WebP</h3>
+      <h3>Lossless format versus lossless bytes</h3>
       <p>
-        WebP has three common flavors: lossy (VP8), lossless (VP8L), and animated. This tool encodes the file
-        bytes as they are, so animation and alpha survive. The data URI always uses
-        <code>data:image/webp;base64,</code> and the body starts with <code>UklGR</code> (RIFF). Inlining a long
-        animated WebP is usually worse than a cached file — keep inlining for small static assets.
+        Two meanings of "lossless" get conflated around WebP and Base64, and separating them prevents most of the
+        confusion. WebP the codec has a lossless mode (VP8L) and a lossy mode (VP8), decided when the file was
+        created — that property is baked into the bytes. Base64 encoding is lossless at the byte level no matter
+        which mode the file uses: it maps bytes to text and back without judging their content, so it never
+        re-compresses anything. Encode a lossy WebP here and the data URI unpacks to that same lossy WebP,
+        artifacts included; encode an animated or alpha-bearing file and every frame and channel comes through,
+        because those are bytes too.
+      </p>
+      <p>
+        The data URI always carries the <code>image/webp</code> MIME label, and the encoded body starts with
+        <code>UklGR</code> — the Base64 spelling of the RIFF container header that opens every WebP file.
       </p>
 
-      <h3>Private by design</h3>
+      <h3>Choosing where the data URI goes</h3>
+      <ul>
+        <li><strong>An <code>&lt;img&gt;</code> src.</strong> The simplest placement, and the only one that carries alt text with it. Use it for content images small enough that a request would cost more than the bytes do.</li>
+        <li><strong>A CSS <code>background-image</code>.</strong> The natural home for decorative art — textures, badges, watermark-style flourishes. No alt text involved, and the string lives with the stylesheet instead of the markup.</li>
+        <li><strong>A <code>&lt;picture&gt;</code> element.</strong> Handle with care: the fallback chain needs a separate URL for each candidate, and a data URI gives you exactly one asset already fixed to its format. When a page truly needs WebP-with-PNG-fallback behavior, serve real files through <code>&lt;picture&gt;</code> and reserve data URIs for cases where a single format is enough.</li>
+      </ul>
       <p>
-        The conversion runs locally with your browser's <code>FileReader</code> API — no upload, no server.
+        The through-line across all three placements: inline when the asset is small and the alternative is an
+        extra request; keep a real cached file when the asset is large or shared across many pages.
+      </p>
+
+      <h3>Nothing leaves the browser</h3>
+      <p>
+        The file you drop in is read with <code>FileReader</code> and encoded in memory. There is no network step
+        anywhere in the flow, so unreleased product art, confidential screenshots, and client deliverables stay on
+        the machine they started on.
       </p>
 
       <h3>Example: a real WebP, converted</h3>
@@ -247,6 +277,28 @@
         <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a>.
         The file stays on this device; that split is explained in the
         <a href="/online-vs-local-base64-converter">online versus local converter comparison</a>.
+      </p>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="wrap prose">
+      <h2>When inlining a WebP is the right call</h2>
+      <p>
+        A data URI is a trade: you spend document size to avoid a network request. The trade clearly favors
+        inlining in a few situations and argues against it nearly everywhere else:
+      </p>
+      <ul>
+        <li><strong>Inline small UI assets</strong> that ship on nearly every page load — icons, logos, control glyphs. One fewer request, and no moment where the layout waits on an image that has not arrived yet.</li>
+        <li><strong>Inline when the deliverable is one file.</strong> A spec emailed as a single HTML document, a demo attached to a ticket, an offline copy of a page — none of those can reliably reference sibling image files.</li>
+        <li><strong>Keep a real file for anything large.</strong> A hero image inlined into markup has to arrive before the page can settle, while a separate file streams in parallel and caches on its own terms.</li>
+        <li><strong>Keep a real file for assets reused across pages.</strong> An inlined copy travels with every page that contains it; a shared file downloads once per visitor and is reused after that.</li>
+      </ul>
+      <p>
+        WebP shifts these thresholds in the encoder's favor compared with PNG — the same visual quality costs fewer
+        source bytes, so more assets fall inside the "small enough to inline" range — but it does not change the
+        shape of the trade. Measure the string, compare it against what the document already weighs, and let the
+        numbers make the call.
       </p>
     </div>
   </section>
@@ -287,6 +339,14 @@
       <details>
         <summary>Is the conversion private?</summary>
         <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The WebP is never uploaded to any server.</p>
+      </details>
+      <details>
+        <summary>Is Base64 encoding lossless for a lossy WebP?</summary>
+        <p>Yes — the two senses of "lossless" are separate. Base64 is lossless at the byte level for any file, so a lossy WebP comes back as the identical lossy WebP. The codec's lossiness happened when the file was created, not during encoding.</p>
+      </details>
+      <details>
+        <summary>Does encoding preserve animation and transparency?</summary>
+        <p>Yes. The encoder reads raw bytes and maps them to text without touching image content, so animated frames, the alpha channel, and metadata all arrive inside the data URI intact.</p>
       </details>
     </div>
   </section>
@@ -330,6 +390,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -365,6 +426,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

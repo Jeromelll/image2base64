@@ -182,11 +182,38 @@
         <code>data:image/…;base64</code> payload at once.
       </p>
 
+      <h3>Where data URIs actually sit in a stylesheet</h3>
+      <p>
+        <code>background-image</code> is the obvious slot, but the same syntax appears in the
+        <code>background</code> shorthand, <code>mask-image</code> and <code>-webkit-mask-image</code>,
+        <code>border-image-source</code>, <code>list-style-image</code>, <code>cursor</code>, and inside
+        <code>@font-face</code> blocks where <code>src</code> carries a font. Media queries do not change the
+        grammar: a retina override that swaps in a 2x asset still writes <code>url(data:image/png;base64,…)</code>
+        inside <code>@media (min-resolution: 2dppx)</code>. In HTML the string shows up in <code>src</code>,
+        <code>srcset</code>, <code>poster</code> and inline <code>style</code> attributes. CSS-in-JS libraries —
+        styled-components, Emotion, an arbitrary-value class in Tailwind — emit ordinary <code>&lt;style&gt;</code>
+        elements, so the payload can be present in the rendered page while the source files you have contain no
+        trace of it.
+      </p>
+
       <h3>How to use it</h3>
       <ol>
         <li><strong>Paste the source text.</strong> CSS, HTML, inline JS, raw email source, JSON — anything containing data URIs.</li>
         <li><strong>Press Extract.</strong> Each found image appears as a card with a preview, its detected format, decoded size and pixel dimensions.</li>
         <li><strong>Download what you need.</strong> Every card has a download button that saves the file with the correct extension — a PNG payload downloads as <code>.png</code>, a JPEG as <code>.jpg</code>, and so on.</li>
+      </ol>
+
+      <h3>Pulling one out by hand</h3>
+      <p>
+        Worth knowing even if you use the tool, because the manual path is what you fall back on when the
+        payload sits somewhere a scanner cannot reach — inside a string built at runtime, for example.
+      </p>
+      <ol>
+        <li><strong>Search for the scheme, not the word.</strong> Look for <code>data:image/</code>. In a minified bundle the whole file is one line, so a line-based search returns a single hit thousands of characters wide; search for the literal prefix instead.</li>
+        <li><strong>Copy the entire token.</strong> Include <code>data:</code> through the closing delimiter. If the payload has no obvious end, take everything up to the next <code>"</code>, <code>'</code>, <code>)</code> or <code>;</code>.</li>
+        <li><strong>Strip the wrapper.</strong> Keep the characters after the first comma. The MIME type before it — <code>image/png</code>, <code>image/jpeg</code>, <code>image/svg+xml</code> — tells you which extension the bytes belong in.</li>
+        <li><strong>Decode.</strong> <code>printf '%s' "$b64" | base64 -d &gt; out.png</code> from a shell, or <code>atob()</code> into a <code>Uint8Array</code> in the browser. JavaScript's <code>atob()</code> rejects whitespace, so unwrap the string first.</li>
+        <li><strong>Open the result.</strong> A viewer that renders it means the extraction worked. A viewer that refuses means the payload was truncated or mislabeled.</li>
       </ol>
 
       <h3>How the extraction works</h3>
@@ -197,6 +224,49 @@
         once (duplicates are marked), so a stylesheet that reuses the same sprite four times gives you one
         download, not four. Decoding is lossless: the downloaded bytes are a byte-for-byte copy of the
         original image, transparency and metadata included.
+      </p>
+
+      <h3>Quoting, and why url() is pickier than it looks</h3>
+      <p>
+        <code>url()</code> takes three forms: bare, single-quoted, double-quoted. The bare form ends at the first
+        <code>)</code> and disallows whitespace, quotes and parentheses, so a Base64 payload — <code>+</code> and
+        <code>/</code> are fine, <code>)</code> never appears — survives it, while a percent-encoded SVG full of
+        parentheses does not. Quoted forms accept almost anything except their own delimiter, which is why a
+        payload containing an apostrophe breaks a single-quoted URL; SVG path data and <code>font-family</code>
+        names produce those apostrophes often enough to matter. Copy the surrounding quotes along with the token.
+        If you drop them, you either cut the tail at the first quote character inside the string or drag the next
+        declaration into your selection.
+      </p>
+
+      <h3>Base64 is not the only kind of data URI</h3>
+      <p>
+        An SVG can be inlined two ways: <code>data:image/svg+xml;base64,PHN2Zy…</code>, and the percent-encoded
+        form <code>data:image/svg+xml,%3Csvg%20…</code>. Only the first is Base64. The second is UTF-8 markup
+        with reserved characters escaped, and it decodes with <code>decodeURIComponent()</code>, not
+        <code>atob()</code>. A scanner looking for Base64 will skip it, and a Base64 decoder run over it produces
+        garbage rather than an error. The trade-offs between the two forms, including which one compresses better
+        inside a stylesheet, are laid out in <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline SVG</a>.
+        If you need to go the other direction and produce a URI rather than consume one, the
+        <a href="/data-uri-generator">data URI generator</a> takes a file and returns the full string.
+      </p>
+
+      <h3>Three failures that look like corrupt files</h3>
+      <ul>
+        <li><strong>Double encoding.</strong> Some pipelines Base64 the whole data URI instead of the bytes, so one decode hands you text starting with <code>data:image/png;base64,</code>. That is a signal to decode again, not a broken image.</li>
+        <li><strong>Percent-encoding stacked on Base64.</strong> A token containing <code>%2F</code> or ending in <code>%3D%3D</code> was URL-escaped after encoding. Unescape first, then decode — the reverse order fails every time.</li>
+        <li><strong>Chunks joined at runtime.</strong> Bundlers sometimes emit <code>"data:image/png;base64,"+"iVBORw0…"</code>, or split a long literal across a line continuation. A scanner that stops at the first quote returns only the prefix, and the payload waits in the next literal.</li>
+      </ul>
+
+      <h3>Checking that the bytes are a real image</h3>
+      <p>
+        Decoded data either parses or it does not, and the first bytes say which format you actually received:
+        <code>89 50 4E 47</code> for PNG, <code>FF D8 FF</code> for JPEG, <code>47 49 46 38</code> for GIF,
+        <code>52 49 46 46</code> ("RIFF") for WebP, and an opening <code>&lt;svg</code> or <code>&lt;?xml</code>
+        for SVG. When a card previews blank but its size looks plausible, compare those bytes against the declared
+        MIME type. A mismatch means the string was mislabeled upstream, and the extension should follow the bytes
+        rather than the label. For a single payload you can also paste it into the
+        <a href="/base64-to-image">Base64 to image decoder</a>, which reports a decode error instead of showing an
+        empty frame.
       </p>
 
       <h3>Typical situations</h3>
@@ -212,7 +282,9 @@
         Percent-encoded SVGs (<code>data:image/svg+xml,%3Csvg…</code>) are not Base64 and are skipped —
         those decode with plain URL unescaping instead. And an image whose payload was truncated in a copy
         will fail to preview; the tool tells you which cards are broken rather than silently downloading
-        corrupt files.
+        corrupt files. Extraction is also often the first step of an audit: if the inline assets you just pulled
+        out are the ones a policy should be restricting, <a href="/data-uri-csp-security">data URIs and CSP</a>
+        explains what an <code>img-src</code> or <code>default-src</code> directive does to them.
       </p>
     </div>
   </section>
@@ -258,6 +330,14 @@
         <summary>Is my CSS or HTML uploaded anywhere?</summary>
         <p>No. Extraction, preview and download all run in your browser with a local scan. Nothing is sent to any server.</p>
       </details>
+      <details>
+        <summary>Why does the extracted file not open?</summary>
+        <p>Two usual causes. Either the payload was cut short while copying — the decoded byte count will not match the character count you would expect from the Base64 length — or the URI was percent-encoded as well as Base64, so it needs unescaping before decoding.</p>
+      </details>
+      <details>
+        <summary>Can I extract images from a minified CSS bundle?</summary>
+        <p>Yes, with one caveat. The scan is text-based, so length is irrelevant, but a bundle that splits a payload across concatenated string literals hides the tail from any scanner. In that case grab the pieces from the source map or from the rendered page.</p>
+      </details>
     </div>
   </section>
 </main>
@@ -300,6 +380,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -335,6 +416,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

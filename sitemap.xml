@@ -193,5 +193,40 @@
   <url><loc>https://image2base64.com/freshdesk-api-attachments-base64-not-supported</loc><lastmod>2026-11-02</lastmod></url>
   <url><loc>https://image2base64.com/sharepoint-rest-api-upload-base64-image-corrupted</loc><lastmod>2026-11-02</lastmod></url>
   <url><loc>https://image2base64.com/onedrive-graph-api-upload-base64-not-decoded</loc><lastmod>2026-11-02</lastmod></url>
+  <url>
+    <loc>https://image2base64.com/terms</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/base64-overhead-measured</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/base64-image-email-clients</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/when-not-to-inline-base64</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/svg-base64-vs-inline-svg</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/base64-in-json-apis</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://image2base64.com/data-uri-csp-security</loc>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
 </urlset>
 

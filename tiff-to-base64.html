@@ -204,16 +204,59 @@
         embed in a document template that only accepts text.
       </p>
 
+      <p>
+        The container is the part worth understanding before you encode anything. A TIFF holds one or more
+        images, and each image is described by tags: dimensions, resolution, color space, compression, and
+        where the next page's data begins. Files usually arrive either uncompressed or LZW-compressed, and
+        scanner output sometimes uses JPEG-compressed strips, CCITT group 4 for bilevel documents, or a mix
+        of methods across pages. None of that structure changes when you encode, because Base64 treats the
+        file as an opaque byte sequence.
+      </p>
+
+      <h3>What the string is good for</h3>
+      <p>
+        A TIFF data URI is a transport format, not a display format. Archives keep TIFF because it is
+        lossless and self-describing. OCR pipelines and document systems accept the bytes and pass them to a
+        decoder that understands the tags. Print workflows want full resolution and often CMYK. In all three
+        cases the Base64 string exists to move a file through a channel that only carries text.
+      </p>
+
       <h3>How to use it</h3>
+      <p>The common shape is one JSON field that holds the whole data URI:</p>
       <pre><code>{
   "scan": "data:image/tiff;base64,SUkqAAwAAAAA..."
 }</code></pre>
 
       <h3>Mind the 33% — and the browser caveat</h3>
       <p>Base64 preserves the original TIFF bytes; it does not convert them to PNG or JPEG. Preview and display depend on the browser, operating system, file encoding, and receiving service. Encoding can succeed even when a preview is unavailable. For broad web compatibility, convert the image to PNG or JPEG with a suitable tool before encoding.</p>
-
+      <p>
+        Size is the other constraint. A lossless 600 dpi letter page keeps far more detail than the same page
+        saved as JPEG, so one scan can run to tens of megabytes and a multipage file multiplies that again.
+        Encoding then adds one byte for every three: a 30 MB file leaves as roughly 40 MB of text, and that
+        text is what your JSON document, database column, or HTTP request actually carries.
+      </p>
+      <p>
+        When the file only needs to be a picture, shrinking it first beats encoding it at full size.
+        <a href="/compress-image-to-100kb">Compressing an image toward 100 KB</a> cuts the payload before the
+        encoder runs, and the <a href="/base64-image-size-calculator">Base64 size calculator</a> gives the
+        output length for a file you already have. Keep the original when fidelity is the point, compress
+        when it is not.
+      </p>
 
       <h3>Endian signatures</h3>
+      <p>
+        The first four bytes identify byte order and the format itself. Little-endian files open with
+        <code>49 49 2A 00</code>, written <code>II*\0</code>; big-endian files open with
+        <code>4D 4D 00 2A</code>, or <code>MM\0*</code>. Base64 works in three-byte groups, so the opening
+        characters of a payload are usually <code>SUkq</code> or <code>TU0A</code>, with the rest of the
+        header following immediately.
+      </p>
+      <p>
+        Decode the first characters rather than trusting a remembered constant. The prefix flips with byte
+        order, and a string that starts with neither is probably not a TIFF at all; JPEG and PNG each begin
+        with their own marker sequences. If a consumer rejects a payload that looks correct, re-read the
+        first bytes before suspecting the encoder.
+      </p>
       <p>Encoding preserves the entire TIFF file, including its byte order and any additional pages. A preview is not proof that every page was displayed; inspect multi-page files with a suitable TIFF viewer.</p>
 
       <h3>Private by design</h3>
@@ -228,6 +271,22 @@
         <a href="/fix-invalid-base64-image-data">fix invalid Base64 image data</a>
         covers a missing prefix, whitespace, and a truncated payload.
       </p>
+      <p>
+        Inside a JSON body the value has to be one unbroken run of characters. Some encoders wrap their output
+        at a fixed column width, which is legal in MIME but breaks strict decoders, so strip the newlines
+        before the string goes into a field. The <a href="/base64-in-json-apis">Base64 in JSON APIs</a> page
+        covers field framing and the request-size limits that large scans run into.
+      </p>
+      <details>
+        <summary>Does Base64 keep every page of a multi-page TIFF?</summary>
+        <p>Yes. The encoder never parses the file, so every page travels inside the string. Whether a viewer
+        displays them is a property of that viewer, not of the encoding.</p>
+      </details>
+      <details>
+        <summary>Can I convert a TIFF to PNG on this page?</summary>
+        <p>No. This tool encodes the file you give it and leaves the bytes untouched. To change format,
+        convert with something that decodes TIFF first, then encode the PNG or JPEG output.</p>
+      </details>
     </div>
   </section>
 
@@ -316,6 +375,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -352,6 +412,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>How Much Bigger Is a Base64 Image? Measured on Real Files</title>
+<meta name="description" content="Base64 adds exactly 33.3% before compression. We measured five real assets: what gzip recovers, and what actually costs you (caching, not bytes)." />
+<link rel="canonical" href="https://image2base64.com/base64-overhead-measured" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image2Base64" />
+<meta property="og:title" content="How Much Bigger Is a Base64 Image? Measured on Real Files" />
+<meta property="og:description" content="Base64 adds exactly 33.3% before compression. We measured five real assets: what gzip recovers, and what actually costs you (caching, not bytes)." />
+<meta property="og:url" content="https://image2base64.com/base64-overhead-measured" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "How Much Bigger Is a Base64 Image? Measured on Real Files",
+  "description": "Base64 adds exactly 33.3% before compression. We measured five real assets: what gzip recovers, and what actually costs you (caching, not bytes).",
+  "datePublished": "2026-11-10",
+  "inLanguage": "en",
+  "author": {"@type": "Person", "name": "Jerome", "url": "https://image2base64.com/about"},
+  "publisher": {"@type": "Organization", "name": "Image2Base64", "url": "https://image2base64.com/", "logo": {"@type": "ImageObject", "url": "https://image2base64.com/logo.png"}}
+}
+</script>
+
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h1>How much bigger is a Base64 image?</h1>
+      <p class="muted">Published 2026-11-10 · measured, not estimated, on the site's own assets</p>
+      <p>Base64 makes a file bigger. That much is common knowledge, and it is usually where the
+        conversation stops. What rarely gets measured is how much bigger the payload is by the time it
+        leaves your server, and whether that difference should influence how you ship an image at all.</p>
+
+      <p>So we encoded five of this site's own assets and compressed both the original file and its
+        Base64 text with gzip at level 9, the way an ordinary static host would. The gap is far smaller
+        than the familiar one-third figure suggests. The thing that actually costs you when you inline
+        an image turns out to have nothing to do with byte count.</p>
+
+      <h2>Why the raw overhead is exactly one third</h2>
+      <p>Base64 exists to push binary data through channels that only carry text. The encoder takes every
+        three bytes of input — 24 bits — and chops them into four groups of six bits. Each six-bit value
+        maps to one character from a 64-symbol alphabet: <code>A–Z</code>, <code>a–z</code>,
+        <code>0–9</code>, plus <code>+</code> and <code>/</code>.</p>
+
+      <p>Four characters to carry three bytes. That ratio is 4/3, or 133.3% of the input, and it is where
+        the 33% comes from. There is no setting to tune and no library that does better — the expansion
+        is arithmetic, not an implementation detail.</p>
+
+      <p>Two small things push the real figure slightly past one third:</p>
+      <ul>
+        <li><strong>Padding.</strong> When the input length is not divisible by three, the encoder emits
+          one or two <code>=</code> characters to complete the last group. A 9,458-byte icon becomes
+          12,612 characters rather than the 12,611 the pure ratio predicts.</li>
+        <li><strong>Line wrapping.</strong> MIME-style encoders insert a line break every 76 characters.
+          Browser APIs such as <code>btoa</code> and <code>FileReader.readAsDataURL</code> do not wrap;
+          most mail libraries and CLI tools do, and the breaks are extra bytes that carry no data.</li>
+      </ul>
+      <p>Treat 33% as a floor. What you paste into an HTML file is normally a hair above it.</p>
+
+      <h2>The five files we measured</h2>
+      <p>All five are real assets served by this site, in the formats they are served in. Sizes are raw
+        byte lengths of the strings, before any HTTP layer touches them.</p>
+
+      <div class="cmp-scroll">
+        <table class="cmp">
+          <caption>Base64 and gzip overhead on five real assets, measured 2026-11-10</caption>
+          <thead>
+            <tr><th>File</th><th>Raw bytes</th><th>Base64 bytes</th><th>gzip(raw)</th><th>gzip(Base64)</th><th>gzip overhead</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>favicon.ico</th><td>9,458</td><td>12,612</td><td>9,414</td><td>9,513</td><td>+1.1%</td></tr>
+            <tr><th>apple-touch-icon.png</th><td>10,916</td><td>14,556</td><td>10,939</td><td>11,044</td><td>+1.0%</td></tr>
+            <tr><th>icon-192.png</th><td>11,802</td><td>15,736</td><td>11,825</td><td>11,926</td><td>+0.9%</td></tr>
+            <tr><th>icon-512.png</th><td>32,932</td><td>43,912</td><td>32,545</td><td>33,076</td><td>+1.6%</td></tr>
+            <tr><th>og-image.png</th><td>68,848</td><td>91,800</td><td>66,981</td><td>68,068</td><td>+1.6%</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <p>Read the second and third columns and the 33% is intact: 9,458 becomes 12,612, 68,848 becomes
+        91,800. Read the last column and it is gone. After compression, inlining these files costs between
+        0.9% and 1.6% — a few dozen to a thousand bytes, depending on the file.</p>
+
+      <p>One note on the row count: <code>icon-512.png</code> and <code>logo.png</code> are the same bytes
+        on this site, so only one of them appears here. Measuring both would have produced two identical
+        rows and no extra information.</p>
+
+      <h2>Where the 33% goes under compression</h2>
+      <p>PNG and JPEG are already compressed containers. The pixel data has been through DEFLATE once
+        before you ever see the file, so a second pass finds very little — for the icons above, gzip
+        shaves off somewhere between a few bytes and a few hundred. There is no redundancy left to
+        exploit.</p>
+
+      <p>Base64 text behaves differently. The encoded stream uses only 64 of the 256 possible byte values,
+        which means roughly two bits in every byte carry no information. A general-purpose compressor
+        spots that immediately and codes the symbols back down toward their actual entropy. That is why
+        <code>gzip(Base64)</code> lands within a couple of percent of <code>gzip(raw)</code>: the transport
+        layer has effectively undone the expansion for you.</p>
+
+      <p>It does not undo all of it. Some residue survives — a thousand-odd bytes on the 68 KB image — and
+        the residue grows with file size. But the headline is that 33% is a property of the string, not of
+        the request.</p>
+
+      <p>Two conditions have to hold for this to be true. Compression has to be enabled for the response
+        that carries the HTML, and it has to be applied to the document rather than skipped because the
+        content type looks binary. Most hosts and CDNs do the right thing by default; a few disable
+        compression above a size threshold, which is exactly where the overhead stops being free.</p>
+
+      <h2>The costs that are not bytes</h2>
+      <p>If the wire penalty is around 1%, then byte count is almost never the reason a data URI hurts.
+        These are the reasons.</p>
+
+      <h3>A data URI has no cache entry of its own</h3>
+      <p>An image referenced by URL gets its own slot in the HTTP cache: an ETag or Last-Modified, a
+        <code>Cache-Control</code> lifetime, possibly <code>immutable</code>. The browser can revalidate
+        with a conditional request and receive a bodyless 304. A data URI has none of that. Its bytes live
+        inside the document, so its lifetime is the document's lifetime. Every fetch that misses the HTML
+        cache ships the image again — not as a 304, as payload.</p>
+
+      <h3>Repetition multiplies what caching would have divided</h3>
+      <p>An avatar used in twenty places on one page is twenty copies of the same string if you inline it
+        twenty times. As a file it is one download and nineteen cache hits. The per-copy overhead is
+        small; the multiplication is not.</p>
+
+      <h3>The preload scanner cannot prioritize it</h3>
+      <p>Browsers speculatively scan raw HTML for resource references before the parser finishes, so a
+        normal <code>&lt;img src&gt;</code> starts downloading in parallel with CSS and JavaScript. A data
+        URI offers nothing to fetch — the bytes still have to arrive as part of the document and then be
+        decoded. Meanwhile the document itself got bigger, so it arrives later and delays everything
+        queued behind it.</p>
+
+      <h3>Any edit to the image invalidates the page</h3>
+      <p>Change one pixel in an inlined icon and the HTML changes. Its ETag changes, its content hash
+        changes, and every visitor re-downloads the whole document — markup, text, and every other inlined
+        asset — to pick up a file that could have been a single small request. With a separate file you
+        rename it or bump a query string and only that file is refetched.</p>
+
+      <h2>When one third is genuinely irrelevant</h2>
+      <p>There are cases where none of the above applies and the arithmetic is the only consideration:</p>
+      <ul>
+        <li><strong>A favicon or a tiny icon used once.</strong> A 9 KB file at +1% is under a hundred
+          bytes. The request it replaces would have cost more in latency than the bytes cost in
+          bandwidth.</li>
+        <li><strong>Self-contained deliverables.</strong> A single-file HTML report, a demo you email to
+          someone, a document that must render offline in five years — self-containment is the
+          requirement, and the caching argument does not apply to a file that is opened once.</li>
+        <li><strong>Content that is unique per request.</strong> A generated chart or a rendered receipt
+          that no two visitors share has no cache value to lose.</li>
+        <li><strong>Images small enough that the document stays under one congestion window.</strong> If
+          the whole page is a few kilobytes, the extra bytes never become the bottleneck.</li>
+      </ul>
+      <p>Everything else — a logo repeated across a site, a hero photograph, an icon set — belongs in a
+        file. The <a href="/base64-favicon">favicon guide</a> is a good example of the case where inlining
+        genuinely wins.</p>
+
+      <h2>Plan with numbers, not with the 33% rule</h2>
+      <p>The honest planning question is not "how much bigger does Base64 make this" but "how many bytes
+        does this page carry, and how often does it change". The
+        <a href="/base64-image-size-calculator">Base64 image size calculator</a> gives you the first half
+        in one step: drop a file in and read the encoded length before you commit to pasting it. For the
+        second half, the decision framework in
+        <a href="/when-not-to-inline-base64">when not to inline images</a> walks through caching, reuse,
+        and rendering cost in the order they usually bite.</p>
+
+      <h2>How these numbers were produced</h2>
+      <p>Each asset was read as bytes and encoded with Python's <code>base64.b64encode</code>. Both the
+        original bytes and the encoded text were then compressed with <code>gzip.compress</code> at
+        <code>compresslevel=9</code>, and every figure in the table is the length of the resulting byte
+        string. No HTTP layer is involved: no chunked transfer encoding, no CDN re-compression, no
+        content negotiation. The files are the ones this site serves, at the sizes it serves them.</p>
+
+      <p>That makes the table reproducible in a dozen lines of Python on any machine, which is the point.
+        The 33% is a constant you can derive on paper; the 1% is what your users actually pay, and it
+        depends on whether compression is on.</p>
+
+      <h2>When to use it, when to skip it</h2>
+      <p><strong>Inline when:</strong></p>
+      <ul>
+        <li>The image appears once, is small, and is needed on first paint.</li>
+        <li>The deliverable must be a single self-contained file.</li>
+        <li>The image is generated per request and has no cache value.</li>
+        <li>You are targeting an environment where a second request is expensive or impossible.</li>
+      </ul>
+      <p><strong>Keep it as a file when:</strong></p>
+      <ul>
+        <li>The same image appears more than once on a page or across pages.</li>
+        <li>The image is large, or is a hero/LCP candidate.</li>
+        <li>The image changes on a different schedule than the page around it.</li>
+        <li>You need per-image caching, CDN delivery, format negotiation, or analytics.</li>
+      </ul>
+      <p>The size penalty is real but small. The caching penalty is real and permanent. Design around the
+        second one.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Photo privacy">
+        <span class="head">Photo privacy</span>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

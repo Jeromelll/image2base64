@@ -64,9 +64,12 @@
 <h1>Jimp getBase64: image to data URI</h1>
 <p>Jimp can read an image, process it, and export a Base64 data URI. In the <a href="https://github.com/jimp-dev/jimp/blob/main/packages/core/src/index.ts">official core implementation</a> checked on October 8, 2026, <code>getBase64()</code> returns a Promise, so use <code>await</code>. The resolved value already contains the header, such as <code>data:image/png;base64,...</code>.</p>
 <p>For a one-off conversion without installing a library, use the <a href="/">Image to Base64 tool</a>. Jimp is useful when your Node.js workflow also needs to resize or re-encode an image before producing the text output.</p>
+<p>Jimp decodes files with its own codecs, so the pipeline needs no DOM, no canvas element, and no headless browser. That is the practical difference from the browser route: <code>FileReader</code> and <code>canvas.toDataURL()</code> both assume a page, and a cron job, queue worker, or CLI script has none. The same call works inside a long-running service and inside a throwaway script.</p>
 <h2>What getBase64 returns</h2>
 <p><code>await image.getBase64("image/png")</code> returns a complete PNG data URI. That string can be assigned to a browser <code>&lt;img src&gt;</code> or used where the destination explicitly accepts data URIs.</p>
 <p>An API field documented as “Base64 content” may instead expect only the text after the comma. Check the destination's contract before sending it. The <a href="/image-to-base64-for-api">API output-shape guide</a> covers raw Base64 versus a full data URI.</p>
+<p>The export comes in two shapes, and swapping them explains most rejected payloads. <code>getBase64(mime)</code> resolves to a string that already carries the media type and the comma. The buffer path resolves to encoded bytes with no prefix at all: older releases spell the pair <code>getBase64Async(Jimp.MIME_PNG)</code> and <code>getBufferAsync</code>, current ones accept a MIME string. On the buffer path nothing inserts <code>data:image/png;base64,</code> for you, so you either concatenate the prefix or send the bare text, depending on what the receiver documents.</p>
+<p>Vision endpoints are a frequent destination for these strings, and they usually want the payload without a header; the <a href="/openai-vision-base64-image">OpenAI vision Base64 image guide</a> shows the shape those requests take.</p>
 <h2>Complete Node.js example</h2>
 <p>Install Jimp in your own project if it is not already a dependency, then save this as <code>jimp-data-uri.mjs</code>. Run it with <code>node jimp-data-uri.mjs input.png</code>. The script writes a data URI and a raw Base64 file so you can choose the output your destination needs.</p>
 <pre><code>import { Jimp } from &quot;jimp&quot;;
@@ -86,7 +89,11 @@ const rawBase64 = dataUri.slice(prefix.length);
 await writeFile(&quot;image.data-uri.txt&quot;, dataUri, &quot;utf8&quot;);
 await writeFile(&quot;image.base64.txt&quot;, rawBase64, &quot;utf8&quot;);
 console.log(`Wrote ${dataUri.length} data-URI characters.`);</code></pre>
+<p>Keeping both outputs side by side means you can paste the right one instead of trimming a value by hand and leaving a stray newline or a duplicated header behind. Most APIs want the raw string; an <code>&lt;img&gt;</code> tag or a CSS rule wants the prefix.</p>
 <p>This example exports PNG even if the input is a supported JPEG. Use <code>image/jpeg</code> and the options supported by your installed Jimp version when you want JPEG output. PNG and JPEG differ in transparency and compression; a Base64 string does not erase those differences. See <a href="/resize-image-to-base64">image resizing before Base64</a> when payload size matters.</p>
+<h2>Memory cost of decoding an image you never edit</h2>
+<p><code>Jimp.read()</code> decodes the file into an RGBA bitmap before any export runs. A 4000 x 3000 photograph therefore occupies about 48 MB of heap while the compressed PNG on disk may be 3 MB, because every pixel carries four bytes. Four of those in flight inside one worker is roughly 200 MB of bitmaps, which is where container memory limits usually get hit.</p>
+<p>Batch scripts should set their own concurrency rather than mapping over a directory. When the job only moves bytes — upload, attachment, JSON field — the decoder earns nothing: <code>readFile()</code> keeps just the compressed file in memory and produces the same Base64 text from the same bytes. The <a href="/base64-image-size-calculator">Base64 size calculator</a> estimates the output length before you encode, so an oversized payload is caught before it reaches a memory limit or an API's request cap.</p>
 <h2>Read a data URI back into Jimp</h2>
 <p>For a trusted data URI produced by the previous script, remove the prefix and decode its Base64 payload into a Buffer. Save the following as <code>jimp-read-data-uri.mjs</code>:</p>
 <pre><code>import { Jimp } from &quot;jimp&quot;;
@@ -109,11 +116,17 @@ const rawBase64 = (await readFile(&quot;input.png&quot;)).toString(&quot;base64&
 const dataUri = `data:image/png;base64,${rawBase64}`;
 console.log(dataUri);</code></pre>
 <p>Use the MIME type that actually matches the input. For browser-side byte encoding, <a href="/how-to-convert-image-to-base64">how to convert an image to Base64</a> shows the FileReader path.</p>
+<p>Byte-level encoding also keeps what a decoder may rewrite: EXIF fields, embedded color profiles, and the exact compression settings. Whether that counts as fidelity or as a leak depends on the file. A camera JPEG carries GPS coordinates that a support inbox should not receive; in most setups re-encoding drops those tags, while the <code>readFile</code> route ships them unchanged. Scans show the same split, since a TIFF carries page structure as well as pixels.</p>
+<p>The trade is that this route cannot resize, crop, rotate, or change format. Choose by whether the image needs editing at all, not by which snippet looks shorter. If the string then lands in a request body, the <a href="/base64-in-json-apis">Base64 in JSON APIs guide</a> covers escaping and field size.</p>
 <h2>Troubleshooting and version differences</h2>
 <p><strong>I see <code>[object Promise]</code>.</strong> Await <code>getBase64()</code>. Do not pass its Promise directly to an <code>&lt;img&gt;</code> or JSON payload.</p>
 <p><strong>My API rejects the string.</strong> Check whether it expects raw Base64 rather than a data URI. Do not encode an already encoded Base64 string again.</p>
 <p><strong>An old example uses a callback.</strong> Match the example to your installed Jimp version. Current named imports and Promise methods should not be combined with an older callback tutorial.</p>
 <p><strong>The output file differs from the input.</strong> That is expected when Jimp decodes and re-encodes the image. Use <code>readFile().toString("base64")</code> when exact original-byte transport is the requirement.</p>
+<p><strong>It works locally and fails at the receiver.</strong> Log the first 40 characters and the total length before sending. A data URI prefix where the API wants raw text, a newline picked up from an editor, or a truncated string explains most of these; <a href="/fix-invalid-base64-image-data">fixing invalid Base64 image data</a> walks through that diagnosis step by step.</p>
+<h2>Two questions that come up in review</h2>
+<details><summary>Does the exported file have to be byte-identical to the source?</summary><p>No, and usually it is not. <code>getBase64()</code> runs the encoder again, so PNG output can differ in length and metadata even when the pixels look the same. When byte identity matters — a checksum the receiver verifies, a legal archive, a content hash — use the <code>readFile</code> route instead.</p></details>
+<details><summary>Will the same code run in a browser bundle?</summary><p>Not reliably. Bundling guidance differs by release and by bundler, and the examples here target the Node runtime that Jimp documents first. If the code already runs in a page, <code>FileReader</code> is shorter and adds no dependency.</p></details>
 <h2>Related guides</h2>
 <p>Continue with <a href="/image-to-base64-for-api">API payload formats</a>, <a href="/resize-image-to-base64">resizing an image before encoding</a>, or the <a href="/how-to-convert-image-to-base64">browser conversion walkthrough</a>.</p>
   </article>
@@ -132,6 +145,7 @@ console.log(dataUri);</code></pre>
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       </nav>
       <nav class="footer-nav" aria-label="Photo privacy">
         <span class="head">Photo privacy</span>
@@ -167,6 +181,12 @@ console.log(dataUri);</code></pre>
         <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

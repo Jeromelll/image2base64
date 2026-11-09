@@ -59,14 +59,6 @@
     },
     {
       "@type": "Question",
-      "name": "Is PNG to Base 64 different from PNG to Base64?",
-      "acceptedAnswer": {
-        "@type": "Answer",
-        "text": "No. PNG to Base 64 is simply a spaced spelling of PNG to Base64. Both refer to encoding the same PNG file bytes with the Base64 format."
-      }
-    },
-    {
-      "@type": "Question",
       "name": "When should I avoid embedding a PNG as Base64?",
       "acceptedAnswer": {
         "@type": "Answer",
@@ -131,10 +123,9 @@
   <section class="hero">
     <div class="wrap">
       <span class="eyebrow">Free · No upload · Runs in your browser</span>
-      <h1>PNG to Base64 Converter (PNG to Base 64)</h1>
+      <h1>PNG to Base64 Converter</h1>
       <p class="lede">
-        Convert <strong>PNG to Base64</strong>—or, in the spaced spelling, <strong>PNG to Base 64</strong>—and
-        instantly copy the raw string, complete data URI, HTML or CSS. Transparency stays intact.
+        Convert <strong>PNG to Base64</strong> and instantly copy the raw string, complete data URI, HTML or CSS. Transparency stays intact.
       </p>
       <p class="trust"><strong>100% client-side.</strong> Your PNG never leaves your device.</p>
     </div>
@@ -220,12 +211,12 @@
 
   <section id="guide" class="content-section">
     <div class="wrap prose">
-      <h2>How to convert PNG to Base64 (Base 64)</h2>
+      <h2>How to convert PNG to Base64</h2>
       <p>
         A PNG is a binary image file. Base64 rewrites those bytes as text characters that can travel inside HTML,
         CSS, JavaScript, JSON or another text-only format. This converter performs that rewrite locally and returns
-        both the encoded string and a complete <code>data:image/png;base64,</code> URI. The spaced phrase
-        “PNG to Base 64” describes exactly the same conversion; <strong>Base64</strong> is the standard spelling.
+        both the encoded string and a complete <code>data:image/png;base64,</code> URI. Some articles and forum posts write the phrase with a space, “PNG to Base 64”; it describes
+        exactly the same conversion, and <strong>Base64</strong> is the standard spelling.
       </p>
 
       <ol>
@@ -380,10 +371,6 @@ document.querySelector(".preview").src = iconDataUri;</code></pre>
         <p>Yes. Everything runs in your browser with the <code>FileReader</code> API. The PNG is never uploaded to any server.</p>
       </details>
       <details>
-        <summary>Is PNG to Base 64 different from PNG to Base64?</summary>
-        <p>No. “PNG to Base 64” is simply a spaced spelling of “PNG to Base64.” Both refer to encoding the same PNG file bytes with the Base64 format.</p>
-      </details>
-      <details>
         <summary>When should I avoid embedding a PNG as Base64?</summary>
         <p>Avoid inlining large PNG files or images reused on many pages. Base64 adds about 33% to the file size, while a normal image URL can be cached independently by the browser.</p>
       </details>
@@ -433,6 +420,7 @@ document.querySelector(".preview").src = iconDataUri;</code></pre>
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -468,6 +456,12 @@ document.querySelector(".preview").src = iconDataUri;</code></pre>
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

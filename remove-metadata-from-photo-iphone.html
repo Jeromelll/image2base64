@@ -122,46 +122,101 @@
 
   <section class="content-section">
     <div class="wrap prose">
-      <h2>When does iOS strip metadata — and when it doesn't</h2>
+      <h2>What an iPhone photo actually carries</h2>
       <p>
-        Apple gives you partial protection, and it depends entirely on the channel:
+        iOS writes a fuller record than most people expect, and it goes well past "this was taken in Paris".
+        A typical shot from the Camera app includes:
       </p>
       <ul>
-        <li><strong>AirDrop &amp; Messages:</strong> iOS 15+ offers "Options → Remove Location" in the share sheet. Location is handled, but other EXIF (device model, timestamps) may still travel.</li>
-        <li><strong>Mail (as attachment):</strong> the file is attached as-is — full EXIF travels with it unless you use the same Options menu.</li>
-        <li><strong>"Save to Files", cloud drives, third-party apps:</strong> the original bytes are copied, metadata included.</li>
-        <li><strong>Sending "as document" in messengers:</strong> preserves everything.</li>
+        <li><strong>A GPS directory</strong> whenever Location Services is enabled for the camera: latitude and longitude, altitude, a UTC timestamp and often a direction. This is the field that ties a file to a street address.</li>
+        <li><strong>Apple's MakerNote.</strong> A vendor block holding the exact device string, the lens identifier, HDR and night-mode flags, and sometimes a hardware serial. It survives most copy operations.</li>
+        <li><strong>Capture timestamps</strong> with sub-second precision, plus the offset from UTC — enough to place a shot in a specific hour in a specific timezone.</li>
+        <li><strong>An orientation value</strong>, so portrait frames display upright without rewriting the sensor grid.</li>
+        <li><strong>An embedded thumbnail</strong> in many HEIC originals: a small preview stored inside the container, which is a second image you did not choose to share.</li>
+        <li><strong>Extras on some shots</strong> — portrait-mode files can carry a depth map as an auxiliary image, and a Live Photo is really a still paired with a short video that has metadata of its own.</li>
       </ul>
       <p>
-        The pattern: iOS protects the casual path and preserves the power-user path. A pre-cleaned file is
-        the only version that behaves the same everywhere.
+        That last point catches people: cleaning the still does nothing for the companion video, which can
+        still carry the capture location when it travels separately.
       </p>
 
-      <h2>Using this tool on iOS, step by step</h2>
+      <h2>The share sheet toggle, precisely</h2>
+      <p>
+        iOS does offer a real location strip, and it lives in the share sheet rather than in Settings. Pick a
+        photo, tap Share, then Options at the top of the sheet: there is a Location switch. Turn it off and
+        the copy you send carries no coordinates. It applies to the share in front of you, not to the photo
+        in your library, and the original keeps its tag.
+      </p>
+      <p>
+        Two limits matter. First, it removes location only. The device model, lens, timestamps, exposure
+        settings, orientation and MakerNote all travel as before, so a recipient can still tell which phone
+        shot the frame and when. Second, the toggle exists on the paths Apple controls — AirDrop, Messages,
+        Mail. It does not appear when you save to Files, hand a file to a third-party app, upload from inside
+        another app, or share an iCloud link. The protection is channel-specific, and the channel is chosen
+        by whoever receives the file, not by you.
+      </p>
+
+      <h2>Exports and re-saves that change the answer</h2>
+      <p>
+        "Export Unmodified Original" in Photos means what it says: the file leaves with everything attached.
+        Editing a photo and then sharing it produces a re-rendered copy whose metadata depends on the edit and
+        the destination, so the result is not something to reason about in advance. A screenshot is
+        genuinely free of the original EXIF, since it is a new capture of the screen — but you get screen
+        resolution, sometimes interface elements in frame, and a PNG that is usually heavier than the JPEG it
+        replaced. Saving an image out of Messages or a web page gives you whatever the sender's or the site's
+        pipeline already produced, which is unknowable from your side. And a third-party HEIC-to-JPEG
+        converter may drop the whole block or faithfully copy it, depending on the app; there is no default
+        to assume.
+      </p>
+
+      <h2>What to check before trusting a cleaner app</h2>
+      <p>
+        The App Store has plenty of metadata removers, and some are fine. Four questions separate them
+        quickly. Does it claim to work offline, and does it actually function in airplane mode? Does it ask
+        for network access at all, since a local strip has no use for one? Does it say whether the output is
+        re-encoded, which would change quality and file size? And does it need your entire photo library when
+        you only want to clean one image? A one-off job does not justify handing a library-wide permission to
+        an app you will delete tomorrow. The browser route below exists for exactly that reason: no install,
+        no permission prompt, no account.
+      </p>
+
+      <h2>The browser route on iOS, step by step</h2>
       <ol>
-        <li>Open this page in <strong>Safari</strong> (Chrome and Firefox cannot decode HEIC on iOS).</li>
-        <li>Tap <em>Choose photos</em> and pick from your photo library — HEIC shots work directly.</li>
-        <li>Each photo shows what was found and what was removed; tap <em>Download clean copy</em>.</li>
-        <li>The cleaned file lands in the Files app / Downloads; share that copy.</li>
+        <li>Open this page in <strong>Safari</strong>. It is the browser on iOS that decodes HEIC natively; other iOS browsers are built on the same engine, but Safari is the safe choice.</li>
+        <li>Tap <em>Choose photos</em> and pick from the library. HEIC originals are read directly, no pre-conversion step.</li>
+        <li>The tool reports how many metadata entries it found and what it removed, then offers <em>Download clean copy</em>.</li>
+        <li>The cleaned file lands in Downloads inside the Files app. Share that copy, not the original.</li>
       </ol>
       <p>
-        On a Mac, Safari handles HEIC the same way. Chrome or Firefox will re-encode HEIC shots to JPEG —
-        that conversion is real (slight quality change, different container) and the tool labels it clearly
-        when it happens. JPEG and PNG files are byte-identical in quality everywhere.
+        Be clear about what comes back for a HEIC input: a JPEG. The browser decodes the HEIC, draws it, and
+        writes a fresh JPEG at quality 92 with no metadata at all. The coordinates, the Apple MakerNote and
+        the embedded thumbnail are gone, but so is the HEIC container, and the pixels go through one lossy
+        re-compression. Very large images may also come back at reduced dimensions. For a JPEG or PNG input
+        the path is different and better: the file is edited at the byte level, metadata segments are
+        dropped, and the image data is copied across without re-encoding, so quality is untouched.
       </p>
 
-      <h2>Turn off iPhone geotagging at the source</h2>
+      <h2>What survives and what does not</h2>
       <p>
-        Cleaning fixes existing photos; this setting fixes future ones. Go to
-        <strong>Settings → Privacy &amp; Security → Location Services → Camera → Never</strong>. From then
-        on, new shots carry no coordinates. Trade-off: the Photos app can no longer group your library by
-        place, and some third-party camera apps lose location features. Check any photo afterwards with the
-        <a href="/exif-viewer">EXIF viewer</a> to confirm no GPS group appears.
+        Surviving: the framing, the colors, the filename stem, and the picture as a picture. On a JPEG or PNG
+        input, the exact compressed pixels survive too. Gone: coordinates, device and lens strings,
+        timestamps, the MakerNote, the embedded thumbnail, any depth map attached to a portrait shot, and the
+        container format in the HEIC case. Nothing is recoverable from the cleaned file afterwards, and
+        re-sharing it will not bring anything back — which is the point, but it also means you should keep
+        the original if you still need it for your own archive.
       </p>
+
+      <h2>Turn off geotagging at the source</h2>
       <p>
-        For everything else the metadata contains — and a tool that strips all of it on any device — see the
-        main <a href="/remove-photo-metadata">photo metadata removal guide</a>, or remove just the location
-        with the <a href="/remove-gps-from-photo">GPS-specific tool</a>.
+        Cleaning handles photos you already have; one setting handles everything you shoot next. Open
+        Settings → Privacy &amp; Security → Location Services → Camera and choose Never. New shots then carry
+        no GPS directory at all. The cost is that Photos can no longer group your library by place, and a few
+        third-party camera apps lose location-dependent features. If you would rather keep that, leave the
+        setting on and clean at publish time — a test shot dropped into the
+        <a href="/exif-viewer">EXIF viewer</a> after the change is the quickest way to confirm which state you
+        are in. For a wider strip that also removes device and date fields, use the
+        <a href="/remove-photo-metadata">metadata remover</a>; for location alone, the
+        <a href="/remove-gps-from-photo">GPS tool</a> keeps the rest of the EXIF intact.
       </p>
     </div>
   </section>
@@ -188,6 +243,14 @@
       <details>
         <summary>Is the photo uploaded?</summary>
         <p>No — the whole pipeline runs in Safari on your device.</p>
+      </details>
+      <details>
+        <summary>Does the cleaned HEIC stay HEIC?</summary>
+        <p>No. A HEIC input comes back as JPEG, because the browser decodes it and writes a fresh image. If you need the original container, keep the source file and share it through the iOS options sheet with Location turned off instead.</p>
+      </details>
+      <details>
+        <summary>What about Live Photos?</summary>
+        <p>A Live Photo is a still plus a short video, and the two files carry separate metadata. Cleaning the still leaves the video untouched, so clean or drop the clip as well if the pair is going somewhere public.</p>
       </details>
     </div>
   </section>
@@ -245,6 +308,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
         <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
       </nav>
       <nav class="footer-nav" aria-label="Photo privacy">
@@ -279,6 +343,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

@@ -151,37 +151,108 @@
     <div class="wrap prose">
       <h2>Base64 to JPG, explained</h2>
       <p>
-        This converter detects PNG, JPG, GIF, WebP or SVG Base64 input and exports a real
-        <strong>.jpg</strong> file. JPG (or JPEG) is a lossy format that shrinks file size dramatically, which makes it
-        the right choice for photographs and complex images where a little quality loss is invisible to the eye.
+        Paste any Base64 image string — PNG, GIF, WebP, BMP, or an existing JPEG — and this page returns a real
+        <strong>.jpg</strong> file. The step in between is not a container swap. The decoded pixels are drawn onto
+        a canvas and pushed back through the browser's own JPEG encoder at quality 0.92, so what lands in your
+        downloads folder is a freshly built JPEG, not the bytes that were hiding inside the string. That single
+        detail explains most of the behaviour described on this page.
+      </p>
+      <p>
+        JPG is a lossy format. It throws away colour detail the eye is unlikely to notice and stores the rest
+        compactly. For photographs, gradients, and anything with soft shading, that trade is heavily in your favour:
+        a Base64 PNG of a camera shot is often several times the size of the same image saved as JPEG. For flat
+        artwork, screenshots of text, and diagrams with hard edges, the same trade works against you, because the
+        compression artifacts land exactly where sharp boundaries used to be.
       </p>
 
-      <h3>When to choose JPG</h3>
+      <h3>When a JPG target makes sense</h3>
       <ul>
-        <li><strong>Photos and gradients.</strong> JPG compresses smoothly-shaded images far better than PNG.</li>
-        <li><strong>You want a smaller file.</strong> Great for web delivery and email attachments.</li>
-        <li><strong>Transparency isn't needed.</strong> JPG has no alpha channel — transparent pixels become a solid background.</li>
+        <li><strong>Photographs and natural scenes.</strong> Continuous tone is what the format was designed for.</li>
+        <li><strong>You need a smaller file for delivery.</strong> Useful for web pages, email attachments, and upload limits.</li>
+        <li><strong>Nothing in the image is transparent.</strong> JPG has no alpha channel, so transparency has to be resolved before saving.</li>
+        <li><strong>The consumer expects .jpg.</strong> Some upload forms, print services, and older desktop software still reject PNG or WebP outright.</li>
       </ul>
+      <p>
+        If the source is a logo, an icon, a screenshot of code, or a chart with thin lines, keep it in PNG instead.
+        <a href="/base64-to-png">Base64 to PNG</a> preserves both transparency and crisp edges, and PNG compression
+        handles large areas of identical colour well.
+      </p>
 
       <h3>What you can paste</h3>
       <ul>
         <li><strong>A full data URI</strong> — for example, <code>data:image/png;base64,iVBOR...</code> or <code>data:image/jpeg;base64,/9j/...</code>.</li>
-        <li><strong>A bare Base64 body</strong> — the source format is detected automatically before conversion.</li>
+        <li><strong>A bare Base64 body</strong> — the source format is detected from the decoded bytes before conversion.</li>
+        <li><strong>A string with line breaks</strong> — whitespace from wrapped Base64 is ignored rather than rejected.</li>
       </ul>
-
-
-      <h3>Transparency is flattened</h3>
       <p>
-        JPEG has no alpha channel. This page draws the decoded image onto a <strong>white</strong> canvas, then
-        exports JPEG at quality 0.92. Transparent PNGs therefore get a white background, and even a JPEG source
-        is re-compressed (not the original bytes). Use <a href="/base64-to-image">Base64 to image</a> when you
-        want the original file untouched.
+        The declared MIME type in a data URI is a hint, not a guarantee. Plenty of strings in the wild are labelled
+        <code>image/png</code> while actually carrying JPEG bytes, usually because something upstream guessed. This
+        decoder looks at the decoded content, so a mislabelled header does not break the conversion. If a string
+        fails outright, the usual causes are a truncated tail, a missing padding character, or characters lost in a
+        copy-paste through a chat client.
+      </p>
+
+      <h3>What quality 0.92 actually means</h3>
+      <p>
+        The canvas encoder is asked for JPEG at 0.92, on a scale where 1.0 is the least destructive setting the
+        browser offers. In practice 0.92 sits in the range most people stop noticing: fine grain in skies and skin
+        stays intact, and file size is well below what 1.0 produces. It is not a magic number, and it is not a
+        quality guarantee — each browser ships its own encoder, and Chrome, Safari, and Firefox do not necessarily
+        produce byte-identical output at the same setting.
+      </p>
+      <p>
+        If you need a different balance, the honest route is to save at this setting, check the result, and if the
+        file is still too large, downscale the pixel dimensions before encoding. Reducing width by a third usually
+        cuts more bytes than dropping quality from 0.92 to 0.8, and it costs less visible detail. Dropping quality
+        alone tends to introduce blockiness around edges long before it makes a meaningful dent in size.
+      </p>
+
+      <h3>Transparency has nowhere to go</h3>
+      <p>
+        JPEG stores three colour channels and no alpha channel, so every pixel must end up opaque. This page draws
+        the decoded image onto a solid white canvas before encoding, which means transparent regions in a PNG source
+        become white in the saved file. A logo cut out on a transparent background will look correct on a white page
+        and wrong on anything else.
+      </p>
+      <p>
+        There is no setting here that changes the fill colour, and that is deliberate — a partially configurable
+        background tends to produce files that look fine in the preview and wrong wherever they are actually used.
+        If the transparency is load-bearing, do not convert. Keep the alpha channel instead, or use
+        <a href="/base64-to-webp">Base64 to WebP</a> if you want a smaller file that still supports transparency. If
+        you genuinely need a JPEG with a specific backdrop, composite the image onto that colour first and then run
+        the result through here.
+      </p>
+
+      <h3>Metadata does not survive the round trip</h3>
+      <p>
+        A canvas re-encode writes pixels, not containers. EXIF, IPTC, XMP, ICC profiles, thumbnails, and maker notes
+        from the original file are all dropped, because the encoder never sees them. For a photo pulled off a phone,
+        that means GPS coordinates, capture time, camera model, and orientation flags are gone from the output.
+      </p>
+      <p>
+        Most of the time this is the outcome you want: the file gets smaller, and location data stops travelling with
+        an image you are about to publish. It is also the reason orientation can flip. If the source relied on an
+        EXIF rotation flag rather than rotated pixels, the browser usually applies the rotation while decoding, so
+        the saved JPEG is upright — but a decoder that ignores the flag will not be. If stripping metadata is the
+        actual goal rather than a side effect, <a href="/remove-photo-metadata">removing photo metadata</a> covers the
+        dedicated workflow and what each field means.
+      </p>
+
+      <h3>.jpg and .jpeg are the same format</h3>
+      <p>
+        The two extensions describe one codec. <code>.jpeg</code> is the older four-character spelling, kept alive by
+        conventions in some software; <code>.jpg</code> is the three-character form that most filesystems and web
+        servers settled on. Nothing about the bytes changes. This page names the download <code>decoded.jpg</code>,
+        and renaming it to <code>.jpeg</code> afterwards is harmless. Going the other direction — turning a JPEG file
+        into a data URI — is handled by <a href="/jpg-to-base64">JPG to Base64</a>.
       </p>
 
       <h3>Private by design</h3>
       <p>
-        Decoding uses the browser's native image handling — the string is turned into an image element locally and
-        never sent anywhere. Safe for confidential assets.
+        Decoding and encoding both happen inside the tab. The string is turned into an image element locally, drawn
+        to a canvas, and encoded by your browser; nothing is posted to a server, and there is no upload step to
+        forget about. That makes the page usable for internal screenshots, unreleased artwork, and documents that
+        should not sit in someone else's temporary storage.
       </p>
     </div>
   </section>
@@ -265,6 +336,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -300,6 +372,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

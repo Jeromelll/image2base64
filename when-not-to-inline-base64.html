@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>When Not to Inline Images as Base64 (Caching, LCP, Reuse)</title>
+<meta name="description" content="Base64 inlining trades cacheability for one fewer request. When that trade is wrong: repeated images, hero images, large photos, and analytics." />
+<link rel="canonical" href="https://image2base64.com/when-not-to-inline-base64" />
+<meta name="robots" content="index, follow" />
+<meta name="theme-color" content="#5365ff" />
+<link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
+<link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png?v=symbol" />
+<link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png?v=symbol" />
+<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png?v=symbol" />
+<link rel="manifest" href="/site.webmanifest?v=symbol" />
+
+<meta property="og:type" content="article" />
+<meta property="og:site_name" content="Image2Base64" />
+<meta property="og:title" content="When Not to Inline Images as Base64 (Caching, LCP, Reuse)" />
+<meta property="og:description" content="Base64 inlining trades cacheability for one fewer request. When that trade is wrong: repeated images, hero images, large photos, and analytics." />
+<meta property="og:url" content="https://image2base64.com/when-not-to-inline-base64" />
+<meta property="og:image" content="https://image2base64.com/og-image.png?v=symbol" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Image to Base64 Converter logo and preview" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:image" content="https://image2base64.com/og-image.png?v=symbol" />
+
+<link rel="stylesheet" href="styles.css" />
+
+<script type="application/ld+json">
+{
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": "When Not to Inline Images as Base64 (Caching, LCP, Reuse)",
+  "description": "Base64 inlining trades cacheability for one fewer request. When that trade is wrong: repeated images, hero images, large photos, and analytics.",
+  "datePublished": "2026-11-10",
+  "inLanguage": "en",
+  "author": {"@type": "Person", "name": "Jerome", "url": "https://image2base64.com/about"},
+  "publisher": {"@type": "Organization", "name": "Image2Base64", "url": "https://image2base64.com/", "logo": {"@type": "ImageObject", "url": "https://image2base64.com/logo.png"}}
+}
+</script>
+
+<!-- AdSense head snippet (inserted by adsense_prep) -->
+  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="wrap header-inner">
+    <a class="brand" href="/"><span class="dot"></span>Base64<span style="color:var(--brand)">Img</span></a>
+        <nav class="nav" aria-label="Primary">
+      <a href="/">Converter</a>
+      <a href="/about">About</a>
+      <a href="/contact">Contact</a>
+      <a href="/privacy">Privacy</a>
+    </nav>
+  </div>
+</header>
+
+<main>
+  <section id="guide" class="content-section">
+    <div class="wrap prose">
+      <h1>When not to inline images as Base64</h1>
+      <p class="muted">Published 2026-11-10 · the caching and performance trade-offs</p>
+      <p>The case for inlining is one sentence long: it removes an HTTP request. That sentence is true,
+        and on a cold connection a request is expensive — DNS, TCP, TLS, then the file itself. Remove
+        enough of them and a page gets measurably faster.</p>
+
+      <p>The trouble is that the sentence describes a narrow situation and gets applied to a broad one.
+        Inlining is a trade, not an optimization. You give up independent caching, independent
+        invalidation, and a place in the browser's priority queue, and you receive one fewer round trip.
+        Whether that is a good deal depends entirely on which side of the trade your page sits on.</p>
+
+      <h2>The one-fewer-request argument, and where it holds</h2>
+      <p>HTTP/1.1 made request count matter enormously. Browsers opened a handful of connections per
+        origin, so a page with thirty images queued them in waves, and each wave cost a round trip. Under
+        those conditions, folding small assets into the document was a genuine win, and the technique
+        earned its reputation honestly.</p>
+
+      <p>HTTP/2 and HTTP/3 changed the arithmetic. Multiplexing means many resources share one connection,
+        so the marginal cost of an additional small request dropped sharply. Header compression removed
+        most of the per-request overhead. The one-fewer-request argument did not become false, but it
+        stopped being decisive for anything but the first few critical assets.</p>
+
+      <p>What still holds, and holds well:</p>
+      <ul>
+        <li><strong>An asset needed on first paint, used once.</strong> A logo in the header, a small
+          icon in the initial viewport. There is no second page view to amortize a request against, and
+          the request would sit behind the document anyway.</li>
+        <li><strong>An asset smaller than the request that would fetch it.</strong> A request carries
+          headers in both directions; a sub-kilobyte icon can genuinely cost more to fetch than to
+          embed.</li>
+        <li><strong>A document that must stand alone.</strong> A single-file HTML export, an offline
+          report, an artifact someone downloads and opens later. Here the request does not exist to
+          remove — there is no server.</li>
+      </ul>
+      <p>Everything else is a weaker case than it looks. See
+        <a href="/embed-images-in-single-html-file">embedding images in a single HTML file</a> for the
+        scenario where the trade is clearly correct.</p>
+
+      <h2>Caching is the cost you pay on every visit</h2>
+      <p>A file with a URL gets its own cache entry. It can carry a long <code>max-age</code>, be marked
+        <code>immutable</code>, and be revalidated with a conditional request that returns a bodyless 304
+        when nothing changed. After the first visit it is effectively free, for as long as the header
+        allows.</p>
+
+      <p>Inline bytes inherit the document's caching, and nothing else. Three consequences follow, and
+        they compound:</p>
+
+      <h3>Every HTML fetch carries the image again</h3>
+      <p>If the document is cached, the image is cached with it. If the document is revalidated or
+        refetched — a new deploy, a cache miss, a user who cleared storage, a shared machine — the image
+        bytes come along in full. There is no way to ask for the image alone.</p>
+
+      <h3>One image edit invalidates everything</h3>
+      <p>Change a pixel in an inlined icon and the HTML's content hash changes. Every visitor now
+        re-downloads the entire document — markup, copy, and every other inlined asset — to pick up a
+        change that should have cost one small request. With separate files you rename the one file and
+        the rest of the cache survives.</p>
+
+      <h3>Expiry is all-or-nothing</h3>
+      <p>A logo that changes once a year and a page that changes weekly cannot have different cache
+        lifetimes if the logo lives inside the page. You end up choosing between a short lifetime for the
+        document (hurting the page) and a long one (making the logo stale). Separate files let you set
+        each policy on its own terms.</p>
+
+      <h2>Repetition turns a small overhead into a large one</h2>
+      <p>This is the failure mode that shows up most often in real code, because it happens by accident.
+        A component gets an inlined placeholder, the component is used in a list, and suddenly the same
+        string is in the document twenty times.</p>
+
+      <p>The arithmetic is unforgiving. Inline an 8 KB avatar once and you added about 11 KB of text.
+        Inline it twenty times and you added roughly 220 KB — to display twenty small circles. As a file,
+        that is one download and nineteen cache hits, and the browser will decode it once.</p>
+
+      <p>The same applies across pages. An icon inlined into every page of a site is re-sent on every
+        navigation that misses the document cache, while a shared sprite or icon file is fetched once and
+        reused everywhere. If an asset appears more than once in your codebase, it wants to be a file.</p>
+
+      <h2>Rendering and priority costs</h2>
+      <h3>The preload scanner has nothing to work with</h3>
+      <p>Browsers speculatively scan the raw HTML byte stream for resource URLs before the parser
+        finishes building the DOM. That is how a normal <code>&lt;img&gt;</code> deep in the body starts
+        downloading while the parser is still on the <code>&lt;head&gt;</code>. A data URI offers no URL
+        to scan, so the image cannot be discovered early — it has to arrive as document bytes and then be
+        decoded.</p>
+
+      <h3>Hero images and LCP get worse</h3>
+      <p>Largest Contentful Paint is usually an image. Inlining it means the browser cannot begin
+        fetching it until the HTML containing it has arrived, and the HTML is now larger by a third of the
+        image's size. You have serialized two things that used to be parallel. For a hero photograph this
+        is a straightforward regression; for a 2 KB icon it is noise.</p>
+
+      <h3>Lazy loading stops applying</h3>
+      <p><code>loading="lazy"</code> works by deferring a fetch. There is nothing to defer when the bytes
+        are already in the document, so an inlined image is downloaded whether or not it ever scrolls
+        into view. On a long page with many below-the-fold images, that is the entire benefit of lazy
+        loading, discarded.</p>
+
+      <h3>The document gets heavier to parse</h3>
+      <p>Long attribute values are not free. They increase the byte stream the parser walks, they bloat
+        the DOM node's attribute string, and they can push a document past the point where browsers
+        handle it comfortably. A page with a dozen inlined images is a page whose HTML is mostly
+        Base64.</p>
+
+      <h2>Tooling you lose without noticing</h2>
+      <p>Once an image is a string inside HTML, every tool that operates on images stops seeing it.</p>
+      <ul>
+        <li><strong>Image CDNs and optimizers.</strong> Format negotiation, responsive variants, and
+          on-the-fly resizing all key off a URL. Inline bytes bypass the pipeline entirely and ship at
+          whatever size you encoded.</li>
+        <li><strong>Build-time optimization.</strong> Most bundlers can emit modern formats and multiple
+          widths for a referenced asset. An inlined string is opaque to them.</li>
+        <li><strong>Analytics and monitoring.</strong> You cannot count requests for something that is
+          not requested. Image-level metrics, cache hit ratios, and per-asset error rates all disappear.</li>
+        <li><strong>Debugging.</strong> The network panel shows nothing. A corrupted image produces a
+          broken glyph with no request to inspect and no status code to read.</li>
+        <li><strong>Accessibility and metadata.</strong> EXIF stripping, alt-text linting, and
+          content-hash-based integrity checks all assume a file.</li>
+      </ul>
+
+      <h2>Content Security Policy will sometimes forbid it outright</h2>
+      <p>If your page sends a <code>Content-Security-Policy</code> with an <code>img-src</code> directive
+        that does not include <code>data:</code>, every inlined image is blocked. The browser reports a
+        violation and renders nothing — and the failure looks like a broken asset rather than a policy
+        decision, which sends people debugging the wrong thing.</p>
+
+      <p>Adding <code>data:</code> to <code>img-src</code> widens the policy for every image on the page,
+        not just the one you wanted to inline. Some teams accept that; others deliberately keep
+        <code>data:</code> out to make inline payloads impossible. The
+        <a href="/data-uri-csp-security">data URI and CSP guide</a> covers what the source expression
+        actually permits and how the directives interact.</p>
+
+      <h2>Scenario by scenario</h2>
+      <div class="cmp-scroll">
+        <table class="cmp">
+          <caption>Inline or separate file, by scenario</caption>
+          <thead>
+            <tr><th>Scenario</th><th>Better choice</th><th>Why</th></tr>
+          </thead>
+          <tbody>
+            <tr><th>Favicon or 16 px UI icon, used site-wide</th><td>Inline only if it is one page; otherwise a file</td><td>Tiny either way, but a file caches across every page view</td></tr>
+            <tr><th>Logo in the header, one per page</th><td>Either; a file is the safer default</td><td>Small and needed early, but reused on every navigation</td></tr>
+            <tr><th>Hero photograph or banner</th><td>File</td><td>LCP candidate; inlining serializes the fetch behind the HTML</td></tr>
+            <tr><th>Avatar repeated in a comment list</th><td>File</td><td>One download and N cache hits instead of N copies of the string</td></tr>
+            <tr><th>Generated chart unique to the request</th><td>Inline</td><td>No cache value to lose, no reuse to amortize</td></tr>
+            <tr><th>Single-file HTML report or offline artifact</th><td>Inline</td><td>Self-containment is the requirement; there is no server to fetch from</td></tr>
+            <tr><th>Icon set, ten or more glyphs</th><td>File (sprite or font)</td><td>Ten inlined strings outweigh one sprite by a wide margin</td></tr>
+            <tr><th>Product images in a gallery</th><td>File</td><td>Large, numerous, below the fold, and benefit from lazy loading</td></tr>
+            <tr><th>Placeholder blur or tiny LQIP</th><td>Inline</td><td>Sub-kilobyte, needed on first paint, unique per image</td></tr>
+            <tr><th>Image behind a strict CSP without <code>data:</code></th><td>File</td><td>Inlining is blocked outright; the policy is the constraint</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h2>Quick rules</h2>
+      <p>If you want one heuristic rather than a table: <strong>inline when the image is unique, small,
+        and needed on first paint. Everything else is a file.</strong></p>
+
+      <p>Three questions, in order, settle almost every case:</p>
+      <ol>
+        <li><strong>Does it appear more than once?</strong> Anywhere — same page, another page, another
+          template. If yes, it is a file. This single question catches most of the real damage.</li>
+        <li><strong>Is it large or is it the LCP element?</strong> If yes, it is a file. Inlining a hero
+          image is a measurable regression, not a micro-optimization.</li>
+        <li><strong>Does it change on a different schedule than the page?</strong> If yes, it is a file.
+          Coupling an image's cache lifetime to a document's is the cost people forget until a deploy
+          goes out to change one icon.</li>
+      </ol>
+
+      <p>If all three answers are no, inlining is fine and probably slightly better than a request.
+        Budget it: measure the encoded size before you commit, using the
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>, and keep the total inlined
+        weight for a page small enough that the document still arrives quickly.</p>
+
+      <h2>When to inline, when not to</h2>
+      <p><strong>Inline:</strong></p>
+      <ul>
+        <li>A unique, small asset needed on first paint.</li>
+        <li>A self-contained deliverable with no server behind it.</li>
+        <li>Content generated per request, with no reuse and no cache value.</li>
+        <li>A placeholder or blur-up that must appear before anything else.</li>
+      </ul>
+      <p><strong>Keep as a file:</strong></p>
+      <ul>
+        <li>Anything used twice, anywhere.</li>
+        <li>Hero images, galleries, and anything below the fold.</li>
+        <li>Assets that change on their own schedule.</li>
+        <li>Anything you need to measure, optimize, or debug per asset.</li>
+        <li>Pages under a CSP that does not permit <code>data:</code>.</li>
+      </ul>
+
+      <p>Related reading: the <a href="/base64-favicon">favicon guide</a> for the small-unique-asset case
+        done properly, <a href="/online-vs-local-base64-converter">online vs. local converters</a> for the
+        privacy side of encoding, and
+        <a href="/base64-overhead-measured">how much bigger Base64 actually makes a file</a> for the byte
+        arithmetic behind the numbers above.</p>
+    </div>
+  </section>
+</main>
+
+<footer class="site-footer">
+  <div class="wrap">
+    <div class="footer-inner">
+      <div class="footer-brand">
+        <a class="brand" href="/"><span class="dot"></span>Image2Base64</a>
+        <p>Free, private, client-side Base64 tools for developers. No upload, no sign-up.</p>
+      </div>
+      <nav class="footer-nav" aria-label="Converters">
+        <span class="head">Converters</span>
+        <a href="/">Image to Base64</a>
+        <a href="/image-to-base64-for-api">Image to Base64 for APIs</a>
+        <a href="/data-uri-generator">Data URI Generator</a>
+        <a href="/base64-favicon">Base64 Favicon</a>
+        <a href="/compress-png-to-base64">Compress PNG to Base64</a>
+        <a href="/compress-jpg-to-base64">Compress JPG to Base64</a>
+        <a href="/extract-base64-image-from-css">Extract Images from CSS</a>
+        <a href="/png-to-base64">PNG to Base64</a>
+        <a href="/jpg-to-base64">JPG / JPEG to Base64</a>
+        <a href="/svg-to-base64">SVG to Base64</a>
+        <a href="/webp-to-base64">WebP to Base64</a>
+        <a href="/gif-to-base64">GIF to Base64</a>
+        <a href="/tiff-to-base64">TIFF to Base64</a>
+        <a href="/heic-to-base64">HEIC to Base64</a>
+        <a href="/bmp-to-base64">BMP to Base64</a>
+        <a href="/base64-to-image">Base64 to Image</a>
+        <a href="/base64-to-png">Base64 to PNG</a>
+        <a href="/base64-to-jpg">Base64 to JPG</a>
+        <a href="/base64-to-svg">Base64 to SVG</a>
+        <a href="/base64-to-webp">Base64 to WebP</a>
+        <a href="/base64-to-gif">Base64 to GIF</a>
+      </nav>
+      <nav class="footer-nav" aria-label="About">
+        <span class="head">About</span>
+        <a href="/about">About</a>
+        <a href="/faq">FAQ</a>
+        <a href="/privacy">Privacy</a>
+        <a href="/contact">Contact</a>
+        <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
+      <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
+
+      </nav>
+      <nav class="footer-nav" aria-label="Photo privacy">
+        <span class="head">Photo privacy</span>
+        <a href="/remove-photo-metadata">Remove photo metadata</a>
+        <a href="/exif-viewer">EXIF viewer</a>
+        <a href="/remove-gps-from-photo">Remove GPS from photo</a>
+        <a href="/remove-metadata-from-photo-iphone">Remove metadata on iPhone</a>
+      </nav>
+      <nav class="footer-nav" aria-label="Guides">
+        <span class="head">Guides</span>
+        <a href="/how-to-convert-image-to-base64">How to convert an image to Base64</a>
+        <a href="/resize-image-to-base64">Resize image to Base64</a>
+        <a href="/fix-invalid-base64-image-data">Fix invalid Base64 image data</a>
+        <a href="/online-vs-local-base64-converter">Online vs. local converters</a>
+        <a href="/image-to-base64-alternatives">Alternatives compared</a>
+        <a href="/base64-image-size-calculator">Base64 size calculator</a>
+        <a href="/base64-image-email-signature">Base64 image in email signature</a>
+        <a href="/base64-image-not-showing-in-outlook">Base64 image not showing in Outlook</a>
+        <a href="/base64-image-in-gmail-signature-not-working">Gmail signature Base64 not working</a>
+        <a href="/embed-base64-image-in-markdown">Embed Base64 image in Markdown</a>
+        <a href="/embed-images-in-single-html-file">Embed images in a single HTML file</a>
+        <a href="/telegram-bot-send-base64-image">Send Base64 image via Telegram Bot</a>
+        <a href="/power-automate-base64-image-in-email">Power Automate Base64 image in email</a>
+        <a href="/google-apps-script-base64-image-in-email">Apps Script Base64 image in email</a>
+        <a href="/slack-base64-image-not-working">Slack Base64 image not working</a>
+        <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
+        <a href="/excel-vba-base64-image-outlook-email">Excel VBA Base64 image in Outlook email</a>
+        <a href="/sendgrid-inline-image-base64">SendGrid inline image with Base64</a>
+        <a href="/openai-vision-base64-image">OpenAI vision Base64 image</a>
+        <a href="/cloud-vision-base64-image">Cloud Vision Base64 image</a>
+        <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
+        <a href="/remove-bg-alternatives">remove.bg alternatives</a>
+        <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
+      </nav>
+    </div>
+    <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
+  </div>
+</footer>
+
+<script src="app.js"></script>
+</body>
+</html>

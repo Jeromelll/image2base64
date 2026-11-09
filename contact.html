@@ -10,8 +10,6 @@
 <meta name="theme-color" content="#5365ff" />
 <link rel="icon" href="/favicon.ico?v=symbol" sizes="any" />
 <link rel="stylesheet" href="styles.css" />
-<!-- AdSense head snippet (inserted by adsense_prep) -->
-  <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4027819746718681" crossorigin="anonymous"></script>
 </head>
 <body>
 <header class="site-header">
@@ -28,29 +26,35 @@
 
 <main class="wrap" style="padding:48px 0 72px;max-width:720px">
   <h1>Contact</h1>
-  <p>Email: <a href="mailto:jeromell@be-winner.com">jeromell@be-winner.com</a></p>
-  <p>This is a one-person site. There is no phone line, no ticket form, and no chat widget. Email is the right channel for tool bugs, factual corrections, privacy questions, and advertising.</p>
+  <p>Email is the only channel: <a href="mailto:jeromell@be-winner.com">jeromell@be-winner.com</a>. This is a one-person site — no phone line, no ticket form, no chat widget — and the same person who built the tools answers the mail. Email works for tool bugs, factual corrections, privacy questions, and advertising.</p>
 
   <h2>Corrections and tool bugs</h2>
-  <p>Please include:</p>
+  <p>For a bug report or correction, four details make the difference between a message that gets fixed in one pass and one that earns a follow-up question:</p>
   <ul>
-    <li>The page URL</li>
-    <li>What you expected and what actually happened</li>
-    <li>Browser and OS if it is a converter bug</li>
-    <li>The suggested fix, if you have one</li>
+    <li>The page URL, so the report points at one specific tool or guide.</li>
+    <li>What you expected and what actually happened — paste the exact error text if there is one.</li>
+    <li>Browser and operating system, because converter behavior can differ between Chrome, Safari, and Firefox.</li>
+    <li>The suggested fix, if you have one.</li>
   </ul>
-  <p>Do not attach confidential images. Converters already run locally; a description of the format and the error text is enough.</p>
+  <p>Do not attach confidential images. The converters run locally in your browser, so there is no server pipeline that could open an attachment anyway; a description of the file type, its rough size, and the error message is enough to reproduce almost every issue. The same four details work for questions that are not bugs — a format behaving oddly, a string that will not decode, an image that renders in one client but not another.</p>
+
+  <h2>What happens next</h2>
+  <p>Support is best-effort, and that is stated here rather than hidden behind a ticket number. Messages are read in arrival order, fixes are made in public — code changes land in the <a href="https://github.com/Jeromelll/image2base64" rel="noopener">GitHub repository</a>, where you can watch an issue move from report to patch — and there is no guaranteed response time. For questions the site already answers, the <a href="/faq">FAQ</a> is faster than waiting on an email.</p>
+
+  <h2>How your email is handled</h2>
+  <p>Message content is used for one purpose: reproducing and fixing whatever you describe. It is read manually by the site operator, it is not fed into any analytics or advertising system, and it is never added to a mailing list. If a correction changes a public page, the fix shows up on that page — your name and address do not. The <a href="/privacy">privacy policy</a> covers what the site itself collects from visitors.</p>
 
   <h2>Advertising</h2>
-  <p>Partnership or ad-quality questions can use the same address. The site uses Google AdSense. We do not ask visitors to click ads, and we cannot “approve” a click on a specific creative. Cookie details: <a href="/privacy">privacy policy</a>. Seller authorization: <a href="/ads.txt"><code>ads.txt</code></a>.</p>
+  <p>Advertising and partnership inquiries are welcome at the same address. The site runs Google AdSense; see the privacy policy for cookie and vendor details, and <a href="/ads.txt"><code>ads.txt</code></a> for authorized sellers. Two things hold regardless of budget: ads are never placed inside converter controls, and guides carry no paid recommendations.</p>
 
   <h2>What we will not do</h2>
   <ul>
-    <li>Decode or inspect a file you upload by email — there is no server pipeline for that.</li>
-    <li>Add a guest post, sponsored tutorial, or paid backlink.</li>
+    <li>Open, decode, or inspect files sent as attachments — there is no process for that, and it would not help, since conversions never touch a server.</li>
+    <li>Publish guest posts, sponsored tutorials, or paid links. Such requests receive a short, polite no.</li>
+    <li>Sell or share the email address.</li>
   </ul>
 
-  <p>See also <a href="/about">About</a>, <a href="/privacy">Privacy</a>, and <a href="/editorial-policy">Editorial policy</a>.</p>
+  <p>For who runs the site and why the tools work the way they do, see <a href="/about">About</a> and the <a href="/editorial-policy">editorial policy</a>.</p>
 </main>
 
 <footer class="site-footer">
@@ -67,6 +71,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -102,6 +107,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

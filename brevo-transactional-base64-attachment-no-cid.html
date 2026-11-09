@@ -73,9 +73,17 @@
 <p>Adding a Base64 attachment to a Brevo transactional email does not by itself make that attachment an inline image. An HTML reference such as <code>&lt;img src="cid:logo001"&gt;</code> needs a matching Content-ID in the email's MIME structure.</p>
 <p>The <a href="https://developers.brevo.com/docs/send-a-transactional-email">public transactional API schema</a> checked on October 8, 2026, documents attachment <code>url</code>, <code>content</code>, and <code>name</code> fields. It does not expose a caller-controlled Content-ID field in that attachment object. Do not invent a <code>cid</code> or <code>contentId</code> field and assume it will work.</p>
 <p>You can prepare a raw Base64 attachment with the <a href="/">Image to Base64 tool</a>. For an image displayed inside the message, the example below uses an HTTPS image URL and keeps the Base64 file as an ordinary attachment.</p>
+<h2>Attachment or inline: the distinction that decides the outcome</h2>
+<p>The two words get used interchangeably, and that is where the trouble starts. An attachment is a MIME part marked <code>Content-Disposition: attachment</code>. A mail client lists it under the message and offers a save button. An inline image is a MIME part marked <code>inline</code> that also carries a <code>Content-ID</code> header, and the HTML points at that identifier with <code>cid:</code>. Both live inside the message. Neither is a data URI, which puts the bytes in the <code>src</code> attribute and needs no separate part at all.</p>
+<p>Skip that distinction and you get the outcome this page is named after: the file arrives, the picture does not.</p>
 <h2>What the transactional API documents</h2>
 <p>For <code>POST /v3/smtp/email</code>, Brevo documents two attachment sources: an absolute file URL, or Base64 <code>content</code>. When you provide <code>content</code>, also provide the filename in <code>name</code>.</p>
 <p>These fields describe an attachment. They are not a documented way to bind an HTML <code>cid:</code> reference. A setting from another Brevo product or a different provider is not automatically part of this transactional endpoint's contract. If CID is essential to your delivery workflow, confirm the currently supported method with Brevo or use a provider that documents the required CID fields, such as the <a href="/sendgrid-inline-image-base64">SendGrid inline-image API</a>.</p>
+<h2>How the no-CID failure looks on the receiving end</h2>
+<p>Three symptoms show up, all tracing back to the same missing link between the HTML and a MIME part. The recipient sees a paperclip and a file listed below the body, with no image above it. Or the <code>&lt;img&gt;</code> renders as a broken icon showing the alt text. Or the space collapses entirely because the client refuses to resolve an image it cannot find and remote content is still blocked.</p>
+<p>None of these is a transport failure. The API answered with a message ID because the message was well formed; it simply contained no part matching the identifier the HTML referred to. Reading the API response as evidence of rendering is the mistake that makes this loop take longer than it should.</p>
+<h2>What a working inline image looks like in MIME</h2>
+<p>The mechanism is older than any of these APIs. The message becomes <code>multipart/related</code>, the HTML is one part, and the image is another with <code>Content-ID: &lt;logo001&gt;</code> and <code>Content-Disposition: inline</code>. The HTML then says <code>&lt;img src="cid:logo001"&gt;</code>, and the client matches the two. Some APIs let the caller set that identifier directly; the <a href="/postmark-cid-inline-image-base64">Postmark inline image guide</a> shows the field names for one that does. The public Brevo attachment object documents a filename, a URL, and encoded content, with no caller-controlled Content-ID, so on this endpoint the identifier is not yours to set.</p>
 <h2>A hosted image plus a Base64 attachment</h2>
 <p>Save this as <code>brevo-attachment.mjs</code>. It requires Node.js 18 or later and a local <code>logo.png</code>. Set <code>IMAGE_URL</code> to a public HTTPS image you control. The default command prints JSON; adding <code>--send</code> makes an actual request.</p>
 <pre><code>import { readFile } from &quot;node:fs/promises&quot;;
@@ -113,6 +121,12 @@ if (!process.argv.includes(&quot;--send&quot;)) {
 <h2>Raw Base64 is not a data URI</h2>
 <p>The <code>content</code> field holds the encoded file bytes. Do not include <code>data:image/png;base64,</code> in that field, and do not Base64-encode a string that is already Base64. Use the <a href="/image-to-base64-for-api">API payload guide</a> when converting between output shapes.</p>
 <p>A browser can render a data URI even when an email client strips it. Switching the HTML source to a data URI is therefore not a reliable substitute for a supported inline-attachment workflow. The <a href="/base64-image-not-showing-in-outlook">Outlook image guide</a> covers this compatibility distinction.</p>
+<h2>Base64 in a JSON body inflates the request</h2>
+<p>The attachment field holds a JSON string, so the request carries about four characters for every three bytes of the file. A 900 KB image becomes roughly 1.2 MB of text before any escaping, and the whole body has to fit inside the provider's request limit, a different number from the message size limit applied after delivery. The <a href="/base64-image-size-calculator">Base64 size calculator</a> gives the encoded length for a known file size, which is worth checking before a payload fails at the edge.</p>
+<p>Multipart uploads avoid part of that cost: an endpoint that accepts multipart sends raw bytes and encodes nothing, so the same image travels smaller. Whether a given provider offers that is a per-provider detail. The transactional JSON endpoint in this guide takes the encoded string, so size the payload around it, or use the <code>url</code> field when the image is already public and the encoding is not needed at all.</p>
+<h2>Checking what actually arrived</h2>
+<p>Open the raw source of the received message instead of the rendered view. In Gmail that is “Show original”; other clients put it behind a view-source or save-as menu, and the exact wording varies. On the image part, look for <code>Content-Type: image/png</code>, then <code>Content-Disposition</code>, then <code>Content-ID</code>. A disposition of <code>attachment</code> means the client treats the part as a downloadable file regardless of what the HTML asked for. A missing <code>Content-ID</code> means no <code>cid:</code> reference can resolve at all, which is the case this page describes.</p>
+<p>Putting Base64 straight into the HTML has its own compatibility record, covered in <a href="/base64-image-in-html-email">Base64 images in HTML email</a>. Neither route works everywhere, and the raw source shows which one your recipient's client actually honored.</p>
 <h2>Troubleshooting</h2>
 <p><strong>The attachment arrives but <code>cid:logo001</code> is blank.</strong> The attachment filename is not a Content-ID. The checked schema does not document a field that connects that CID to the attachment. Use a hosted image or confirm a supported CID method before relying on it.</p>
 <p><strong>The API rejects the attachment.</strong> Inspect raw Base64 versus data URI, the required filename, supported file types, and your current provider limits. Decode the value locally to confirm it contains the intended bytes.</p>
@@ -139,6 +153,7 @@ if (!process.argv.includes(&quot;--send&quot;)) {
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       </nav>
       <nav class="footer-nav" aria-label="Photo privacy">
         <span class="head">Photo privacy</span>
@@ -174,6 +189,12 @@ if (!process.argv.includes(&quot;--send&quot;)) {
         <a href="/discord-js-send-base64-image">Send Base64 image with discord.js</a><a href="/trello-api-upload-attachment-base64-multipart">Trello attachments with Base64</a><a href="/freshdesk-api-attachments-base64-not-supported">Freshdesk attachments: multipart</a><a href="/sharepoint-rest-api-upload-base64-image-corrupted">SharePoint Base64 upload fix</a><a href="/onedrive-graph-api-upload-base64-not-decoded">OneDrive Graph Base64 upload fix</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>

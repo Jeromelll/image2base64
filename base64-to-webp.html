@@ -156,12 +156,17 @@
         <strong>.webp</strong> file in your browser.
       </p>
 
-      <h3>When to choose WebP</h3>
+      <h3>When WebP is the right output format</h3>
       <ul>
-        <li><strong>Smaller files for the web.</strong> WebP typically compresses better than PNG or JPG.</li>
-        <li><strong>You need transparency or animation.</strong> WebP supports both.</li>
-        <li><strong>Modern browsers only.</strong> All current browsers support WebP; very old ones may not.</li>
+        <li><strong>Photographs and complex artwork.</strong> WebP's lossy mode holds a photo together at fewer bytes than most same-quality JPEG exports, which is exactly what you want when the image is headed for a page that has a weight budget.</li>
+        <li><strong>Artwork with transparency.</strong> Alpha rides along in both lossy and lossless WebP, so a PNG with soft edges converts without picking up a hard white or black frame around it.</li>
+        <li><strong>Deployment to current browsers.</strong> Every current major browser decodes WebP, on the canvas and off it, so the .webp file you save here renders wherever it is used next.</li>
       </ul>
+      <p>
+        The flip side is legacy compatibility: if the file has to render somewhere WebP support is genuinely
+        absent, convert to PNG or JPEG instead. That is rare today, but it is the one reason WebP is not a
+        universal default.
+      </p>
 
       <h3>What you can paste</h3>
       <ul>
@@ -169,19 +174,69 @@
         <li><strong>A bare Base64 body</strong> — the source format is detected automatically before conversion.</li>
       </ul>
 
-
-      <h3>This page re-encodes through canvas</h3>
+      <h3>What quality 0.9 does to your image</h3>
       <p>
-        Unlike the generic <a href="/base64-to-image">Base64 to image</a> decoder, this page exports
-        <code>image/webp</code> at quality 0.9 via <code>canvas.toBlob</code>. A JPEG or PNG source becomes a
-        new WebP; it is not a lossless round-trip. Animated GIF or WebP input is flattened to the first frame
-        the browser paints. Alpha from PNG is kept. If you only need the original bytes, use the generic decoder.
+        The re-encode runs through <code>canvas.toBlob</code> at a fixed quality of 0.9, using the browser's own
+        WebP encoder. On that scale, 0.9 is a high setting: the encoder is allowed to discard detail, but not much
+        of it. Photographs come through with skin tones, gradients, and skies intact — at ordinary viewing sizes,
+        most people will not spot the difference from the source.
+      </p>
+      <p>
+        Flat graphics behave differently. Screenshots, diagrams, pixel art, and anything built from hard
+        one-pixel edges and large flat fills can pick up faint ringing or softened corners after a lossy pass,
+        even at 0.9. For that class of asset, check the preview at full size before downloading — and if the
+        edges matter, keep the image lossless as PNG via <a href="/base64-to-png">Base64 to PNG</a> instead of
+        paying for a format change you cannot see a benefit from.
       </p>
 
-      <h3>Private by design</h3>
+      <h3>Animated input turns into a still frame</h3>
       <p>
-        Decoding uses the browser's native image handling — the string is turned into an image element locally and
-        never sent anywhere. Safe for confidential assets.
+        The canvas pipeline draws what the browser paints for the source image, and for an animated GIF or an
+        animated WebP that is the first frame. The download is a single still .webp. That is exactly what you
+        want when the motion is decorative and a poster frame is all you need. It is the wrong tool when the
+        animation itself is the point: no setting here carries frames, delays, or looping into the output. To
+        get an animated GIF back whole, decode it on <a href="/base64-to-gif">Base64 to GIF</a>, which returns
+        the original bytes untouched.
+      </p>
+
+      <h3>Re-encode here, or original bytes elsewhere</h3>
+      <p>
+        This page answers one question: "give me a WebP version of this image." The generic
+        <a href="/base64-to-image">Base64 to image</a> decoder answers a different one: "give me back the file
+        the string was made from." The generic page detects the format from the decoded bytes and downloads them
+        unchanged, so compression settings, metadata, and animation all survive. Pick this page when the format
+        itself should change; pick the generic decoder when the file should not.
+      </p>
+
+      <h3>Runs entirely on your machine</h3>
+      <p>
+        Your string becomes a local image element, the canvas draws it, and the encoder writes the file — all
+        inside the browser, with no upload step anywhere in the path. Strings pulled from internal dashboards,
+        private repositories, or client work can go through the tool without leaving the device.
+      </p>
+    </div>
+  </section>
+
+  <section class="content-section">
+    <div class="wrap prose">
+      <h2>What each input format becomes</h2>
+      <p>
+        The converter accepts anything the browser can decode, and the same canvas pipeline runs for every source.
+        The outcomes differ in ways worth knowing before you paste:
+      </p>
+      <ul>
+        <li><strong>PNG in.</strong> Transparency survives the re-encode, so transparent regions stay transparent in the .webp you download.</li>
+        <li><strong>JPEG in.</strong> The source has no alpha channel, so the output is fully opaque. Whatever compression artifacts the JPEG already carried come along; a lossy-to-lossy pass does not repair them.</li>
+        <li><strong>GIF in.</strong> Only the first frame is drawn, so an animated source produces a still image of its opening frame.</li>
+        <li><strong>WebP in.</strong> The file is decoded and encoded again at quality 0.9. Re-encoding an already-compressed file spends a little more fidelity each pass, so treat each conversion as a one-way trip.</li>
+        <li><strong>SVG in.</strong> The markup is rasterized into pixels, and vector scalability ends there. Keep the original .svg for anything that has to resize cleanly.</li>
+      </ul>
+      <p>
+        One habit worth picking up: glance at the downloaded file's size against the source. WebP usually lands
+        well below a PNG or JPEG of the same image, but a small SVG can occasionally grow once it becomes pixels —
+        the output only shrinks when the raster form compresses better than the vector description did. When the
+        budget drives the decision, the <a href="/base64-image-size-calculator">Base64 image size calculator</a>
+        puts numbers on both sides before you commit.
       </p>
     </div>
   </section>
@@ -222,6 +277,14 @@
       <details>
         <summary>Is the decoder private?</summary>
         <p>Yes. Decoding happens entirely in your browser. Nothing is uploaded, so your data stays on your device.</p>
+      </details>
+      <details>
+        <summary>Does the conversion keep transparency from a PNG source?</summary>
+        <p>Yes. Alpha survives the canvas re-encode, so transparent regions in a PNG input stay transparent in the downloaded .webp. JPEG sources have no alpha channel, so their output is fully opaque.</p>
+      </details>
+      <details>
+        <summary>What happens to an animated GIF or animated WebP I paste in?</summary>
+        <p>The export draws the first frame the browser paints, so the result is a still image. To preserve every frame of a GIF, use the GIF decoder instead — it passes the original animated bytes through without re-encoding.</p>
       </details>
     </div>
   </section>
@@ -265,6 +328,7 @@
         <a href="/privacy">Privacy</a>
         <a href="/contact">Contact</a>
         <a href="/editorial-policy">Editorial</a>
+        <a href="/terms">Terms</a>
       <a class="feedback-link" href="mailto:jeromell@be-winner.com?subject=Feedback">Feedback</a>
 
       </nav>
@@ -300,6 +364,12 @@
         <a href="/base64-image-in-html-email">Base64 image in HTML email</a>
         <a href="/remove-bg-alternatives">remove.bg alternatives</a>
         <a href="/remove-bg-shutting-down">remove.bg shutting down</a>
+        <a href="/base64-overhead-measured">How much bigger is Base64?</a>
+        <a href="/base64-image-email-clients">Base64 images in email clients</a>
+        <a href="/when-not-to-inline-base64">When not to inline Base64</a>
+        <a href="/svg-base64-vs-inline-svg">SVG: data URI vs inline</a>
+        <a href="/base64-in-json-apis">Base64 in JSON APIs</a>
+        <a href="/data-uri-csp-security">Data URIs and CSP</a>
       </nav>
     </div>
     <p class="copyright">© 2026 Image2Base64 · Tools run entirely in your browser.</p>
