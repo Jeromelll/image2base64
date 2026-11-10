@@ -1,0 +1,44 @@
+name: CI
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: pr-check-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  pr-check:
+    name: pr-check
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Syntax-check JavaScript
+        run: |
+          set -euo pipefail
+          while IFS= read -r file; do
+            node --check "$file"
+          done < <(git ls-files '*.js' '*.mjs')
+
+      - name: Syntax-check Python
+        run: python3 -m py_compile build.py check_seo_consistency.py
+
+      - name: Test shared OAuth implementation
+        run: node --test site-auth/tests/*.test.mjs
+
+      - name: Test photo tools, analytics, and image conversion
+        run: node --test tests/*.test.js tests/*.test.mjs
+
+      - name: Check SEO consistency
+        run: python3 check_seo_consistency.py
+
+      - name: Build public assets
+        run: python3 build.py
+
+      - name: Verify Worker bundle without deploying
+        run: npx wrangler@4.129.0 deploy --dry-run

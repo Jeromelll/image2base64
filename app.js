@@ -2,8 +2,171 @@
 // File conversion stays local. Usage events can make network requests.
 // Wires up whichever widgets exist on the page.
 
-(function () {
+(function (root) {
   "use strict";
+
+  // Conversion core shared with tests/image-convert.test.mjs.
+  // Browser boot below returns early when there is no document (Node).
+  function mimeLabel(mime) {
+    var labels = {
+      "image/png": "PNG",
+      "image/jpeg": "JPG",
+      "image/gif": "GIF",
+      "image/webp": "WebP",
+      "image/svg+xml": "SVG"
+    };
+    return labels[mime] || mime || "image";
+  }
+
+  function detectImageMime(bytes) {
+    if (bytes.length >= 8 &&
+        bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 &&
+        bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) {
+      return "image/png";
+    }
+    if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
+      return "image/jpeg";
+    }
+    if (bytes.length >= 6) {
+      var gifHeader = String.fromCharCode.apply(null, bytes.slice(0, 6));
+      if (gifHeader === "GIF87a" || gifHeader === "GIF89a") return "image/gif";
+    }
+    if (bytes.length >= 12) {
+      var riff = String.fromCharCode.apply(null, bytes.slice(0, 4));
+      var webp = String.fromCharCode.apply(null, bytes.slice(8, 12));
+      if (riff === "RIFF" && webp === "WEBP") return "image/webp";
+    }
+    try {
+      var text = new TextDecoder("utf-8").decode(bytes.slice(0, 2048))
+        .replace(/^\uFEFF/, "")
+        .trim();
+      if (/^(?:<\?xml[\s\S]*?\?>\s*)?<svg[\s>]/i.test(text)) return "image/svg+xml";
+    } catch (e) {}
+    return "";
+  }
+
+  function decodeImageBase64(value) {
+    var declaredMime = "";
+    var body = value;
+    var dataUri = value.match(/^data:([^;,]+)?(?:;charset=[^;,]+)?;base64,([\s\S]+)$/i);
+    if (dataUri) {
+      declaredMime = (dataUri[1] || "").toLowerCase();
+      body = dataUri[2];
+    } else if (/^data:/i.test(value)) {
+      throw new Error("Use a Base64 data URI. URL-encoded data URIs are not supported here.");
+    }
+
+    body = body.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
+    if (!body || /[^a-z0-9+/=]/i.test(body)) {
+      throw new Error("The input contains characters that are not valid Base64.");
+    }
+    body = body.replace(/=+$/, "");
+    while (body.length % 4) body += "=";
+
+    var binary;
+    try {
+      binary = atob(body);
+    } catch (e) {
+      throw new Error("The Base64 string is incomplete or malformed.");
+    }
+    if (!binary.length) throw new Error("The Base64 string is empty.");
+
+    var bytes = new Uint8Array(binary.length);
+    for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+    var detectedMime = detectImageMime(bytes);
+    var mime = detectedMime || declaredMime;
+    if (!/^image\//.test(mime)) {
+      throw new Error("This Base64 data does not appear to contain a supported image.");
+    }
+    return { bytes: bytes, mime: mime };
+  }
+
+  function decodeImageInput(value) {
+    var trimmed = String(value == null ? "" : value).trim();
+    if (!trimmed) {
+      var error = new Error("Paste a Base64 string or data URI first.");
+      error.empty = true;
+      throw error;
+    }
+    return decodeImageBase64(trimmed);
+  }
+
+  function rejectUnexpectedImageMime(parsedMime, acceptMime) {
+    if (acceptMime && parsedMime !== acceptMime) {
+      throw new Error(
+        "This page accepts " + mimeLabel(acceptMime) + " data. The pasted image is " +
+        mimeLabel(parsedMime) + "."
+      );
+    }
+  }
+
+  function classifyImageFile(file, accept) {
+    var nameLower = (file && file.name ? file.name : "").toLowerCase();
+    var type = file && file.type ? file.type : "";
+    var isHeic = /image\/hei[cf]/.test(type) || /\.hei[cf]$/.test(nameLower);
+    var isTiff = /image\/tiff/.test(type) || /\.tiff?$/.test(nameLower);
+    var isBmp = /image\/(bmp|x-ms-bmp)/.test(type) || /\.bmp$/.test(nameLower);
+    if (!/^image\//.test(type) && !isHeic && !isTiff && !isBmp) {
+      return {
+        error: "That doesn't look like an image file. Please choose a PNG, JPG, GIF, WebP, SVG, TIFF, BMP or HEIC."
+      };
+    }
+    var effectiveType = type;
+    if (isHeic && !/^image\/hei[cf]/.test(effectiveType)) {
+      effectiveType = nameLower.endsWith(".heif") ? "image/heif" : "image/heic";
+    } else if (isTiff && !/^image\/tiff/.test(effectiveType)) {
+      effectiveType = "image/tiff";
+    } else if (isBmp && !/^image\/(bmp|x-ms-bmp)/.test(effectiveType)) {
+      effectiveType = "image/bmp";
+    }
+    var warning = "";
+    if (accept && effectiveType && effectiveType.indexOf(accept) === -1) {
+      warning = "Heads up: this is a " + (effectiveType || "non-" + accept) +
+        " file, but the converter handles it the same way.";
+    }
+    return { mime: effectiveType, warning: warning };
+  }
+
+  function assembleDataUri(dataUri, effectiveType) {
+    var comma = String(dataUri || "").indexOf(",");
+    var raw = comma >= 0 ? dataUri.slice(comma + 1) : String(dataUri || "");
+    var next = String(dataUri || "");
+    if (effectiveType && /^image\//.test(effectiveType)) {
+      var declared = comma >= 0 ? next.slice(5, next.indexOf(";", 5)).toLowerCase() : "";
+      if (!declared || declared === "application/octet-stream" || declared !== effectiveType) {
+        next = "data:" + effectiveType + ";base64," + raw;
+      }
+    }
+    return { dataUri: next, raw: raw };
+  }
+
+  function buildEncodedSnippets(dataUri, raw, effectiveType, fileType, credit) {
+    var mime = effectiveType || fileType || "image/png";
+    var html = '<img src="' + dataUri + '" alt="" />';
+    if (credit) {
+      html += ' <small><a href="https://image2base64.com/">via Image2Base64</a></small>';
+    }
+    return {
+      html: html,
+      css: "background-image: url(" + dataUri + ");",
+      link: '<link rel="icon" type="' + mime + '" href="' + dataUri + '" />',
+      vision: JSON.stringify({ requests: [{ image: { content: raw }, features: [{ type: "LABEL_DETECTION", maxResults: 3 }] }] })
+    };
+  }
+
+  var imageConvert = {
+    mimeLabel: mimeLabel,
+    detectImageMime: detectImageMime,
+    decodeImageBase64: decodeImageBase64,
+    decodeImageInput: decodeImageInput,
+    rejectUnexpectedImageMime: rejectUnexpectedImageMime,
+    classifyImageFile: classifyImageFile,
+    assembleDataUri: assembleDataUri,
+    buildEncodedSnippets: buildEncodedSnippets
+  };
+  if (typeof module !== "undefined" && module.exports) module.exports = imageConvert;
+  root.ImageConvert = imageConvert;
+  if (!root.document) return;
 
   // ---------- privacy-first event tracking ----------
   // Sends minimal, cookieless events to our own Worker (/api/evt).
@@ -161,11 +324,7 @@
     // HTML <img> snippet builder. The credit link is strictly opt-in:
     // default off, only appended when the visitor ticks the checkbox.
     function buildHtmlSnippet(dataUri) {
-      var snippet = '<img src="' + dataUri + '" alt="" />';
-      if (creditToggle && creditToggle.checked) {
-        snippet += ' <small><a href="https://image2base64.com/">via Image2Base64</a></small>';
-      }
-      return snippet;
+      return buildEncodedSnippets(dataUri, "", "", "", !!(creditToggle && creditToggle.checked)).html;
     }
 
     // Report natural dimensions as soon as the preview bitmap is ready.
@@ -189,49 +348,36 @@
       clearEncodedResult();
       // Some OS/browsers leave File.type empty for HEIC/HEIF (and occasionally
       // TIFF/BMP). Encoding only needs bytes, so fall back to the extension.
-      var nameLower = (file.name || "").toLowerCase();
-      var isHeic = /image\/hei[cf]/.test(file.type || "") || /\.hei[cf]$/.test(nameLower);
-      var isTiff = /image\/tiff/.test(file.type || "") || /\.tiff?$/.test(nameLower);
-      var isBmp = /image\/(bmp|x-ms-bmp)/.test(file.type || "") || /\.bmp$/.test(nameLower);
-      if (!/^image\//.test(file.type) && !isHeic && !isTiff && !isBmp) {
-        showError("That doesn't look like an image file. Please choose a PNG, JPG, GIF, WebP, SVG, TIFF, BMP or HEIC.");
+      var classified = classifyImageFile(file, accept);
+      if (classified.error) {
+        showError(classified.error);
         return;
       }
-      var effectiveType = file.type || "";
-      if (isHeic && !/^image\/hei[cf]/.test(effectiveType)) {
-        effectiveType = nameLower.endsWith(".heif") ? "image/heif" : "image/heic";
-      } else if (isTiff && !/^image\/tiff/.test(effectiveType)) {
-        effectiveType = "image/tiff";
-      } else if (isBmp && !/^image\/(bmp|x-ms-bmp)/.test(effectiveType)) {
-        effectiveType = "image/bmp";
-      }
-      if (accept && effectiveType && effectiveType.indexOf(accept) === -1) {
-        // Soft note only — still convert, since the engine is format-agnostic.
-        showError("Heads up: this is a " + (effectiveType || "non-" + accept) +
-          " file, but the converter handles it the same way.");
-      }
+      var effectiveType = classified.mime;
+      if (classified.warning) showError(classified.warning);
       var reader = new FileReader();
       reader.onload = function (e) {
         if (version !== readVersion) return;
-        var dataUri = e.target.result;            // data:image/png;base64,AAAA...
-        var comma = dataUri.indexOf(",");
-        var raw = comma >= 0 ? dataUri.slice(comma + 1) : dataUri;
         // FileReader prefixes from File.type; empty/octet-stream HEIC/TIFF/BMP
         // get a correct image/* data URI so HTML/CSS snippets paste cleanly.
-        if (effectiveType && /^image\//.test(effectiveType)) {
-          var declared = comma >= 0 ? dataUri.slice(5, dataUri.indexOf(";", 5)).toLowerCase() : "";
-          if (!declared || declared === "application/octet-stream" || declared !== effectiveType) {
-            dataUri = "data:" + effectiveType + ";base64," + raw;
-          }
-        }
+        var assembled = assembleDataUri(String(e.target.result || ""), effectiveType);
+        var dataUri = assembled.dataUri;
+        var raw = assembled.raw;
+        var snippets = buildEncodedSnippets(
+          dataUri,
+          raw,
+          effectiveType,
+          file.type,
+          !!(creditToggle && creditToggle.checked)
+        );
 
         outData.value = dataUri;
         if (outRaw) outRaw.value = raw;
         lastDataUri = dataUri;
-        if (outHtml) outHtml.value = buildHtmlSnippet(dataUri);
-        if (outCss) outCss.value = "background-image: url(" + dataUri + ");";
-        if (outLink) outLink.value = '<link rel="icon" type="' + (effectiveType || file.type || "image/png") + '" href="' + dataUri + '" />';
-        if (outVision) outVision.value = JSON.stringify({"requests":[{"image":{"content":raw},"features":[{"type":"LABEL_DETECTION","maxResults":3}]}]});
+        if (outHtml) outHtml.value = snippets.html;
+        if (outCss) outCss.value = snippets.css;
+        if (outLink) outLink.value = snippets.link;
+        if (outVision) outVision.value = snippets.vision;
 
         if (preview) { preview.src = dataUri; preview.hidden = false; }
         if (metaName) metaName.textContent = file.name || "(pasted image)";
@@ -403,17 +549,6 @@
       activeObjectUrl = "";
     }
 
-    function mimeLabel(mime) {
-      var labels = {
-        "image/png": "PNG",
-        "image/jpeg": "JPG",
-        "image/gif": "GIF",
-        "image/webp": "WebP",
-        "image/svg+xml": "SVG"
-      };
-      return labels[mime] || mime || "image";
-    }
-
     function extensionForMime(mime) {
       var extensions = {
         "image/png": "png",
@@ -423,69 +558,6 @@
         "image/svg+xml": "svg"
       };
       return extensions[mime] || "img";
-    }
-
-    function detectMime(bytes) {
-      if (bytes.length >= 8 &&
-          bytes[0] === 0x89 && bytes[1] === 0x50 && bytes[2] === 0x4e && bytes[3] === 0x47 &&
-          bytes[4] === 0x0d && bytes[5] === 0x0a && bytes[6] === 0x1a && bytes[7] === 0x0a) {
-        return "image/png";
-      }
-      if (bytes.length >= 3 && bytes[0] === 0xff && bytes[1] === 0xd8 && bytes[2] === 0xff) {
-        return "image/jpeg";
-      }
-      if (bytes.length >= 6) {
-        var gifHeader = String.fromCharCode.apply(null, bytes.slice(0, 6));
-        if (gifHeader === "GIF87a" || gifHeader === "GIF89a") return "image/gif";
-      }
-      if (bytes.length >= 12) {
-        var riff = String.fromCharCode.apply(null, bytes.slice(0, 4));
-        var webp = String.fromCharCode.apply(null, bytes.slice(8, 12));
-        if (riff === "RIFF" && webp === "WEBP") return "image/webp";
-      }
-      try {
-        var text = new TextDecoder("utf-8").decode(bytes.slice(0, 2048))
-          .replace(/^\uFEFF/, "")
-          .trim();
-        if (/^(?:<\?xml[\s\S]*?\?>\s*)?<svg[\s>]/i.test(text)) return "image/svg+xml";
-      } catch (e) {}
-      return "";
-    }
-
-    function parseBase64(value) {
-      var declaredMime = "";
-      var body = value;
-      var dataUri = value.match(/^data:([^;,]+)?(?:;charset=[^;,]+)?;base64,([\s\S]+)$/i);
-      if (dataUri) {
-        declaredMime = (dataUri[1] || "").toLowerCase();
-        body = dataUri[2];
-      } else if (/^data:/i.test(value)) {
-        throw new Error("Use a Base64 data URI. URL-encoded data URIs are not supported here.");
-      }
-
-      body = body.replace(/\s+/g, "").replace(/-/g, "+").replace(/_/g, "/");
-      if (!body || /[^a-z0-9+/=]/i.test(body)) {
-        throw new Error("The input contains characters that are not valid Base64.");
-      }
-      body = body.replace(/=+$/, "");
-      while (body.length % 4) body += "=";
-
-      var binary;
-      try {
-        binary = atob(body);
-      } catch (e) {
-        throw new Error("The Base64 string is incomplete or malformed.");
-      }
-      if (!binary.length) throw new Error("The Base64 string is empty.");
-
-      var bytes = new Uint8Array(binary.length);
-      for (var i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
-      var detectedMime = detectMime(bytes);
-      var mime = detectedMime || declaredMime;
-      if (!/^image\//.test(mime)) {
-        throw new Error("This Base64 data does not appear to contain a supported image.");
-      }
-      return { bytes: bytes, mime: mime };
     }
 
     function loadImage(url) {
@@ -551,24 +623,25 @@
 
     function decode() {
       showError("");
-      var v = (input.value || "").trim();
-      if (!v) { showError("Paste a Base64 string or data URI first."); return; }
+      var sourceText = String(input.value || "").trim();
+      var parsed;
+      try {
+        parsed = decodeImageInput(sourceText);
+      } catch (e) {
+        if (!(e && e.empty)) {
+          revokeActiveUrl();
+          if (resWrap) resWrap.hidden = true;
+        }
+        showError((e && e.message) || "The Base64 string could not be decoded.");
+        return;
+      }
       revokeActiveUrl();
       if (resWrap) resWrap.hidden = true;
 
-      var parsed;
       try {
-        parsed = parseBase64(v);
+        rejectUnexpectedImageMime(parsed.mime, acceptMime);
       } catch (e) {
-        showError(e.message || "The Base64 string could not be decoded.");
-        return;
-      }
-
-      if (acceptMime && parsed.mime !== acceptMime) {
-        showError(
-          "This page accepts " + mimeLabel(acceptMime) + " data. The pasted image is " +
-          mimeLabel(parsed.mime) + "."
-        );
+        showError(e.message);
         return;
       }
 
@@ -581,7 +654,7 @@
             sourceBlob,
             parsed.mime,
             "Detected " + mimeLabel(parsed.mime) + ". Preview it here or download the original image bytes.",
-            { srcMime: parsed.mime, dims: dims, srcChars: v.length }
+            { srcMime: parsed.mime, dims: dims, srcChars: sourceText.length }
           );
           return null;
         }
@@ -591,7 +664,7 @@
             outputMime,
             "Converted " + mimeLabel(parsed.mime) + " to " + mimeLabel(outputMime) +
             " in your browser.",
-            { srcMime: parsed.mime, dims: dims, srcChars: v.length }
+            { srcMime: parsed.mime, dims: dims, srcChars: sourceText.length }
           );
         });
       }).catch(function (e) {
@@ -1145,13 +1218,13 @@
     initExtractor();
     wireCopyButtons(document);
   });
-})();
 
-// Feedback mailto: include the page title in the subject so we know which page the user was on
-document.querySelectorAll('a.feedback-link').forEach(function (a) {
-  try {
-    var url = new URL(a.href);
-    url.searchParams.set('subject', 'Feedback: ' + document.title);
-    a.href = url.toString();
-  } catch (e) { /* keep static subject */ }
-});
+  // Feedback mailto: include the page title in the subject so we know which page the user was on
+  document.querySelectorAll('a.feedback-link').forEach(function (a) {
+    try {
+      var url = new URL(a.href);
+      url.searchParams.set('subject', 'Feedback: ' + document.title);
+      a.href = url.toString();
+    } catch (e) { /* keep static subject */ }
+  });
+})(typeof globalThis !== "undefined" ? globalThis : this);

@@ -11,6 +11,8 @@ permissions:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    outputs:
+      deployed: ${{ steps.deploy.outputs.deployed }}
     # Job-level env so the step-level `if` can read it (the `secrets`
     # context is not available in step `if` conditionals).
     env:
@@ -22,7 +24,7 @@ jobs:
       - name: Test shared OAuth implementation
         run: node --test site-auth/tests/*.test.mjs
 
-      - name: Test photo tools and analytics
+      - name: Test photo tools, analytics, and image conversion
         run: node --test tests/*.test.js tests/*.test.mjs
 
       - name: Check SEO consistency
@@ -35,6 +37,21 @@ jobs:
         run: npx wrangler@4.129.0 deploy --dry-run
 
       - name: Deploy Worker
+        id: deploy
         # Only fires once the CLOUDFLARE_API_TOKEN secret is configured in the repo.
         if: ${{ env.CLOUDFLARE_API_TOKEN != '' }}
-        run: npx wrangler@4.129.0 deploy
+        run: |
+          npx wrangler@4.129.0 deploy
+          echo "deployed=true" >> "$GITHUB_OUTPUT"
+
+  post-deploy-probe:
+    name: post-deploy-probe
+    needs: deploy
+    if: needs.deploy.outputs.deployed == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 3
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Probe live site after deploy
+        run: node scripts/probe-production.mjs
