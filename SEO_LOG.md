@@ -1,3 +1,12 @@
+## 2026-11-10 — AdSense 账号迁移：image2base64.com → ads@be-winner.com（pub-8359621843582672）
+
+- 背景：站点原先挂在 jiamu970214@gmail.com 的 AdSense（pub-4027819746718681）；Jerome 指定 ads@be-winner.com 绑定的 AdSense 为唯一正确账号，两账号并存需合并。
+- 账号事实（控制台实测）：ads@be-winner.com → pub-8359621843582672，名下站点 sephiria-guide.com，状态 Needs attention / **Low value content**；jeromell@be-winner.com 无 AdSense 账号；jiamu970214@gmail.com → pub-4027819746718681，名下站点 image2base64.com。
+- 代码侧（PR #12，合并提交见 main）：ads.txt seller 行、全站 head 广告代码 client、privacy 中的发布商 ID 统一改为 ca-pub-8359621843582672，共 68 个文件；部署后线上 ads.txt 与首页代码均为新 ID。
+- 控制台侧：已在 jiamu 账号站点列表删除 image2base64.com（列表变为 Nothing to display）；已在 ads@ 账号新增 image2base64.com（状态 Requires review），点击了 Verify site ownership（AdSense code snippet 方式），随后该账号的 Google 会话被登出，验证结果未能回读确认。
+- 待办：Request review 尚未提交；ads@ 账号顶部仍有付款资料 warning；sephiria-guide.com 的 Low value content 尚未整改；jiamu 账号关闭需 Jerome 在后台操作（account/* 页面返回 403）。
+- 门禁：seo fail=0（3 个既有 WARN）、node 34/34、build 96 资产；PR #12 Workers Builds 与 GitHub Actions `42757291438` 均成功。
+
 ## 2026-11-10 — AdSense 复核前的内容深度整改（PR #10）
 
 - 触发：2026-11-08 AdSense 拒信（pub-4027819746718681）；9-26 首次、11-07 第二次，同一模板。技术面排查（广告代码、ads.txt、robots/Mediapartners、可访问性、索引）全部通过，判定落在官方四类原因中的「内容不足 / 低价值内容」。
