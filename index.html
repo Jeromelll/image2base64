@@ -221,7 +221,7 @@
         <div id="drop" class="dropzone" data-accept="">
           <div class="dz-icon" aria-hidden="true">🖼️</div>
           <h2>Drop an image here</h2>
-          <p>or paste from clipboard · max recommended ~5&nbsp;MB</p>
+          <p>or paste from clipboard · about 5&nbsp;MB is comfortable, 15&nbsp;MB is the limit</p>
           <button id="pick" class="btn btn-primary" type="button">Choose image</button>
           <input id="file" class="visually-hidden" type="file" accept="image/*" />
         </div>
@@ -498,7 +498,7 @@
       </details>
       <details>
         <summary>Is this converter safe and private?</summary>
-        <p>Yes. Conversion runs entirely in your browser via the <code>FileReader</code> API. Your image is never uploaded — there is no network request, so even private or sensitive images stay on your device.</p>
+        <p>Yes. Conversion runs in this tab with the <code>FileReader</code> API, and the image file is not uploaded. The page can still send a cookieless usage event (event name, page, and a coarse size bucket — never the file name or bytes) and it may load ads. Conversion finishes even if that event cannot be sent. Details are in the <a href="/privacy">privacy policy</a>.</p>
       </details>
       <details>
         <summary>How do I use a Base64 image in HTML or CSS?</summary>
@@ -514,11 +514,11 @@
       </details>
       <details>
         <summary>Does this converter work offline?</summary>
-        <p>Yes. Once the page has loaded, the whole tool runs locally in your browser — there is no server call during conversion, so it keeps working even without an internet connection.</p>
+        <p>Yes. After this page has loaded, encoding and decoding keep working without a connection. A usage event may fail to send while you are offline; the Base64 result on the page does not depend on that request.</p>
       </details>
       <details>
         <summary>Is there a file size limit?</summary>
-        <p>No hard limit — encoding happens in your device's memory, not on a server. Files up to roughly 5&nbsp;MB convert comfortably; larger images work but produce very long strings that can slow your browser.</p>
+        <p>Files up to about 5&nbsp;MB convert comfortably. Files larger than 15&nbsp;MB are refused with an on-page error so the browser does not build a huge string that can freeze the tab. Sizes in between still convert on your device and produce long strings.</p>
       </details>
       <details>
         <summary>Can I paste an image from clipboard?</summary>

@@ -45,25 +45,69 @@
       btn.classList.remove("ok");
     }, 1400);
   }
+  function copyDownloadName(btn) {
+    var sel = btn && btn.getAttribute ? (btn.getAttribute("data-copy") || "") : "";
+    if (sel === "#out-raw") return "base64.txt";
+    if (sel === "#out-html") return "snippet.html";
+    if (sel === "#out-css") return "snippet.css";
+    if (sel === "#out-vision") return "vision.json";
+    if (sel === "#out-link") return "favicon-link.html";
+    return "data-uri.txt";
+  }
+  function downloadTextFile(text, filename) {
+    var blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "base64.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(function () { URL.revokeObjectURL(url); }, 2000);
+  }
   function copyText(text, btn) {
-    if (!text) return;
-    var done = function () { flash(btn); };
+    if (!text) {
+      flash(btn, "Nothing to copy");
+      return;
+    }
+    var copied = function () { flash(btn, "Copied!"); };
+    var saveFile = function () {
+      try {
+        downloadTextFile(text, copyDownloadName(btn));
+        flash(btn, "Downloaded");
+      } catch (e) {
+        flash(btn, "Copy failed");
+      }
+    };
     if (navigator.clipboard && navigator.clipboard.writeText) {
-      navigator.clipboard.writeText(text).then(done).catch(function () { fallbackCopy(text, done); });
+      navigator.clipboard.writeText(text).then(copied).catch(function () {
+        if (fallbackCopy(text)) copied();
+        else saveFile();
+      });
+    } else if (fallbackCopy(text)) {
+      copied();
     } else {
-      fallbackCopy(text, done);
+      saveFile();
     }
   }
-  function fallbackCopy(text, done) {
+  function fallbackCopy(text) {
     var ta = document.createElement("textarea");
     ta.value = text;
+    ta.setAttribute("readonly", "");
     ta.style.position = "fixed";
+    ta.style.top = "0";
+    ta.style.left = "0";
+    ta.style.width = "1px";
+    ta.style.height = "1px";
     ta.style.opacity = "0";
     document.body.appendChild(ta);
+    ta.focus();
     ta.select();
-    try { document.execCommand("copy"); } catch (e) {}
+    try { ta.setSelectionRange(0, text.length); } catch (e) {}
+    var ok = false;
+    try { ok = document.execCommand("copy") === true; } catch (e) { ok = false; }
     document.body.removeChild(ta);
-    done();
+    return ok;
   }
   // Draw a sample scene (photo or avatar) shared by encoder and decoder
   // sample chips. Canvas stays local; nothing is downloaded.
@@ -143,6 +187,39 @@
 
     // The format this page is tuned for, e.g. "png" / "jpeg". Empty = any image.
     var accept = (drop.getAttribute("data-accept") || "").toLowerCase();
+    // Same browser-memory ceiling as the compress tool. The homepage still
+    // calls ~5 MB the comfortable size; larger files up to this limit convert.
+    var ENCODE_MAX_BYTES = 15 * 1024 * 1024;
+
+    function mimeFromImageName(name) {
+      var n = String(name || "").toLowerCase();
+      if (/\.png$/.test(n)) return "image/png";
+      if (/\.jpe?g$/.test(n)) return "image/jpeg";
+      if (/\.gif$/.test(n)) return "image/gif";
+      if (/\.webp$/.test(n)) return "image/webp";
+      if (/\.svg$/.test(n)) return "image/svg+xml";
+      if (/\.heif$/.test(n)) return "image/heif";
+      if (/\.hei[cf]$/.test(n)) return "image/heic";
+      if (/\.tiff?$/.test(n)) return "image/tiff";
+      if (/\.bmp$/.test(n)) return "image/bmp";
+      return "";
+    }
+
+    // Some OS/browsers leave File.type empty, or report SVG as text/xml and
+    // JPEG as image/jpg. Encoding only needs bytes; recover the MIME the
+    // site already claims to support before rejecting the file.
+    function effectiveImageType(file) {
+      var type = String((file && file.type) || "").toLowerCase();
+      if (type === "image/jpg" || type === "image/pjpeg" || type === "image/x-citrix-jpeg") type = "image/jpeg";
+      if (type === "image/x-png" || type === "image/x-citrix-png") type = "image/png";
+      var fromName = mimeFromImageName(file && file.name);
+      var generic = !type || type === "application/octet-stream" || type === "binary/octet-stream";
+      var svgAsText = fromName === "image/svg+xml" && (
+        type === "text/xml" || type === "text/plain" || type === "application/xml" || type === "application/octet-stream"
+      );
+      if ((generic || svgAsText) && fromName) type = fromName;
+      return type;
+    }
 
     // Last encoded data URI, so the opt-in credit toggle can rebuild the
     // HTML snippet without re-reading the file.
@@ -187,23 +264,18 @@
       if (!file) return;
       var version = ++readVersion;
       clearEncodedResult();
-      // Some OS/browsers leave File.type empty for HEIC/HEIF (and occasionally
-      // TIFF/BMP). Encoding only needs bytes, so fall back to the extension.
-      var nameLower = (file.name || "").toLowerCase();
-      var isHeic = /image\/hei[cf]/.test(file.type || "") || /\.hei[cf]$/.test(nameLower);
-      var isTiff = /image\/tiff/.test(file.type || "") || /\.tiff?$/.test(nameLower);
-      var isBmp = /image\/(bmp|x-ms-bmp)/.test(file.type || "") || /\.bmp$/.test(nameLower);
-      if (!/^image\//.test(file.type) && !isHeic && !isTiff && !isBmp) {
-        showError("That doesn't look like an image file. Please choose a PNG, JPG, GIF, WebP, SVG, TIFF, BMP or HEIC.");
+      if (!file.size) {
+        showError("This file is empty. Choose an image that contains data.");
         return;
       }
-      var effectiveType = file.type || "";
-      if (isHeic && !/^image\/hei[cf]/.test(effectiveType)) {
-        effectiveType = nameLower.endsWith(".heif") ? "image/heif" : "image/heic";
-      } else if (isTiff && !/^image\/tiff/.test(effectiveType)) {
-        effectiveType = "image/tiff";
-      } else if (isBmp && !/^image\/(bmp|x-ms-bmp)/.test(effectiveType)) {
-        effectiveType = "image/bmp";
+      if (file.size > ENCODE_MAX_BYTES) {
+        showError("This file is over the 15 MB limit. Choose a smaller image.");
+        return;
+      }
+      var effectiveType = effectiveImageType(file);
+      if (!/^image\//.test(effectiveType)) {
+        showError("That doesn't look like an image file. Please choose a PNG, JPG, GIF, WebP, SVG, TIFF, BMP or HEIC.");
+        return;
       }
       if (accept && effectiveType && effectiveType.indexOf(accept) === -1) {
         // Soft note only — still convert, since the engine is format-agnostic.
@@ -213,13 +285,18 @@
       var reader = new FileReader();
       reader.onload = function (e) {
         if (version !== readVersion) return;
-        var dataUri = e.target.result;            // data:image/png;base64,AAAA...
+        var dataUri = e.target && e.target.result;
+        if (typeof dataUri !== "string" || dataUri.indexOf(",") < 0) {
+          showError("Sorry — the file could not be read. Try another image.");
+          return;
+        }
         var comma = dataUri.indexOf(",");
-        var raw = comma >= 0 ? dataUri.slice(comma + 1) : dataUri;
-        // FileReader prefixes from File.type; empty/octet-stream HEIC/TIFF/BMP
-        // get a correct image/* data URI so HTML/CSS snippets paste cleanly.
+        var raw = dataUri.slice(comma + 1);
+        // FileReader prefixes from File.type. Empty, octet-stream, image/jpg,
+        // and text/xml SVG labels are rewritten so the data URI matches the file.
         if (effectiveType && /^image\//.test(effectiveType)) {
-          var declared = comma >= 0 ? dataUri.slice(5, dataUri.indexOf(";", 5)).toLowerCase() : "";
+          var semi = dataUri.indexOf(";", 5);
+          var declared = semi > 5 ? dataUri.slice(5, semi).toLowerCase() : "";
           if (!declared || declared === "application/octet-stream" || declared !== effectiveType) {
             dataUri = "data:" + effectiveType + ";base64," + raw;
           }
